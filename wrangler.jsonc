@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "suburbmates",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-12",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  }
+}
