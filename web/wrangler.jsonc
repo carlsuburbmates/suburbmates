@@ -5,7 +5,7 @@
   "vars": {
     "TURNSTILE_SITE_KEY": "0x4AAAAAAD2mX1Brs-CzSjzW"
   },
-  "compatibility_date": "2024-12-30",
+  "compatibility_date": "2026-07-15",
   "compatibility_flags": [
     "nodejs_compat",
     "nodejs_compat_populate_process_env"

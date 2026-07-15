@@ -40,6 +40,8 @@ Production is `https://suburbmates.com.au`; `www.suburbmates.com.au` permanently
 
 The only runtime and deployment path is `web/`; the obsolete root Worker and its deployment commands have been removed. Do not add blanket Edge runtime declarations: the supported deployment uses the Next.js Node.js runtime through OpenNext.
 
+Next.js 16 warns that `middleware.ts` is deprecated, but OpenNext Cloudflare 1.20 rejects the replacement Node-based `proxy.ts`. Keep the small supported Edge middleware until the adapter documents Proxy support; this incompatibility was build-tested on 16 July 2026.
+
 Required delivery checks from `web/`:
 
 ```bash
