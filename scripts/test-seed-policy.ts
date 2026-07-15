@@ -30,7 +30,7 @@ function getTodayAest(): string {
 
 function runSeed(filePath: string, env: Record<string, string> = {}): { success: boolean, output: string } {
   try {
-    const output = execSync(`npx tsx --env-file=.env.local scripts/seed.ts --dry-run ${filePath}`, { 
+    const output = execSync(`npx tsx --env-file-if-exists=.env.local scripts/seed.ts --dry-run ${filePath}`, {
       encoding: 'utf8', 
       stdio: 'pipe',
       env: { ...process.env, ...env }
