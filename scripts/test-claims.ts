@@ -47,6 +47,7 @@ async function runTests() {
         contact_email: ownerEmail,
         source_key: sourceKey,
         is_published: true,
+        listing_status: 'published',
       })
       .select('id')
       .single();

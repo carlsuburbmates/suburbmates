@@ -305,6 +305,8 @@ async function runSeed(): Promise<void> {
       } else {
         const publicationPolicy = importPublicationPolicy(existingId);
         vendor.is_published = publicationPolicy.isPublished;
+        vendor.listing_status = 'pending_review';
+        vendor.listing_source = 'imported';
         // Insert rather than upsert so a concurrent duplicate cannot have its
         // existing publication state changed by an import race.
         queryResult = await supabase.from('vendors').insert(vendor).select('id').single();
