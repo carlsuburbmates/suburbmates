@@ -15,14 +15,22 @@ type ProfileChangeOverview = {
   rejected_count: number;
 };
 
+type ListingOverview = {
+  review_count: number;
+  published_count: number;
+  rejected_count: number;
+  unpublished_count: number;
+};
+
 export default async function OpsOverviewPage() {
   const { supabase } = await verifyOpsAdmin("/ops");
-  const [claimResult, profileResult] = await Promise.all([
+  const [listingResult, claimResult, profileResult] = await Promise.all([
+    supabase.rpc("ops_listing_overview"),
     supabase.rpc("ops_claim_overview"),
     supabase.rpc("ops_profile_change_overview"),
   ]);
 
-  if (claimResult.error || profileResult.error) {
+  if (listingResult.error || claimResult.error || profileResult.error) {
     throw new Error("The operations overview could not be loaded.");
   }
 
@@ -38,8 +46,14 @@ export default async function OpsOverviewPage() {
     approved_count: 0,
     rejected_count: 0,
   }) as ProfileChangeOverview;
+  const listingOverview = (listingResult.data?.[0] ?? {
+    review_count: 0,
+    published_count: 0,
+    rejected_count: 0,
+    unpublished_count: 0,
+  }) as ListingOverview;
 
-  const attentionCount = Number(overview.pending_count) + Number(overview.needs_information_count) + Number(profileOverview.pending_count);
+  const attentionCount = Number(listingOverview.review_count) + Number(overview.pending_count) + Number(overview.needs_information_count) + Number(profileOverview.pending_count);
 
   return (
     <div className="space-y-8">
@@ -53,9 +67,19 @@ export default async function OpsOverviewPage() {
 
       <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4" aria-label="Claim status summary">
         <SummaryCard label="Open claim work" value={attentionCount} urgent={attentionCount > 0} />
-        <SummaryCard label="Pending" value={Number(overview.pending_count)} />
-        <SummaryCard label="Needs information" value={Number(overview.needs_information_count)} />
+        <SummaryCard label="Listings to review" value={Number(listingOverview.review_count)} />
+        <SummaryCard label="Claims to review" value={Number(overview.pending_count) + Number(overview.needs_information_count)} />
         <SummaryCard label="Profile edits" value={Number(profileOverview.pending_count)} />
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-bold">Listing review</h3>
+            <p className="mt-1 text-sm text-slate-600">Prepare approved public fields and control publication independently from ownership and payment.</p>
+          </div>
+          <Link href="/ops/listings" className="btn btn-primary">Open listing queue</Link>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
