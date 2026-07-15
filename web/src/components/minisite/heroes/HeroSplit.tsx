@@ -51,11 +51,11 @@ export function HeroSplit({ data, styling }: { data: MinisiteVendor; styling: Ve
                   <CheckCircle size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">{data.is_claimed ? "Owner-Managed Details" : "Claimable by the Owner"}</h3>
+                  <h3 className="font-bold text-lg">{data.is_claimed ? "Approved Owner" : "Ownership Available for Review"}</h3>
                   <p className="text-white/60 text-sm mt-1">
                     {data.is_claimed
-                      ? "The business owner can maintain and enrich this profile."
-                      : "The business owner can claim and enrich this profile without hiding it."}
+                      ? "The approved owner can submit profile changes for review."
+                      : "The business owner can submit an evidence-backed ownership request."}
                   </p>
                 </div>
               </div>

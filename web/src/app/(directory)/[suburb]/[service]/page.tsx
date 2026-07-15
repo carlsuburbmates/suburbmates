@@ -22,10 +22,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   const suburbName = suburbRes.data?.name || suburbSlug;
   const categoryName = categoryRes.data?.name || serviceSlug;
+  const { count } = await supabase
+    .from("vendors")
+    .select("id", { count: "exact", head: true })
+    .eq("suburb_slug", suburbSlug)
+    .eq("category_slug", serviceSlug)
+    .eq("is_published", true);
   
   return {
     title: `Local ${categoryName} in ${suburbName} | SuburbMates`,
     description: `Find local ${categoryName} in ${suburbName}. Direct contact, no paywalls, no middlemen.`,
+    alternates: { canonical: `/${suburbSlug}/${serviceSlug}` },
+    robots: count ? undefined : { index: false, follow: true },
   };
 }
 

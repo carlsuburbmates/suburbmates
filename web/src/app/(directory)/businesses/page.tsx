@@ -2,10 +2,16 @@ import { createClient } from "@/utils/supabase/server";
 import { DirectoryBrowseClient } from "@/components/ui/DirectoryBrowseClient";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Browse Local Businesses | SuburbMates",
-  description: "Search and browse local businesses in your area.",
-};
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
+  const params = await searchParams;
+  const hasVariant = Object.values(params).some((value) => value !== undefined && value !== "" && value !== "1");
+  return {
+    title: "Browse Local Businesses | SuburbMates",
+    description: "Search and browse local businesses in your area.",
+    alternates: { canonical: "/businesses" },
+    robots: hasVariant ? { index: false, follow: true } : undefined,
+  };
+}
 
 export default async function BusinessesPage({
   searchParams,

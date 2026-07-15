@@ -9,8 +9,9 @@ import { HeroCentered } from "@/components/minisite/heroes/HeroCentered";
 import { HeroMinimal } from "@/components/minisite/heroes/HeroMinimal";
 import { ContactSticky, ContactInline } from "@/components/minisite/contact/ContactComponents";
 
-// Force dynamic data fetching to cache at the edge for 1 hour (ISR)
-export const revalidate = 3600;
+// Approved listing changes must be visible immediately after operator review.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{
@@ -24,17 +25,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("business_name, description, suburb_slug, category_slug")
+    .select("business_name, description, suburb_slug, category_slug, is_published, suburbs(name), categories(name)")
     .eq("id", slug)
     .single();
     
   if (!vendor) {
     return { title: "Not Found" };
   }
+
+  const categoryRelation = vendor.categories as unknown as { name: string } | { name: string }[] | null;
+  const suburbRelation = vendor.suburbs as unknown as { name: string } | { name: string }[] | null;
+  const categoryName = (Array.isArray(categoryRelation) ? categoryRelation[0]?.name : categoryRelation?.name) ?? "Local business";
+  const suburbName = (Array.isArray(suburbRelation) ? suburbRelation[0]?.name : suburbRelation?.name) ?? vendor.suburb_slug;
   
   return {
-    title: `${vendor.business_name} | Local ${vendor.category_slug} in ${vendor.suburb_slug}`,
-    description: vendor.description ? vendor.description.substring(0, 150) + "..." : `Contact ${vendor.business_name} in ${vendor.suburb_slug}.`,
+    title: `${vendor.business_name} | ${categoryName} in ${suburbName}`,
+    description: vendor.description ? vendor.description.substring(0, 155) : `View public contact details for ${vendor.business_name} in ${suburbName}.`,
+    alternates: { canonical: `/vendor/${slug}` },
+    robots: vendor.is_published ? undefined : { index: false, follow: false },
   };
 }
 
@@ -60,9 +68,28 @@ export default async function VendorWebsite({ params }: PageProps) {
   // Compute design parameters out of existing data deterministically
   const design = getVendorDesign(vendor.id, vendor.created_at);
   const profileDescription = vendor.description || `This is a public directory profile for ${vendor.business_name} in ${vendor.suburbs?.name}. Business details may be added or corrected when the owner claims this profile.`;
+  const canonicalUrl = `https://suburbmates.com.au/vendor/${vendor.id}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: vendor.business_name,
+    description: profileDescription,
+    url: canonicalUrl,
+    telephone: vendor.phone || undefined,
+    email: vendor.contact_email || undefined,
+    address: vendor.street_address ? {
+      "@type": "PostalAddress",
+      streetAddress: vendor.street_address,
+      addressLocality: vendor.suburbs?.name,
+      addressCountry: "AU",
+    } : undefined,
+    areaServed: vendor.suburbs?.name ? { "@type": "Place", name: vendor.suburbs.name } : undefined,
+    sameAs: vendor.website ? [vendor.website] : undefined,
+  };
 
   return (
     <div className={`min-h-screen flex flex-col ${design.font.class} ${design.palette.bg} ${design.palette.text} transition-colors duration-300`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       
       {/* ── Vendor Header ── */}
       <header className={`border-b sticky top-0 z-50 ${design.palette.bg} ${design.corners.border} border-black/5 dark:border-white/5`}>

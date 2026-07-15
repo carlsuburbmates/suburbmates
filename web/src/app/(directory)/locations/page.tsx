@@ -1,5 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Service Locations | SuburbMates',
+  description: 'Browse locations with published local business listings.',
+  alternates: { canonical: '/locations' },
+};
 
 export default async function LocationsPage() {
   const supabase = createClient(
@@ -7,10 +14,11 @@ export default async function LocationsPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const { data: suburbs } = await supabase
-    .from('suburbs')
-    .select('name, slug')
-    .order('name');
+  const { data: vendorSuburbs } = await supabase.from('vendors').select('suburb_slug').eq('is_published', true);
+  const slugs = [...new Set((vendorSuburbs ?? []).map((vendor) => vendor.suburb_slug).filter(Boolean))] as string[];
+  const { data: suburbs } = slugs.length
+    ? await supabase.from('suburbs').select('name, slug').in('slug', slugs).order('name')
+    : { data: [] };
   
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">

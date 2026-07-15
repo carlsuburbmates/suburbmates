@@ -1,6 +1,23 @@
 import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ suburb: string }> }): Promise<Metadata> {
+  const { suburb } = await params;
+  const supabase = await createClient();
+  const [suburbResult, vendorResult] = await Promise.all([
+    supabase.from('suburbs').select('name').eq('slug', suburb).single(),
+    supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('suburb_slug', suburb).eq('is_published', true),
+  ]);
+  const name = suburbResult.data?.name ?? suburb;
+  return {
+    title: `Local Businesses in ${name} | SuburbMates`,
+    description: `Browse published local business listings serving ${name}.`,
+    alternates: { canonical: `/${suburb}` },
+    robots: vendorResult.count ? undefined : { index: false, follow: true },
+  };
+}
 
 export default async function SuburbPage({ params }: { params: Promise<{ suburb: string }> }) {
   const { suburb } = await params;
@@ -16,14 +33,20 @@ export default async function SuburbPage({ params }: { params: Promise<{ suburb:
     notFound();
   }
 
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('name, slug')
-    .order('name');
+  const { data: vendorCategories } = await supabase
+    .from('vendors')
+    .select('category_slug')
+    .eq('suburb_slug', suburb)
+    .eq('is_published', true);
+  const categorySlugs = [...new Set((vendorCategories ?? []).map((vendor) => vendor.category_slug).filter(Boolean))] as string[];
+  const { data: categories } = categorySlugs.length
+    ? await supabase.from('categories').select('name, slug').in('slug', categorySlugs).order('name')
+    : { data: [] };
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-extrabold text-[#121212] mb-8">Local Businesses in {suburbData.name}</h1>
+      {!categories?.length && <p className="rounded-xl bg-slate-100 p-6 text-slate-600">No published business listings are available in this location yet.</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {categories?.map((category) => (
           <Link 

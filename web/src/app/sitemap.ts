@@ -15,18 +15,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://suburbmates.com.au';
 
   const routes: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-    },
-    {
-      url: `${baseUrl}/locations`,
-      lastModified: new Date(),
-    },
-    {
-      url: `${baseUrl}/categories`,
-      lastModified: new Date(),
-    },
+    { url: baseUrl },
+    { url: `${baseUrl}/businesses` },
+    { url: `${baseUrl}/locations` },
+    { url: `${baseUrl}/categories` },
+    { url: `${baseUrl}/how-it-works` },
+    { url: `${baseUrl}/contact` },
   ];
 
   if (vendors) {
@@ -48,10 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
 
     dynamicRoutes.forEach((url) => {
-      routes.push({
-        url,
-        lastModified: new Date(),
-      });
+      routes.push({ url });
     });
   }
 
