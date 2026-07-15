@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { HeroSearch } from "@/components/ui/HeroSearch";
+import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Phone, Shield, Store, MapPin, Globe, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -50,6 +53,35 @@ const valueProps = [
 ];
 
 export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientProps) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+
+    if (!accessToken || !refreshToken) return;
+
+    const completeMagicLink = async () => {
+      const supabase = createClient();
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (error) {
+        router.replace("/login?error=Unable%20to%20complete%20sign-in");
+        return;
+      }
+
+      // Remove the one-time credentials from the address bar before navigation.
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      window.location.replace("/dashboard");
+    };
+
+    void completeMagicLink();
+  }, [router]);
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* ── Hero ───────────────────────────────────────────── */}
