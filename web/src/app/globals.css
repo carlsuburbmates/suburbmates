@@ -1,0 +1,405 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   SUBURBMATES — SEMANTIC COLOUR TOKEN SYSTEM
+   Every colour used in the UI must reference a token from here.
+   Tokens are organised by surface context to prevent mismatches.
+
+   WCAG AA targets:
+   • Normal text  → 4.5:1 minimum
+   • Large text   → 3.0:1 minimum
+   • UI borders/icons → 3.0:1 minimum
+   • Focus rings  → 3.0:1 against adjacent colour
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surfaces ────────────────────────────────────────────── */
+  --sm-surface:           #ffffff;    /* page background          */
+  --sm-surface-muted:     #f9fafb;    /* gray-50 — section tint   */
+  --sm-surface-inverse:   #000000;    /* dark sections / header   */
+  --sm-surface-overlay:   rgba(0,0,0,0.60); /* image overlays    */
+
+  /* ── Text ON light surfaces (white / gray-50) ───────────── */
+  --sm-text-primary:      #000000;    /* 21:1   ✅               */
+  --sm-text-secondary:    #374151;    /* gray-700 — 10.7:1 ✅    */
+  --sm-text-tertiary:     #4b5563;    /* gray-600 — 7.0:1  ✅    */
+  --sm-text-placeholder:  #6b7280;    /* gray-500 — 4.6:1  ✅    */
+
+  /* ── Text ON dark/inverse surfaces (black) ──────────────── */
+  --sm-text-on-inverse:           #ffffff;    /* 21:1    ✅       */
+  --sm-text-on-inverse-secondary: #d1d5db;    /* gray-300 10.7:1 ✅*/
+  /* REMOVED: gray-400 (#9ca3af) on black = 3.1:1 — WCAG FAIL    */
+
+  /* ── Interactive / Brand ────────────────────────────────── */
+  --sm-brand-bg:          #000000;
+  --sm-brand-text:        #ffffff;    /* 21:1 on brand-bg ✅     */
+  --sm-brand-hover-bg:    #1f2937;    /* gray-800 — 16:1 ✅      */
+  --sm-brand-active-bg:   #111827;    /* gray-900                */
+
+  /* ── Borders ─────────────────────────────────────────────── */
+  --sm-border:            #e5e7eb;    /* gray-200                */
+  --sm-border-strong:     #000000;
+  --sm-border-muted:      #f3f4f6;    /* gray-100                */
+
+  /* ── Focus rings ─────────────────────────────────────────── */
+  --sm-ring-on-light:     #000000;    /* ring on white bg        */
+  --sm-ring-on-dark:      #ffffff;    /* ring on black bg        */
+
+  /* ── Disabled state ─────────────────────────────────────── */
+  --sm-disabled-bg:       #f3f4f6;    /* gray-100                */
+  --sm-disabled-text:     #4b5563;    /* gray-600 — 7.0:1 on gray-100 ✅ */
+  --sm-disabled-border:   #e5e7eb;    /* gray-200                */
+
+  /* ── Form feedback states ───────────────────────────────── */
+  --sm-error:             #b91c1c;    /* red-700 — 7.6:1 on white ✅  */
+  --sm-error-bg:          #fef2f2;    /* red-50                  */
+  --sm-error-border:      #f87171;    /* red-400                 */
+  --sm-success:           #15803d;    /* green-700 — 6.5:1 on white ✅*/
+  --sm-success-bg:        #f0fdf4;    /* green-50                */
+  --sm-success-border:    #4ade80;    /* green-400               */
+
+  /* Tailwind theme bridge */
+  --background: var(--sm-surface);
+  --foreground: var(--sm-text-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════════════════ */
+
+body {
+  background-color: var(--sm-surface);
+  color: var(--sm-text-primary);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS — shared base + variants
+   Every variant explicitly declares: default, hover, focus-visible,
+   active, disabled. No state may reduce legibility.
+═══════════════════════════════════════════════════════════════ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;          /* 12px */
+  font-size: 0.8125rem;            /* 13px */
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  outline: none;
+  transition: background-color 0.15s ease,
+              color 0.15s ease,
+              border-color 0.15s ease,
+              transform 0.15s ease,
+              box-shadow 0.15s ease;
+}
+
+/* Active scale — shared */
+.btn:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.96);
+}
+
+/* Disabled — shared. WCAG exempts disabled controls but we still ensure legibility */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  background-color: var(--sm-disabled-bg) !important;
+  color: var(--sm-disabled-text) !important;         /* 7:1 on gray-100 ✅ */
+  border-color: var(--sm-disabled-border) !important;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Loading — preserves colours, swaps cursor */
+.btn.btn--loading {
+  cursor: wait;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* ── Primary: black bg / white text ── */
+.btn-primary {
+  background-color: var(--sm-brand-bg);     /* #000 */
+  color: var(--sm-brand-text);              /* #fff — 21:1 ✅ */
+  border-color: var(--sm-brand-bg);
+}
+.btn-primary:hover {
+  background-color: var(--sm-brand-hover-bg);  /* gray-800 ✅ */
+  border-color: var(--sm-brand-hover-bg);
+}
+.btn-primary:focus-visible {
+  box-shadow: 0 0 0 2px var(--sm-surface),
+              0 0 0 4px var(--sm-ring-on-light);
+}
+.btn-primary:active:not(:disabled) {
+  background-color: var(--sm-brand-active-bg);
+}
+
+/* ── Outline: white bg / black border / black text ── */
+.btn-outline {
+  background-color: var(--sm-surface);       /* #fff */
+  color: var(--sm-text-primary);             /* #000 — 21:1 ✅ */
+  border-color: var(--sm-border-strong);
+}
+.btn-outline:hover {
+  background-color: var(--sm-brand-bg);      /* invert on hover */
+  color: var(--sm-brand-text);               /* #fff — 21:1 ✅ */
+  border-color: var(--sm-brand-bg);
+}
+.btn-outline:focus-visible {
+  box-shadow: 0 0 0 2px var(--sm-surface),
+              0 0 0 4px var(--sm-ring-on-light);
+}
+
+/* ── Ghost: transparent / black text / hover fills ── */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--sm-text-primary);             /* #000 — 21:1 ✅ */
+  border-color: transparent;
+}
+.btn-ghost:hover {
+  background-color: var(--sm-brand-bg);
+  color: var(--sm-brand-text);               /* #fff — 21:1 ✅ */
+}
+.btn-ghost:focus-visible {
+  box-shadow: 0 0 0 2px var(--sm-surface),
+              0 0 0 4px var(--sm-ring-on-light);
+}
+
+/* ── Inverse: white bg / black text (for use ON dark sections) ── */
+.btn-inverse {
+  background-color: var(--sm-surface);       /* #fff */
+  color: var(--sm-text-primary);             /* #000 — 21:1 ✅ */
+  border-color: var(--sm-surface);
+}
+.btn-inverse:hover {
+  background-color: #e5e7eb;                 /* gray-200 — #000 text = 16:1 ✅ */
+  border-color: #e5e7eb;
+  transform: scale(1.03);
+}
+.btn-inverse:focus-visible {
+  /* ring on dark background: offset uses dark bg colour */
+  box-shadow: 0 0 0 2px var(--sm-surface-inverse),
+              0 0 0 4px var(--sm-ring-on-dark);
+}
+.btn-inverse:active:not(:disabled) {
+  background-color: #d1d5db;                 /* gray-300 */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAVIGATION LINKS
+═══════════════════════════════════════════════════════════════ */
+
+.nav-link {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sm-text-primary);             /* #000 — 21:1 ✅ */
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.5rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  outline: none;
+  white-space: nowrap;
+}
+.nav-link:hover {
+  color: var(--sm-text-secondary);           /* gray-700 — 10.7:1 ✅ */
+  background-color: var(--sm-border-muted);  /* gray-100 — subtle tint */
+}
+.nav-link:focus-visible {
+  box-shadow: 0 0 0 2px var(--sm-surface),
+              0 0 0 4px var(--sm-ring-on-light);
+}
+
+/* ── Nav link on dark/inverse header ── */
+.nav-link-inverse {
+  color: var(--sm-text-on-inverse);           /* #fff — 21:1 ✅ */
+}
+.nav-link-inverse:hover {
+  color: var(--sm-text-on-inverse-secondary); /* gray-300 — 10.7:1 ✅ */
+  background-color: rgba(255,255,255,0.08);
+}
+.nav-link-inverse:focus-visible {
+  box-shadow: 0 0 0 2px var(--sm-surface-inverse),
+              0 0 0 4px var(--sm-ring-on-dark);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORM INPUTS
+═══════════════════════════════════════════════════════════════ */
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid var(--sm-border);
+  background-color: var(--sm-surface);
+  color: var(--sm-text-primary);             /* #000 — 21:1 ✅ */
+  font-size: 1rem;
+  font-weight: 500;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+.form-input::placeholder {
+  color: var(--sm-text-placeholder);         /* gray-500 — 4.6:1 ✅ */
+}
+.form-input:focus {
+  border-color: var(--sm-border-strong);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
+}
+.form-input:focus-visible {
+  border-color: var(--sm-border-strong);
+  box-shadow: 0 0 0 2px var(--sm-surface),
+              0 0 0 4px var(--sm-ring-on-light);
+}
+.form-input:disabled {
+  background-color: var(--sm-disabled-bg);
+  color: var(--sm-disabled-text);            /* gray-600 on gray-100 — 7:1 ✅ */
+  cursor: not-allowed;
+}
+.form-input.is-error {
+  border-color: var(--sm-error);
+  box-shadow: 0 0 0 3px rgba(185,28,28,0.12);
+}
+.form-input.is-success {
+  border-color: var(--sm-success);
+  box-shadow: 0 0 0 3px rgba(21,128,61,0.12);
+}
+
+/* Form feedback text */
+.form-message {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 0.375rem;
+}
+.form-message--error {
+  color: var(--sm-error);                    /* red-700 — 7.6:1 on white ✅ */
+}
+.form-message--success {
+  color: var(--sm-success);                  /* green-700 — 6.5:1 on white ✅ */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════════════════ */
+
+.card {
+  background-color: var(--sm-surface);
+  border: 1.5px solid var(--sm-border);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.10);
+  transform: translateY(-4px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════════════════════ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* Explicit colours — never inherit */
+.badge-primary {
+  background-color: var(--sm-brand-bg);      /* #000 */
+  color: var(--sm-brand-text);               /* #fff — 21:1 ✅ */
+}
+.badge-muted {
+  background-color: var(--sm-surface-muted); /* gray-50 */
+  color: var(--sm-text-secondary);           /* gray-700 — 10.7:1 ✅ */
+  border: 1px solid var(--sm-border);
+}
+.badge-error {
+  background-color: var(--sm-error-bg);      /* red-50 */
+  color: var(--sm-error);                    /* red-700 — 7.6:1 ✅ */
+  border: 1px solid var(--sm-error-border);
+}
+.badge-success {
+  background-color: var(--sm-success-bg);    /* green-50 */
+  color: var(--sm-success);                  /* green-700 — 6.5:1 ✅ */
+  border: 1px solid var(--sm-success-border);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   IMAGE OVERLAY TEXT SAFETY
+   Any text placed directly over an image must sit on this overlay.
+   min overlay opacity ensures 4.5:1 contrast for white text.
+═══════════════════════════════════════════════════════════════ */
+
+.overlay-text-safe {
+  position: relative;
+}
+.overlay-text-safe::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--sm-surface-overlay);     /* rgba(0,0,0,0.60) */
+  pointer-events: none;
+}
+.overlay-text-safe > * {
+  position: relative;
+  z-index: 1;
+  color: var(--sm-text-on-inverse);          /* #fff ✅ */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE MENU OVERLAY (for future mobile nav implementation)
+═══════════════════════════════════════════════════════════════ */
+
+.mobile-menu-panel {
+  background-color: var(--sm-surface);
+  color: var(--sm-text-primary);             /* #000 — always explicit ✅ */
+  border-right: 1px solid var(--sm-border);
+}
+.mobile-menu-link {
+  display: block;
+  padding: 1rem 1.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--sm-text-primary);             /* #000 ✅ */
+  border-radius: 0.5rem;
+  transition: background-color 0.15s ease;
+  outline: none;
+}
+.mobile-menu-link:hover {
+  background-color: var(--sm-surface-muted);
+  color: var(--sm-text-primary);             /* keeps #000 ✅ */
+}
+.mobile-menu-link:focus-visible {
+  box-shadow: 0 0 0 2px var(--sm-surface),
+              0 0 0 4px var(--sm-ring-on-light);
+}

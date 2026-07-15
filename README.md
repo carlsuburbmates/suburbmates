@@ -1,44 +1,25 @@
 # SuburbMates
 
-Cloudflare-first production baseline for `suburbmates.com.au`.
+SuburbMates is a public, hyper-local business directory for the City of Darebin, with Northcote as the current priority. The directory publishes real business listings even when contact information is incomplete. A business owner can later claim and enrich a listing.
 
-## What this repo does today
+Read [`docs/HANDOVER.md`](docs/HANDOVER.md) before changing the project. It is the canonical project context, current-state record, operating guide, and next-work queue.
 
-- Serves the apex host `suburbmates.com.au`
-- Redirects `www.suburbmates.com.au` to the apex with HTTP `308`
-- Exposes `/healthz` for deployment checks
-- Gives Cloudflare a stable production artifact before the full app rebuild
-
-## Local checks
+## Core commands
 
 ```bash
 npm install
 npm run check
+npm run audit -- data/vendor-candidates-merged.csv
+npm run seed -- --dry-run data/vendor-candidates-merged.csv
+npm run catalogue:report -- data/vendor-candidates-merged.csv
 ```
 
-## Deploy
+The web application lives in `web/`. Run its checks from that directory:
 
 ```bash
-npm run deploy
+npm install
+npm run lint
+npm run build
 ```
 
-## Cutover sequence
-
-1. Confirm the Worker deploy succeeds and the Cloudflare temporary URL serves correctly.
-2. Add `suburbmates.com.au` as a Cloudflare zone.
-3. Recreate the required DNS records in Cloudflare before changing nameservers.
-4. Change the registrar nameservers from Vercel DNS to the Cloudflare-assigned nameservers.
-5. Attach `suburbmates.com.au` to the Cloudflare production service.
-6. Keep `www.suburbmates.com.au` as a redirect-only hostname to the apex.
-7. Remove `suburbmates.com.au` and `www.suburbmates.com.au` from Vercel after the Cloudflare cutover is serving live traffic correctly.
-
-## DNS records to recreate in Cloudflare
-
-The domain is still delegated to Vercel DNS, so the zone migration is not complete until these are recreated inside Cloudflare:
-
-- Apex production routing for `suburbmates.com.au`
-- `www` hostname support for the redirect path
-- Mail verification and delivery records for Resend
-- Any records required for `info.suburbmates.com.au`
-
-Do not treat old Vercel environment variables as source of truth. Stripe remains out of scope for this migration.
+Stripe and Cloudflare configuration remain in the repository and connected accounts. They are intentionally outside the current vendor-catalogue workstream.
