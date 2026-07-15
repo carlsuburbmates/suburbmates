@@ -23,6 +23,17 @@ type Listing = {
   draft_values: Record<string, string | null> | null;
 };
 
+type ListingEvidence = {
+  evidence_id: string;
+  evidence_type: string;
+  source_url: string | null;
+  status: string;
+  summary: string | null;
+  evidence_data: Record<string, unknown>;
+  checked_at: string | null;
+  created_at: string;
+};
+
 export default async function OpsListingDetailPage({ params, searchParams }: {
   params: Promise<{ vendorId: string }>;
   searchParams: Promise<{ error?: string; success?: string }>;
@@ -30,16 +41,18 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const { vendorId } = await params;
   const message = await searchParams;
   const { supabase } = await verifyOpsAdmin(`/ops/listings/${vendorId}`);
-  const [{ data, error }, categoriesResult, suburbsResult] = await Promise.all([
+  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult] = await Promise.all([
     supabase.rpc("ops_list_listings", { p_status: "all", p_query: null, p_vendor_id: vendorId, p_limit: 1, p_offset: 0 }),
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
+    supabase.rpc("ops_list_listing_evidence", { p_vendor_id: vendorId }),
   ]);
-  if (error) throw new Error("The listing could not be loaded.");
+  if (error || categoriesResult.error || suburbsResult.error || evidenceResult.error) throw new Error("The listing could not be loaded.");
   const listing = data?.[0] as Listing | undefined;
   if (!listing) notFound();
   const values = listing.draft_values ?? listing;
   const status = listing.listing_status;
+  const evidence = (evidenceResult.data ?? []) as ListingEvidence[];
 
   return (
     <div className="space-y-7">
@@ -55,6 +68,14 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
 
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
       {message.success && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{message.success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : "Decision recorded with an audit event."}</p>}
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-xl font-bold">Source evidence</h3>
+        <p className="mt-2 text-sm text-slate-600">Original submitted or imported facts remain separate from the operator draft and public decision.</p>
+        {evidence.length === 0 ? <p className="mt-5 rounded-xl bg-slate-100 p-4 text-sm text-slate-600">No structured evidence record exists for this legacy listing.</p> : (
+          <div className="mt-5 space-y-4">{evidence.map((item) => <EvidenceCard key={item.evidence_id} evidence={item} />)}</div>
+        )}
+      </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Approved public fields and operator draft</h3>
@@ -118,6 +139,19 @@ function value(source: Listing | Record<string, string | null>, key: string) {
 function statusLabel(status: string) {
   if (status === "unclassified") return "Needs classification";
   return status.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function EvidenceCard({ evidence }: { evidence: ListingEvidence }) {
+  const fields = Object.entries(evidence.evidence_data).filter(([, value]) => value !== null && value !== "");
+  return (
+    <article className="rounded-xl border border-slate-200 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-bold">{statusLabel(evidence.evidence_type)}</p><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold">{statusLabel(evidence.status)}</span></div>
+      {evidence.summary && <p className="mt-3 text-sm text-slate-700">{evidence.summary}</p>}
+      {evidence.source_url && <p className="mt-2 break-all text-sm text-slate-600">Source: {evidence.source_url}</p>}
+      {fields.length > 0 && <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">{fields.map(([key, fieldValue]) => <div key={key} className="rounded-lg bg-slate-50 p-3"><dt className="font-semibold text-slate-500">{statusLabel(key)}</dt><dd className="mt-1 break-words">{typeof fieldValue === "object" ? JSON.stringify(fieldValue) : String(fieldValue)}</dd></div>)}</dl>}
+      <p className="mt-3 text-xs text-slate-500">Recorded {new Date(evidence.created_at).toLocaleString("en-AU")}{evidence.checked_at ? ` · Checked ${new Date(evidence.checked_at).toLocaleString("en-AU")}` : ""}</p>
+    </article>
+  );
 }
 
 const rejectReasons = [

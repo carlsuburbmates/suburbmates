@@ -1,9 +1,7 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { runtimeEnv } from "@/lib/runtime-env";
+import { TurnstileVerificationError, verifyTurnstileToken } from "@/lib/turnstile";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 const topics = new Set([
@@ -15,13 +13,6 @@ const topics = new Set([
   "partnership",
   "other",
 ]);
-
-type TurnstileResult = {
-  success?: boolean;
-  hostname?: string;
-  action?: string;
-  "error-codes"?: string[];
-};
 
 function fail(code: string): never {
   redirect(`/contact?error=${encodeURIComponent(code)}`);
@@ -52,47 +43,11 @@ export async function submitContactAction(formData: FormData) {
     fail("invalid");
   }
 
-  const turnstileSecret = runtimeEnv("TURNSTILE_SECRET_KEY");
-  if (!turnstileSecret || !token) {
-    fail("verification");
-  }
-
-  const requestHeaders = await headers();
-  const remoteIp = requestHeaders.get("cf-connecting-ip");
-  const verificationBody = new URLSearchParams({
-    secret: turnstileSecret,
-    response: token,
-    idempotency_key: randomUUID(),
-  });
-  if (remoteIp) verificationBody.set("remoteip", remoteIp);
-
-  let verification: TurnstileResult;
+  let verification: { hostname: string; action: string };
   try {
-    const response = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      { method: "POST", body: verificationBody, cache: "no-store" },
-    );
-    verification = (await response.json()) as TurnstileResult;
-  } catch {
-    fail("verification_unavailable");
-  }
-
-  const allowedHostnames = new Set(
-    (runtimeEnv("CONTACT_ALLOWED_HOSTNAMES") ?? "suburbmates.com.au")
-      .split(",")
-      .map((hostname) => hostname.trim().toLowerCase())
-      .filter(Boolean),
-  );
-  const isOfficialTestMode =
-    runtimeEnv("TURNSTILE_TEST_MODE") === "true" &&
-    turnstileSecret === "1x0000000000000000000000000000000AA";
-  if (
-    verification.success !== true ||
-    (!isOfficialTestMode && (
-      verification.action !== "contact" || !verification.hostname ||
-      !allowedHostnames.has(verification.hostname.toLowerCase())
-    ))
-  ) {
+    verification = await verifyTurnstileToken(token, "contact");
+  } catch (error) {
+    if (error instanceof TurnstileVerificationError) fail(error.code);
     fail("verification");
   }
 
@@ -104,8 +59,8 @@ export async function submitContactAction(formData: FormData) {
       p_requester_email: requesterEmail,
       p_business_name: businessName || null,
       p_message: message,
-      p_turnstile_hostname: isOfficialTestMode ? "cloudflare-official-test" : verification.hostname,
-      p_turnstile_action: isOfficialTestMode ? "contact" : verification.action,
+      p_turnstile_hostname: verification.hostname,
+      p_turnstile_action: verification.action,
     });
     if (error) {
       if (error.message.includes("Too many recent requests")) fail("rate_limit");
