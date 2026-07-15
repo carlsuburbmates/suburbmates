@@ -2,20 +2,21 @@ import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { isTaxonomyPageEligible } from '@/lib/taxonomy-eligibility';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
-  const [categoryResult, vendorResult] = await Promise.all([
+  const [categoryResult, isEligible] = await Promise.all([
     supabase.from('categories').select('name').eq('slug', slug).single(),
-    supabase.from('published_vendors').select('id', { count: 'exact', head: true }).eq('category_slug', slug),
+    isTaxonomyPageEligible(supabase, { routeType: 'category', categorySlug: slug }),
   ]);
   const name = categoryResult.data?.name ?? slug;
   return {
     title: `${name} by Location | SuburbMates`,
     description: `Browse published ${name.toLowerCase()} listings by location.`,
     alternates: { canonical: `/categories/${slug}` },
-    robots: vendorResult.count ? undefined : { index: false, follow: true },
+    robots: isEligible ? undefined : { index: false, follow: true },
   };
 }
 

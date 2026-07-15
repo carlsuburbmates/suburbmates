@@ -121,7 +121,50 @@ async function fetchPublishedVendors() {
   return rows;
 }
 
-function buildExpectedSitemap(vendors) {
+async function fetchTaxonomyPageEligibility() {
+  const endpoint = new URL("/rest/v1/taxonomy_page_eligibility", SUPABASE_URL);
+  endpoint.searchParams.set("select", "route_type,suburb_slug,category_slug,qualified_listing_count");
+  endpoint.searchParams.set("order", "route_type.asc,suburb_slug.asc,category_slug.asc");
+
+  const rows = [];
+  const keys = new Set();
+  let expectedTotal;
+
+  while (expectedTotal === undefined || rows.length < expectedTotal) {
+    const from = rows.length;
+    const to = from + PAGE_SIZE - 1;
+    const response = await request(endpoint, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        authorization: `Bearer ${SUPABASE_KEY}`,
+        prefer: "count=exact",
+        range: `${from}-${to}`,
+        "range-unit": "items",
+      },
+    });
+    assert(response.status === 200 || response.status === 206, `Supabase taxonomy eligibility returned ${response.status}.`);
+    const range = parseContentRange(response.headers.get("content-range"));
+    assert(range.from === from, `Supabase taxonomy eligibility started at ${range.from}, expected ${from}.`);
+    if (expectedTotal === undefined) expectedTotal = range.total;
+    assert(range.total === expectedTotal, "Supabase taxonomy eligibility count changed during pagination.");
+
+    const page = await response.json();
+    assert(Array.isArray(page), "Supabase taxonomy eligibility response was not an array.");
+    assert(page.length > 0 || rows.length === expectedTotal, `Supabase taxonomy eligibility ended early at ${from}.`);
+    for (const row of page) {
+      const key = `${row.route_type}:${row.suburb_slug || ""}:${row.category_slug || ""}`;
+      assert(!keys.has(key), `Supabase taxonomy eligibility contains duplicate route ${key}.`);
+      keys.add(key);
+      rows.push(row);
+      assert(rows.length <= expectedTotal, "Supabase returned more taxonomy eligibility rows than its exact count.");
+    }
+  }
+
+  assert(rows.length === expectedTotal, `Supabase returned ${rows.length} taxonomy rows, expected ${expectedTotal}.`);
+  return rows;
+}
+
+function buildExpectedSitemap(vendors, taxonomyRows) {
   const urls = new Set([
     BASE_URL,
     `${BASE_URL}/businesses`,
@@ -133,10 +176,14 @@ function buildExpectedSitemap(vendors) {
   ]);
   for (const vendor of vendors) {
     urls.add(`${BASE_URL}/vendor/${vendor.slug}`);
-    if (vendor.suburb_slug) urls.add(`${BASE_URL}/${vendor.suburb_slug}`);
-    if (vendor.category_slug) urls.add(`${BASE_URL}/categories/${vendor.category_slug}`);
-    if (vendor.suburb_slug && vendor.category_slug) {
-      urls.add(`${BASE_URL}/${vendor.suburb_slug}/${vendor.category_slug}`);
+  }
+  for (const row of taxonomyRows) {
+    if (row.route_type === "suburb" && row.suburb_slug && !row.category_slug) {
+      urls.add(`${BASE_URL}/${row.suburb_slug}`);
+    } else if (row.route_type === "category" && row.category_slug && !row.suburb_slug) {
+      urls.add(`${BASE_URL}/categories/${row.category_slug}`);
+    } else if (row.route_type === "pair" && row.suburb_slug && row.category_slug) {
+      urls.add(`${BASE_URL}/${row.suburb_slug}/${row.category_slug}`);
     }
   }
   return urls;
@@ -205,8 +252,12 @@ async function main() {
   const invalidVendor = await request(`${BASE_URL}/vendor/00000000-0000-0000-0000-000000000000`, { redirect: "manual" });
   assert(invalidVendor.status === 404, `Unknown vendor route returned ${invalidVendor.status}, expected 404.`);
 
-  const vendors = await fetchPublishedVendors();
+  const [vendors, taxonomyRows] = await Promise.all([
+    fetchPublishedVendors(),
+    fetchTaxonomyPageEligibility(),
+  ]);
   assert(vendors.length > 0, "Public catalogue unexpectedly contains no published vendors.");
+  assert(taxonomyRows.length > 0, "Taxonomy eligibility projection unexpectedly contains no qualified routes.");
   const sampleVendor = await request(`${BASE_URL}/vendor/${vendors[0].slug}`);
   assert(sampleVendor.status === 200, `Published vendor sample returned ${sampleVendor.status}.`);
   const sampleBody = await sampleVendor.text();
@@ -217,7 +268,7 @@ async function main() {
     `${BASE_URL}/vendor/${vendors[0].slug}`,
   );
 
-  const expected = buildExpectedSitemap(vendors);
+  const expected = buildExpectedSitemap(vendors, taxonomyRows);
   const actual = parseSitemap(sitemapXml);
   compareUrlSets(actual, expected);
 
@@ -230,7 +281,7 @@ async function main() {
   const combinations = new Set(vendors.flatMap((vendor) => vendor.suburb_slug && vendor.category_slug
     ? [`${vendor.suburb_slug}/${vendor.category_slug}`]
     : []));
-  console.log(`Production smoke passed: ${vendors.length} vendors, ${categorySlugs.size} categories, ${suburbSlugs.size} suburbs, ${combinations.size} suburb/category pages, ${actual.size} sitemap URLs.`);
+  console.log(`Production smoke passed: ${vendors.length} vendors, ${taxonomyRows.length} eligible taxonomy routes, ${categorySlugs.size} categories, ${suburbSlugs.size} suburbs, ${combinations.size} suburb/category pages, ${actual.size} sitemap URLs.`);
 }
 
 main().catch((error) => {

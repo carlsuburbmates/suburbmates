@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { taxonomyEligibilityKey, type TaxonomyPageEligibilityRow } from "./taxonomy-eligibility";
 
 export const PUBLIC_CATALOGUE_PAGE_SIZE = 1000;
 
@@ -22,9 +23,10 @@ export class PublicCatalogueReadError extends Error {
   }
 }
 
-export async function collectAllPages<T extends { id: string }>(
+export async function collectAllPages<T>(
   fetchPage: (from: number, to: number) => Promise<CataloguePage<T>>,
   pageSize = PUBLIC_CATALOGUE_PAGE_SIZE,
+  identifyRow: (row: T) => string = (row) => String((row as { id?: unknown }).id ?? ""),
 ): Promise<T[]> {
   if (!Number.isInteger(pageSize) || pageSize < 1) {
     throw new PublicCatalogueReadError("Invalid public catalogue page size.");
@@ -57,10 +59,11 @@ export async function collectAllPages<T extends { id: string }>(
     }
 
     for (const row of page.data) {
-      if (!row.id || ids.has(row.id)) {
+      const id = identifyRow(row);
+      if (!id || ids.has(id)) {
         throw new PublicCatalogueReadError(`Public catalogue contains a duplicate or missing ID at offset ${from}.`);
       }
-      ids.add(row.id);
+      ids.add(id);
       rows.push(row);
       if (rows.length > pageCount) {
         throw new PublicCatalogueReadError("Public catalogue returned more rows than its exact count.");
@@ -72,6 +75,21 @@ export async function collectAllPages<T extends { id: string }>(
     throw new PublicCatalogueReadError("Public catalogue did not match its exact count.");
   }
   return rows;
+}
+
+export async function fetchAllTaxonomyPageEligibility(
+  client: SupabaseClient,
+): Promise<TaxonomyPageEligibilityRow[]> {
+  return collectAllPages(async (from, to) => {
+    const result = await client
+      .from("taxonomy_page_eligibility")
+      .select("route_type, suburb_slug, category_slug, qualified_listing_count", { count: "exact" })
+      .order("route_type", { ascending: true })
+      .order("suburb_slug", { ascending: true })
+      .order("category_slug", { ascending: true })
+      .range(from, to);
+    return result as CataloguePage<TaxonomyPageEligibilityRow>;
+  }, PUBLIC_CATALOGUE_PAGE_SIZE, taxonomyEligibilityKey);
 }
 
 export async function fetchAllPublishedVendorRouteRows(
@@ -97,6 +115,7 @@ export function publishedSuburbSlugs(rows: PublicVendorRouteRow[]): string[] {
 
 export function buildPublicSitemapUrls(
   rows: PublicVendorRouteRow[],
+  taxonomyRows: TaxonomyPageEligibilityRow[],
   baseUrl = "https://suburbmates.com.au",
 ): string[] {
   const base = baseUrl.replace(/\/+$/, "");
@@ -112,9 +131,16 @@ export function buildPublicSitemapUrls(
 
   for (const row of rows) {
     urls.add(`${base}/vendor/${row.slug}`);
-    if (row.suburb_slug) urls.add(`${base}/${row.suburb_slug}`);
-    if (row.category_slug) urls.add(`${base}/categories/${row.category_slug}`);
-    if (row.suburb_slug && row.category_slug) urls.add(`${base}/${row.suburb_slug}/${row.category_slug}`);
+  }
+
+  for (const row of taxonomyRows) {
+    if (row.route_type === "suburb" && row.suburb_slug && row.category_slug === null) {
+      urls.add(`${base}/${row.suburb_slug}`);
+    } else if (row.route_type === "category" && row.category_slug && row.suburb_slug === null) {
+      urls.add(`${base}/categories/${row.category_slug}`);
+    } else if (row.route_type === "pair" && row.suburb_slug && row.category_slug) {
+      urls.add(`${base}/${row.suburb_slug}/${row.category_slug}`);
+    }
   }
 
   return [...urls];

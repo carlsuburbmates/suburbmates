@@ -30,7 +30,7 @@ Reverified on 16 July 2026 (Australia/Melbourne):
 - 0 active operators pending selection of the permanent operator email;
 - 0 open claims, profile changes, or genuine contact requests at the verification checkpoint;
 - three failed claim-test identities were removed; their three truthfully labelled audit events remain immutable;
-- after the privacy-page deployment, the public sitemap contains all 1,600 vendor URLs, 175 category URLs, 10 location URLs, 406 suburb/category URLs, and 7 static URLs (2,198 URLs total).
+- the public sitemap contains all 1,600 vendor URLs, 14 qualified category hubs, 5 qualified suburb hubs, 58 qualified suburb/category pages, and 7 static URLs (1,684 URLs total). All other valid taxonomy pages remain browseable but `noindex` and absent from the sitemap.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
@@ -59,7 +59,7 @@ npm run cf:build
 ### Public directory
 
 - `/`, `/businesses`, `/categories`, `/locations`: discovery surfaces.
-- `/[suburb]` and `/[suburb]/[service]`: taxonomy pages; empty combinations use `noindex, follow`.
+- `/[suburb]`, `/categories/[slug]`, and `/[suburb]/[service]`: taxonomy pages. They become indexable only through the evidence-based `taxonomy_page_eligibility` policy; other valid pages use `noindex, follow`.
 - `/vendor/[slug]`: published business profile, canonical metadata, and evidence-limited LocalBusiness JSON-LD. Current human-readable slugs are canonical; legacy UUID routes permanently redirect, while unpublished listings have no public route.
 - `/sitemap.xml`: force-dynamic, complete paginated published catalogue; never includes `/ops`.
 - `/contact`: private support intake protected by hostname-restricted Cloudflare Turnstile.
@@ -69,6 +69,8 @@ npm run cf:build
 Public catalogue reads that can exceed 1,000 rows must use `web/src/lib/public-catalogue.ts`. Never restore a single unpaginated Supabase vendor query for sitemap, category, or location coverage.
 
 Public directory reads use `public.published_vendors`, a safe projection containing only displayed listing fields. Never re-grant anonymous or authenticated `SELECT` on `public.vendors`; owner dashboard data comes from `list_current_owner_vendors()`.
+
+`suburbs.location_kind` distinguishes exact suburbs from the existing `darebin` municipality fallback. Municipality-fallback pages remain available for local browsing but are never indexable. The `taxonomy-v1` gate requires a published reviewed listing, exact-suburb context, source URL plus check date, at least one useful contact/address/description field, three qualifying listings for a pair page, and two qualified pair pages for a hub.
 
 ### Owners
 
@@ -126,7 +128,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716127000` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716128000` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth SMTP only at launch | Domain verified; confirm the actual Supabase SMTP path with one controlled magic-link test |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
@@ -168,9 +170,7 @@ After deployment, verify the served production response—not only browser cache
 2. Confirm one real Supabase/Resend magic-link delivery and saved session.
 3. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
 4. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
-5. Separate SEO eligibility from publication and adopt an evidence-based usefulness threshold for thin taxonomy pages.
-6. Decide the mixed `darebin` council/suburb taxonomy and document the migration rule.
-7. Add outbound website safety/freshness checks and a constrained media/logo pipeline only after the core launch gates pass.
+5. Add outbound website safety/freshness checks and a constrained media/logo pipeline only after the core launch gates pass.
 
 ## Cleanup boundary
 

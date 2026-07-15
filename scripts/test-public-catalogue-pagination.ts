@@ -7,6 +7,7 @@ import {
   publishedSuburbSlugs,
   type PublicVendorRouteRow,
 } from "../web/src/lib/public-catalogue";
+import { taxonomyEligibilityKey, type TaxonomyPageEligibilityRow } from "../web/src/lib/taxonomy-eligibility";
 
 function rows(count: number): PublicVendorRouteRow[] {
   return Array.from({ length: count }, (_, index) => ({
@@ -74,7 +75,24 @@ async function run() {
     /data is missing/,
   );
 
-  const urls = buildPublicSitemapUrls(sixteenHundred);
+  const taxonomyRows: TaxonomyPageEligibilityRow[] = [
+    { route_type: "category", suburb_slug: null, category_slug: "after-page-one", qualified_listing_count: 4 },
+    { route_type: "suburb", suburb_slug: "late-suburb", category_slug: null, qualified_listing_count: 7 },
+    { route_type: "pair", suburb_slug: "late-suburb", category_slug: "after-page-one", qualified_listing_count: 3 },
+  ];
+  const taxonomyCalls: Array<[number, number]> = [];
+  const collectedTaxonomyRows = await collectAllPages(
+    async (from, to) => {
+      taxonomyCalls.push([from, to]);
+      return { data: taxonomyRows.slice(from, to + 1), count: taxonomyRows.length, error: null };
+    },
+    2,
+    taxonomyEligibilityKey,
+  );
+  assert.deepEqual(collectedTaxonomyRows, taxonomyRows);
+  assert.deepEqual(taxonomyCalls, [[0, 1], [2, 3]]);
+
+  const urls = buildPublicSitemapUrls(sixteenHundred, taxonomyRows);
   assert.equal(new Set(urls).size, urls.length);
   assert(urls.every((url) => url.startsWith("https://suburbmates.com.au")));
   assert(urls.includes("https://suburbmates.com.au/vendor/business-1600"));
@@ -82,6 +100,8 @@ async function run() {
   assert(urls.includes("https://suburbmates.com.au/categories/after-page-one"));
   assert(urls.includes("https://suburbmates.com.au/late-suburb"));
   assert(urls.includes("https://suburbmates.com.au/late-suburb/after-page-one"));
+  assert(!urls.includes("https://suburbmates.com.au/categories/category-0"));
+  assert(!urls.includes("https://suburbmates.com.au/suburb-0"));
   for (const route of ["", "/businesses", "/locations", "/categories", "/how-it-works", "/contact", "/privacy"]) {
     assert(urls.includes(`https://suburbmates.com.au${route}`));
   }

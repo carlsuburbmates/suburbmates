@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { buildPublicSitemapUrls, fetchAllPublishedVendorRouteRows } from '@/lib/public-catalogue';
+import { buildPublicSitemapUrls, fetchAllPublishedVendorRouteRows, fetchAllTaxonomyPageEligibility } from '@/lib/public-catalogue';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +11,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://suburbmates.com.au';
-  const vendors = await fetchAllPublishedVendorRouteRows(supabase);
-  return buildPublicSitemapUrls(vendors, baseUrl).map((url) => ({ url }));
+  const [vendors, taxonomyRows] = await Promise.all([
+    fetchAllPublishedVendorRouteRows(supabase),
+    fetchAllTaxonomyPageEligibility(supabase),
+  ]);
+  return buildPublicSitemapUrls(vendors, taxonomyRows, baseUrl).map((url) => ({ url }));
 }
