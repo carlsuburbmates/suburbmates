@@ -1,0 +1,47 @@
+name: Production smoke
+
+on:
+  schedule:
+    - cron: "23 19 * * *"
+      timezone: "Australia/Melbourne"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Check production end to end
+        env:
+          BASE_URL: https://suburbmates.com.au
+          SMOKE_SUPABASE_URL: ${{ secrets.SMOKE_SUPABASE_URL }}
+          SMOKE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SMOKE_SUPABASE_PUBLISHABLE_KEY }}
+        run: node scripts/production-smoke.mjs
+
+      - name: Open or update one failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title='[Production smoke] Live checks failing'
+          body="Production smoke failed: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
