@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { runtimeEnv } from '@/lib/runtime-env';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1];
-    if (token !== process.env.REVALIDATION_TOKEN) {
+    if (!token || token !== runtimeEnv('REVALIDATION_TOKEN')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
