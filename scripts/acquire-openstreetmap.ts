@@ -165,7 +165,7 @@ out tags center;`;
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
           'Accept': 'application/json',
-          'User-Agent': 'suburbmates-directory-importer/0.1.0 (contact@suburbmates.test)'
+        'User-Agent': 'SuburbMates-directory-importer/1.0 (+https://suburbmates.com.au/contact)'
         },
         body: `data=${encodeURIComponent(query)}`
       });

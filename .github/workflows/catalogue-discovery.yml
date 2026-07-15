@@ -1,0 +1,44 @@
+name: Catalogue candidate discovery
+
+on:
+  schedule:
+    - cron: "17 18 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalogue-candidate-discovery
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run acquire:osm
+      - run: npm run audit -- data/vendor-candidates-osm.csv
+      - run: npm run catalogue:merge
+      - run: npm run audit -- data/vendor-candidates-merged.csv
+      - run: npm run catalogue:report -- data/vendor-candidates-merged.csv
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: catalogue-candidates-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            data/vendor-candidates-osm.csv
+            data/vendor-candidates-merged.csv
+
+      - name: Confirm publication boundary
+        run: echo "Candidates were acquired and audited only. No database seed or publication command ran."
