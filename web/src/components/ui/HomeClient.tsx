@@ -34,12 +34,12 @@ const valueProps = [
   {
     icon: Phone,
     title: "Direct Contact",
-    desc: "Phone numbers are never hidden behind a paywall. Call or message any local professional immediately.",
+    desc: "When a business provides public contact details, SuburbMates displays them directly without selling the enquiry.",
   },
   {
     icon: Shield,
-    title: "Locals Only",
-    desc: "Every business actually operates in the suburbs they claim to service.",
+    title: "Local Discovery",
+    desc: "Browse published listings organised by their stored suburb and category, with corrections handled through review.",
   },
   {
     icon: Store,

@@ -1,6 +1,6 @@
 # SuburbMates
 
-SuburbMates is a public, hyper-local business directory for the City of Darebin, with Northcote as the current priority. The directory publishes real business listings even when contact information is incomplete. A business owner can later claim and enrich a listing.
+SuburbMates is a public, hyper-local business directory for the City of Darebin. Published listings can remain useful when some contact information is unavailable. New discoveries, ownership claims, and owner changes enter reviewed workflows before they affect public state.
 
 Read [`docs/HANDOVER.md`](docs/HANDOVER.md) before changing the project. It is the canonical project context, current-state record, operating guide, and next-work queue.
 
@@ -22,4 +22,4 @@ npm run lint
 npm run build
 ```
 
-Stripe and Cloudflare configuration remain in the repository and connected accounts. They are intentionally outside the current vendor-catalogue workstream.
+Cloudflare delivers the production site. Stripe remains deliberately disabled until an optional paid product is defined; it is never a publication prerequisite.

@@ -1,158 +1,168 @@
 # SuburbMates Handover
 
-**Purpose:** canonical context for the next Codex or Antigravity session.
+**Purpose:** canonical current-state and operating context for future SuburbMates work.
 
 **Repository:** `/Users/carlg/Documents/AI-Coding/suburbmates`
 
-**Current priority:** continue expanding the real-business catalogue for the City of Darebin, Northcote first, and maintain the verified public directory website. Do not create dummy businesses.
+**Product authority:** the locked documents in `docs/REFERENCE/`. This handover records the implementation that currently exists; it must not override those specifications.
 
 ## Product objective
 
-SuburbMates is a public local-business directory, not a lead-selling or quotation middleman. Every discoverable real business can have a public listing with:
+SuburbMates is a public local-business directory for the City of Darebin. Residents browse published listings and contact businesses directly. It is not a quote marketplace, lead seller, or payment gate.
 
-- business name
-- category
-- suburb
-- street address when publicly available
-- public phone or email when available
-- website and source provenance when available
+The launch model is deliberately review-first:
 
-Listings are public even when incomplete. A visitor can search or browse a listing and open its directory-style minisite. A business owner can claim a matching listing by email and enrich it. A business does not need its own website to appear.
+- new discoveries and submissions remain unpublished until an operator approves them;
+- ownership, publication, payment, ABN evidence, tier, and SEO eligibility are independent states;
+- an email match supports a claim but never grants ownership automatically;
+- owner changes are proposals and never alter the public listing before review;
+- automated checks and external integrations provide evidence, not publication authority;
+- no workflow may invent business facts, silently delete records, or weaken audit history.
 
-## Post-launch operating model
+## Current hosted state
 
-Once launched, SuburbMates is intended to operate as an autonomous directory pipeline rather than a manually curated staff workflow. The system can acquire real public business records, normalize and deduplicate them, publish complete or incomplete listings, generate the directory minisite from the stored record, and support owner-initiated claiming and enrichment.
+Reverified on 16 July 2026 (Australia/Melbourne):
 
-Autonomous operation does not mean that secrets, destructive database changes, legal or policy decisions, abuse handling, or paid-product changes should be made unattended. The default automation boundary is: discover, audit, deduplicate, upsert, publish, render, and accept owner claims; do not silently delete, invent, or materially alter a business record.
+- 1,621 vendor rows total;
+- 1,600 published rows;
+- 21 unpublished legacy rows awaiting classification;
+- 0 active operators pending selection of the permanent operator email;
+- 0 open claims, profile changes, listing drafts, or genuine contact requests at the verification checkpoint;
+- three failed claim-test identities were removed; their three truthfully labelled audit events remain immutable;
+- the public sitemap contains all 1,600 vendor URLs, 175 category URLs, 10 location URLs, and 406 suburb/category URLs (2,197 URLs total).
 
-## Current source of truth
+Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
-The repository code, migrations, data files, and hosted Supabase database are authoritative. Old Antigravity plans, screenshots, transcripts, and audit reports are not authoritative and were removed or are being removed from the active project context.
+## Production website
 
-Current hosted database snapshot, reverified on 15 July 2026:
+Production is `https://suburbmates.com.au`; `www.suburbmates.com.au` permanently redirects to the apex domain. The app is a Next.js App Router deployment packaged by OpenNext and served by the Cloudflare Worker `suburbmates`.
 
-- 1,621 vendor rows total.
-- 1,600 rows published publicly.
-- 16 rows sourced from the Northcote Rise association directory.
-- 21 rows are not currently published; inspect their state before changing publication behavior.
+The current runtime path is `web/`. Do not deploy the obsolete root Worker. Do not add blanket Edge runtime declarations: the supported deployment uses the Next.js Node.js runtime through OpenNext.
 
-The prior 1,582-row merged CSV is a source baseline, not a guarantee that it exactly equals the current hosted database. The hosted count must be rechecked after each catalogue import.
-
-## Production website status
-
-The full Next.js directory is deployed to the existing Cloudflare Worker and publicly served at `https://suburbmates.com.au`. The 15 July 2026 release was verified against live Supabase data across the homepage, business browse page, Northcote page, categories, suburb/category results, claim/login path, locations, sitemap, and a real vendor minisite. `www.suburbmates.com.au` permanently redirects to the canonical apex domain.
-
-The Cloudflare OpenNext adapter uses the Next.js Node.js runtime. Do not add `export const runtime = 'edge'` to pages or route handlers; that configuration produced HTTP 500 responses in the packaged Worker. Build and preview the Cloudflare bundle before deployment with `npm run cf:build` and `npm run cf:preview` from `web/`.
-
-## Architecture
-
-- `web/`: Next.js App Router public directory and authenticated owner flows.
-- `web/src/app/(directory)/businesses/`: searchable public browse page.
-- `web/src/app/(directory)/[suburb]/`: suburb directory pages.
-- `web/src/app/(directory)/[suburb]/[service]/`: suburb/category pages.
-- `web/src/app/vendor/[slug]/`: directory minisites.
-- `web/src/app/(directory)/claim/`: email-matched self-service claims.
-- `web/src/app/(directory)/dashboard/`: owner profile enrichment.
-- `supabase/migrations/`: schema, RLS, claim RPCs, provenance, and owner profile update history.
-- `scripts/`: acquisition, audit, merge, import, reporting, and tests.
-- `data/`: source-specific candidate files and catchment manifest.
-
-The public UI intentionally filters to `is_published = true`. New catalogue imports are published immediately by `scripts/seed.ts`; owner claiming does not require staff approval and does not hide the listing.
-
-## Vendor workflow
-
-1. Acquire a real source record.
-2. Normalize and audit the source file.
-3. Compare name, address, phone, website, and source identity against the full hosted catalogue.
-4. Upsert the record without overwriting owner-entered values with blanks.
-5. Publish the new listing immediately.
-6. Allow the owner to sign in using the matching contact email and claim it.
-7. Allow the owner to edit business name, address, email, phone, website, and description.
-
-Same-name businesses at different addresses remain separate. Do not merge by name alone.
-
-## Monetisation strategy
-
-The baseline directory is free to businesses: real listings are discoverable, including listings with incomplete public information, and owners can claim and enrich their listing without needing to buy a website. Monetisation is an optional layer on top of that public utility, not a gate on catalogue inclusion.
-
-The current direction is to test paid owner upgrades such as enhanced minisite presentation, featured placement, richer contact or media sections, and subscription-based business tools after the free directory demonstrates traffic and claim demand. Featured placement must be clearly labelled and must not remove ordinary businesses from relevant search or suburb results.
-
-Stripe is intentionally deferred. No paid plan, checkout, billing entitlement, or Stripe-dependent workflow should be treated as launch-critical. The monetisation model is open to recommendation and discussion at any point; any recommendation must preserve free public discovery, transparent ranking, and the owner-claim model.
-
-## Current acquisition sources
-
-- OpenStreetMap commercial features across the Darebin catchment: `scripts/acquire-openstreetmap.ts`.
-- Curated real records: `data/vendor-candidates.csv`.
-- Northcote Rise association directory: `data/vendor-candidates-northcote-rise.csv`.
-- Darebin’s official association page is the local source index. Preston Central and Fairfield Village expose larger directories and are the next acquisition targets. Reservoir currently has no equivalent public directory linked from Council.
-
-The acquisition rules are in [`vendor-acquisition-strategy.md`](vendor-acquisition-strategy.md). Do not scrape closed directories such as Yellow Pages, White Pages, Google Places, Foursquare, or Facebook without an explicit licence permitting persistent directory storage and display.
-
-## Import commands
-
-From the repository root:
+Required delivery checks from `web/`:
 
 ```bash
-npm run check
-npm run audit -- data/vendor-candidates-merged.csv
-npm run seed -- --dry-run data/vendor-candidates-merged.csv
-npm run seed -- data/vendor-candidates-merged.csv
-npm run audit -- data/vendor-candidates-northcote-rise.csv
-npm run seed -- --dry-run data/vendor-candidates-northcote-rise.csv
-npm run seed -- data/vendor-candidates-northcote-rise.csv
-npm run catalogue:report -- data/vendor-candidates-merged.csv
+npm run lint
+npm run build
+npm run cf:build
 ```
 
-`scripts/seed.ts` now paginates existing Supabase vendors in 1,000-row pages before reconciliation. This is required because Supabase responses otherwise stop at the first 1,000 rows.
+`cf:build` includes a credential scan and must fail if known server secrets appear in the Worker bundle. Server credentials belong in Cloudflare secret bindings, never `web/.env.local` or committed configuration. Only public browser configuration may be present at build time.
 
-## Tests and verification
+## Implemented architecture
 
-Root checks:
+### Public directory
+
+- `/`, `/businesses`, `/categories`, `/locations`: discovery surfaces.
+- `/[suburb]` and `/[suburb]/[service]`: taxonomy pages; empty combinations use `noindex, follow`.
+- `/vendor/[id]`: published business profile, canonical metadata, and evidence-limited LocalBusiness JSON-LD.
+- `/sitemap.xml`: force-dynamic, complete paginated published catalogue; never includes `/ops`.
+- `/contact`: private support intake protected by hostname-restricted Cloudflare Turnstile.
+- `/how-it-works`: plain-language publication, claim, and owner-edit model.
+
+Public catalogue reads that can exceed 1,000 rows must use `web/src/lib/public-catalogue.ts`. Never restore a single unpaginated Supabase vendor query for sitemap, category, or location coverage.
+
+### Owners
+
+- `/login`: Supabase passwordless email authentication.
+- `/claim`: a matching authenticated email can submit a pending claim request only.
+- `/dashboard`: an approved owner can submit a proposed profile change.
+- claim approval, rejection, information requests, and revocation are operator-only and audited;
+- profile changes remain separate from the public vendor row until operator approval;
+- authenticated owners have no direct table or legacy RPC path to update public vendor fields.
+
+### Operations
+
+`/ops` is deny-by-default and requires both a valid Supabase session and an active `operator_users` row. Service credentials are not an alternate operator identity.
+
+Implemented queues:
+
+- `/ops/listings`: draft, review, publish, reject, unpublish, restore, and legacy classification;
+- `/ops/claims`: reviewed ownership requests and revocation;
+- `/ops/profile-edits`: moderated owner proposals with stale-base detection;
+- `/ops/contact`: private support requests and audited resolution state;
+- `/ops/system`: integration health, automation jobs, and append-only audit history.
+
+Operator actions use authenticated `SECURITY DEFINER` RPCs that call `private.require_active_operator()`, lock mutable records, validate transitions, and append audit events atomically. Publication never changes as a side effect of ownership, ABN, payment, or tier.
+
+No permanent operator is enrolled yet. Do not enrol the temporary `carl@suburbmates.com.au` identity or the Stripe-only Yahoo identity by assumption. After the owner selects the permanent email, that person must sign in once before a single active operator row is added and audited.
+
+## Data and acquisition workflow
+
+The safe automated discovery path is:
+
+1. acquire public-source candidates;
+2. normalize, audit, and deduplicate them;
+3. generate a review artifact;
+4. import new rows as `pending_review` and unpublished;
+5. let an operator review evidence and approve publication.
+
+`scripts/seed.ts` preserves publication for existing rows and explicitly sets new rows to unpublished pending review. It must never auto-publish. Empty import fields must not erase existing stored values, and same-name businesses at different addresses must remain distinct.
+
+The weekly GitHub `Catalogue Discovery` workflow runs acquisition/audit/merge checks without secrets, uploads the candidate artifact, and never writes to the hosted database. Moving approved candidates automatically into the private review queue is still pending; automatic public publication remains prohibited.
+
+Current allowed sources and rules are documented in `docs/vendor-acquisition-strategy.md` and `docs/openstreetmap-acquisition.md`. Do not persist data from closed directories without a licence permitting storage and display.
+
+## Safety and audit invariants
+
+- `audit_events` is append-only for every application role, including service paths.
+- `actor_user_id` is an immutable historical UUID, intentionally not a live-auth foreign key; deleting an account must not rewrite history.
+- hosted mutation tests are prohibited by default because labelled audit evidence cannot be deleted.
+- destructive legacy inactivity pruning and the legacy AI publication function are disabled.
+- listing imports, claim decisions, profile edits, contact intake, and listing lifecycle actions preserve unrelated business state.
+- generated or test build output is ignored and must not be committed.
+
+## Integrations
+
+| Service | Purpose | Current status |
+| --- | --- | --- |
+| GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716100000` |
+| Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
+| Resend | Supabase Auth SMTP only at launch | Domain verified; confirm the actual Supabase SMTP path with one controlled magic-link test |
+| Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
+| ABN Lookup | Optional supporting evidence | Credential works; no workflow enabled; never gate listing, claim, or publication on ABN alone |
+
+No paid service is required for launch. Keep Stripe and bulk ABR work disabled until a real product need exists. Custom notification email is optional and must not gate database persistence.
+
+## Verification commands
+
+Repository-safe checks:
 
 ```bash
 npm run check
 npm run audit:test
-npm run catalogue:merge:test
 npm run acquire:osm:test
-npm run claim:test
+npm run catalogue:merge:test
 npm run seed:test
-npm run verify:db
+npm run public-catalogue:test
 ```
 
 Web checks:
 
 ```bash
 cd web
+npm run lint
 npm run build
+npm run cf:build
 ```
 
-The production build passes. The generic `npm run lint` command currently scans generated OpenNext output when that output exists and reports pre-existing generated-code and source `any` issues; use focused ESLint scopes while that cleanup is handled. The live Supabase claim test creates temporary users and a vendor, verifies claim isolation and profile enrichment, then removes all test rows.
+`npm run claim:test` is mutation-bearing and intentionally refuses a hosted project unless `ALLOW_APPEND_ONLY_TEST_AUDIT=true`. Use rollback-only SQL or a disposable Supabase environment for lifecycle/authorization acceptance. If a hosted test is explicitly authorised, it must leave no user, listing, claim, or request residue and must accept its labelled immutable audit event.
 
-## Integrated accounts and access references
+After deployment, verify the served production response—not only browser cache—for `/`, `/contact`, `/sitemap.xml`, `/categories`, one populated taxonomy page, one empty/noindex taxonomy page, one vendor page, and unauthenticated `/ops` denial.
 
-These are the current project integrations. This list contains identifiers for reference only, never credentials. Secrets remain in the local environment and connected account settings.
+## Remaining work
 
-| Service | Current project/account reference | Use | Status |
-| --- | --- | --- | --- |
-| GitHub | `carlsuburbmates/suburbmates` | Source repository and change history | Current source repository |
-| Supabase | Remote project `lqxohgpignkqqfkkbzsn` (`lqxohgpignkqqfkkbzsn.supabase.co`) | Hosted PostgreSQL, Auth, RLS, vendor catalogue, claims, and remote MCP access | Preferred and remote-only |
-| Cloudflare | Worker/service `suburbmates` | Production edge delivery and deployment target | Connected; domain/infrastructure work remains separate from catalogue work |
-| Domain registrar | VentraIP domain account for `suburbmates.com.au` | Registrar and nameserver control | Cloudflare is the DNS authority; do not move DNS back to Vercel |
-| Resend | Sending domain `info.suburbmates.com.au` | Transactional email for claims and owner workflows | Connected; verify DNS/domain status before relying on email |
-| Stripe | Existing connected Stripe configuration | Future paid upgrades, featured placement, or subscriptions | Deferred; do not make it a prerequisite |
-| Local MCP | Supabase MCP configured in `.mcp.json` | Controlled access to the remote Supabase project | Configured; never commit its access token |
-
-Supabase must remain remote-integrated only. Do not start or add a local Supabase Docker stack, local database dump, or local replica for normal development; this avoids unnecessary local storage and prevents agents from mistaking a local database for the production source of truth. Use the hosted project through the configured environment and MCP connection, with read-only inspection preferred outside explicit import or claim tests.
-
-## Known gaps and next work
-
-1. Build a repeatable source adapter for Preston Central and Fairfield Village, with source-specific staging files and address-aware duplicate reports.
-2. Investigate the 21 unpublished hosted rows and document why they are unpublished before changing the public policy.
-3. Reconcile the hosted database against all canonical source files and report additions, enrichments, duplicates, and stale records.
-4. Repeat the live route verification after website or catalogue releases.
-5. Keep owner claims self-service and preserve public visibility for incomplete listings.
-6. Defer paid monetization, Stripe behavior, and domain cutover unless explicitly brought back into scope.
+1. Select and enrol one permanent operator, then test every authenticated `/ops` queue in the browser.
+2. Confirm one real Supabase/Resend magic-link delivery and saved session.
+3. Add reviewed business-submission intake for businesses not already in the catalogue.
+4. Conservatively normalise existing listing-source/evidence records without inventing provenance.
+5. Separate SEO eligibility from publication and adopt an evidence-based usefulness threshold for thin taxonomy pages.
+6. Add stable public vendor slugs plus permanent redirect history while preserving current UUID URLs.
+7. Automate post-deploy live smoke checks and failure-only notification using free allowances.
+8. Decide the mixed `darebin` council/suburb taxonomy and document the migration rule.
+9. Add outbound website safety/freshness checks and a constrained media/logo pipeline only after the core launch gates pass.
 
 ## Cleanup boundary
 
-This handover is the durable project context. Do not recreate raw session transcripts, screenshots, recordings, speculative architecture plans, or repeated audit batches in the repository. Put durable decisions in this document or update the focused operational document that owns the workflow.
+Keep durable decisions in this handover or the focused document that owns the workflow. Do not add raw transcripts, screenshots, recordings, build output, credentials, or repeated speculative plans to the repository.

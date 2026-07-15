@@ -3,6 +3,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { fetchAllPublishedVendorRouteRows, publishedSuburbSlugs } from '@/lib/public-catalogue';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Service Locations | SuburbMates',
   description: 'Browse locations with published local business listings.',

@@ -20,8 +20,8 @@ export default function JoinPage() {
         <div className="grid md:grid-cols-2 gap-6 text-left max-w-2xl mx-auto pt-8 pb-12">
           <div className="bg-white p-6 rounded-2xl border shadow-sm">
             <ShieldCheck size={32} className="text-black mb-4" />
-            <h3 className="text-xl font-bold mb-2">Locals Only</h3>
-            <p className="text-slate-600">Customers trust SuburbMates because we only list businesses that actually service their suburbs.</p>
+            <h3 className="text-xl font-bold mb-2">Reviewed changes</h3>
+            <p className="text-slate-600">Claims and owner updates are reviewed before they change ownership or public listing details.</p>
           </div>
           <div className="bg-white p-6 rounded-2xl border shadow-sm">
             <Zap size={32} className="text-black mb-4" />
