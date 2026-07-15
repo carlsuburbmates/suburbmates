@@ -8,9 +8,9 @@ export const metadata = {
 
 export default async function ClaimPage() {
   const supabase = await createClient();
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (error || !session) {
+  if (error || !user) {
     redirect("/login?next=/claim");
   }
 
@@ -20,7 +20,7 @@ export default async function ClaimPage() {
         <div>
           <h1 className="text-4xl font-black tracking-tight mb-2">Claim Your Business</h1>
           <p className="text-slate-600">
-            Sign in using the business contact email. Matching listings can be claimed instantly.
+            Sign in using the business contact email. An email match supports your request, but ownership is granted only after review.
           </p>
         </div>
         

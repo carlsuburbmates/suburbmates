@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Building, MapPin, Tag, CheckCircle2, AlertCircle, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 type ClaimableVendor = {
   id: string;
@@ -20,7 +19,6 @@ export default function ClaimClient() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [supabase] = useState(createClient);
-  const router = useRouter();
 
   useEffect(() => {
     const loadClaimableListings = async () => {
@@ -44,17 +42,16 @@ export default function ClaimClient() {
     setError(null);
     setSuccess(null);
 
-    const { error: claimError } = await supabase.rpc("claim_vendor_for_current_email", {
+    const { error: claimError } = await supabase.rpc("submit_claim_for_current_email", {
       p_vendor_id: vendorId,
+      p_claimant_note: null,
     });
 
     if (claimError) {
-      setError(claimError.message || "Unable to claim this listing. Please try again.");
+      setError(claimError.message || "Unable to submit this claim request. Please try again.");
     } else {
-      setSuccess("Your listing is now claimed. You can update it from your dashboard.");
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
+      setResults((current) => current.filter((vendor) => vendor.id !== vendorId));
+      setSuccess("Your claim request has been submitted for review. The listing remains public and unchanged while the request is assessed.");
     }
     setClaimingId(null);
   };
@@ -84,7 +81,7 @@ export default function ClaimClient() {
       {!loading && !error && results.length === 0 && (
         <div className="rounded-2xl border bg-white p-8 text-center shadow-sm">
           <Mail className="mx-auto mb-4 text-slate-400" size={28} />
-          <h2 className="text-xl font-bold">No automatic claim is available</h2>
+          <h2 className="text-xl font-bold">No listing is ready for a claim request</h2>
           <p className="mt-2 text-sm text-slate-600">
             This email does not match an unclaimed listing contact. The business can remain publicly listed while its contact details are updated.
           </p>
@@ -116,7 +113,7 @@ export default function ClaimClient() {
                   disabled={claimingId === vendor.id || success !== null}
                   className="btn btn-primary whitespace-nowrap"
                 >
-                  {claimingId === vendor.id ? "Claiming..." : "Claim Business"}
+                  {claimingId === vendor.id ? "Submitting..." : "Submit Claim Request"}
                 </button>
               </div>
             ))}
