@@ -37,7 +37,7 @@ Never infer the reason for a legacy row’s state. Recheck hosted counts before 
 
 Production is `https://suburbmates.com.au`; `www.suburbmates.com.au` permanently redirects to the apex domain. The app is a Next.js App Router deployment packaged by OpenNext and served by the Cloudflare Worker `suburbmates`.
 
-The current runtime path is `web/`. Do not deploy the obsolete root Worker. Do not add blanket Edge runtime declarations: the supported deployment uses the Next.js Node.js runtime through OpenNext.
+The only runtime and deployment path is `web/`; the obsolete root Worker and its deployment commands have been removed. Do not add blanket Edge runtime declarations: the supported deployment uses the Next.js Node.js runtime through OpenNext.
 
 Required delivery checks from `web/`:
 
@@ -159,9 +159,8 @@ After deployment, verify the served production response—not only browser cache
 4. Conservatively normalise existing listing-source/evidence records without inventing provenance.
 5. Separate SEO eligibility from publication and adopt an evidence-based usefulness threshold for thin taxonomy pages.
 6. Add stable public vendor slugs plus permanent redirect history while preserving current UUID URLs.
-7. Automate post-deploy live smoke checks and failure-only notification using free allowances.
-8. Decide the mixed `darebin` council/suburb taxonomy and document the migration rule.
-9. Add outbound website safety/freshness checks and a constrained media/logo pipeline only after the core launch gates pass.
+7. Decide the mixed `darebin` council/suburb taxonomy and document the migration rule.
+8. Add outbound website safety/freshness checks and a constrained media/logo pipeline only after the core launch gates pass.
 
 ## Cleanup boundary
 

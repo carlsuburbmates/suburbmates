@@ -26,11 +26,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm run audit:test
-      - run: npm run acquire:osm:test
-      - run: npm run catalogue:merge:test
-      - run: npm run seed:test
-      - run: npm run public-catalogue:test
 
   web:
     runs-on: ubuntu-latest

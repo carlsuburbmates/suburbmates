@@ -14,12 +14,13 @@ npm run seed -- --dry-run data/vendor-candidates-merged.csv
 npm run catalogue:report -- data/vendor-candidates-merged.csv
 ```
 
-The web application lives in `web/`. Run its checks from that directory:
+The repository root contains catalogue acquisition, audit, and import tooling. The only web runtime and deployment configuration lives in `web/`; `npm run dev` at the root safely delegates there. Run web delivery checks from that directory:
 
 ```bash
 npm install
 npm run lint
 npm run build
+npm run cf:build
 ```
 
 Cloudflare delivers the production site. Stripe remains deliberately disabled until an optional paid product is defined; it is never a publication prerequisite.
