@@ -4,9 +4,10 @@ import { AxeCore } from "@/components/AxeCore";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://suburbmates.com.au"),
-  title: "SuburbMates — Local Trades, Zero Noise",
-  description: "Find local tradespeople in your suburb. No paywalls, no middlemen. Direct contact.",
+  title: "SuburbMates — Preparing for launch",
+  description: "SuburbMates is preparing a better way to discover local businesses.",
   alternates: { canonical: "/" },
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({
