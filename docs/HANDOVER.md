@@ -114,7 +114,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 - `audit_events` is append-only for every application role, including service paths.
 - `actor_user_id` is an immutable historical UUID, intentionally not a live-auth foreign key; deleting an account must not rewrite history.
 - hosted mutation tests are prohibited by default because labelled audit evidence cannot be deleted.
-- destructive legacy inactivity pruning and the legacy AI publication function are disabled.
+- destructive legacy inactivity pruning, legacy AI publication, and legacy media processing are disabled; both local Edge Function tombstones are CI-checked for absence of service-role capability, and the linked hosted project has zero deployed Edge Functions and zero storage buckets.
 - resolved contact content is deleted after 12 months and spam content after 30 days by a private daily retention job; audit history retains no deleted message content.
 - listing imports, claim decisions, profile edits, contact intake, and listing lifecycle actions preserve unrelated business state.
 - generated or test build output is ignored and must not be committed.
