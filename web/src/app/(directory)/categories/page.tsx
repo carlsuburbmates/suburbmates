@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { fetchAllPublishedVendorRouteRows, publishedCategorySlugs } from '@/lib/public-catalogue';
 
 export const metadata: Metadata = {
   title: 'Business Categories | SuburbMates',
@@ -14,11 +15,12 @@ export default async function CategoriesPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const { data: vendorCategories } = await supabase.from('vendors').select('category_slug').eq('is_published', true);
-  const slugs = [...new Set((vendorCategories ?? []).map((vendor) => vendor.category_slug).filter(Boolean))] as string[];
-  const { data: categories } = slugs.length
+  const vendorRows = await fetchAllPublishedVendorRouteRows(supabase);
+  const slugs = publishedCategorySlugs(vendorRows);
+  const { data: categories, error } = slugs.length
     ? await supabase.from('categories').select('name, slug').in('slug', slugs).order('name')
-    : { data: [] };
+    : { data: [], error: null };
+  if (error) throw new Error('Published categories could not be loaded.');
   
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">

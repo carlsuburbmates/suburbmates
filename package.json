@@ -18,6 +18,7 @@
     "catalogue:merge": "tsx --env-file=.env.local scripts/merge-vendor-catalogues.ts",
     "catalogue:merge:test": "tsx --env-file-if-exists=.env.local scripts/test-merge-vendor-catalogues.ts",
     "catalogue:report": "tsx scripts/report-catalogue-coverage.ts",
+    "public-catalogue:test": "tsx scripts/test-public-catalogue-pagination.ts",
     "verify:db": "tsx --env-file=.env.local scripts/verify-db.ts"
   },
   "devDependencies": {

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { fetchAllPublishedVendorRouteRows, publishedSuburbSlugs } from '@/lib/public-catalogue';
 
 export const metadata: Metadata = {
   title: 'Service Locations | SuburbMates',
@@ -14,11 +15,12 @@ export default async function LocationsPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const { data: vendorSuburbs } = await supabase.from('vendors').select('suburb_slug').eq('is_published', true);
-  const slugs = [...new Set((vendorSuburbs ?? []).map((vendor) => vendor.suburb_slug).filter(Boolean))] as string[];
-  const { data: suburbs } = slugs.length
+  const vendorRows = await fetchAllPublishedVendorRouteRows(supabase);
+  const slugs = publishedSuburbSlugs(vendorRows);
+  const { data: suburbs, error } = slugs.length
     ? await supabase.from('suburbs').select('name, slug').in('slug', slugs).order('name')
-    : { data: [] };
+    : { data: [], error: null };
+  if (error) throw new Error('Published locations could not be loaded.');
   
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
