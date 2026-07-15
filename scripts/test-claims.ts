@@ -8,6 +8,14 @@ if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
   throw new Error('Missing Supabase test credentials.');
 }
 
+const supabaseHostname = new URL(supabaseUrl).hostname;
+const isLocalDatabase = supabaseHostname === 'localhost' || supabaseHostname === '127.0.0.1';
+if (!isLocalDatabase && process.env.ALLOW_APPEND_ONLY_TEST_AUDIT !== 'true') {
+  throw new Error(
+    'Claim mutation tests leave append-only audit records. Run against a local/disposable Supabase project, or explicitly set ALLOW_APPEND_ONLY_TEST_AUDIT=true.',
+  );
+}
+
 const anonClient = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
 const serviceClient = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } });
 

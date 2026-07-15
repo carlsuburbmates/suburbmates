@@ -14,7 +14,15 @@ type Vendor = {
   description: string | null;
 };
 
-export default function ProfileEditor({ vendor }: { vendor: Vendor }) {
+type ProfileChange = {
+  change_request_id: string;
+  change_status: string;
+  proposed_changes: Partial<Vendor>;
+  operator_note: string | null;
+  created_at: string;
+};
+
+export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor; latestChange: ProfileChange | null }) {
   const [businessName, setBusinessName] = useState(vendor.business_name || "");
   const [streetAddress, setStreetAddress] = useState(vendor.street_address || "");
   const [contactEmail, setContactEmail] = useState(vendor.contact_email || "");
@@ -23,6 +31,7 @@ export default function ProfileEditor({ vendor }: { vendor: Vendor }) {
   const [description, setDescription] = useState(vendor.description || "");
   
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +43,7 @@ export default function ProfileEditor({ vendor }: { vendor: Vendor }) {
     setError(null);
     setSuccess(null);
 
-    const { error } = await supabase.rpc("update_vendor_profile", {
+    const { error } = await supabase.rpc("submit_vendor_profile_change", {
       p_vendor_id: vendor.id,
       p_business_name: businessName,
       p_street_address: streetAddress || null,
@@ -42,13 +51,14 @@ export default function ProfileEditor({ vendor }: { vendor: Vendor }) {
       p_phone: phone || null,
       p_website: website || null,
       p_description: description || null,
+      p_submitter_note: null,
     });
 
     if (error) {
-      setError(error.message || "Failed to update profile.");
+      setError(error.message || "Failed to submit changes for review.");
     } else {
-      setSuccess("Profile updated successfully!");
-      setTimeout(() => setSuccess(null), 3000);
+      setSubmitted(true);
+      setSuccess("Changes submitted for review. Your current public profile remains unchanged until approval.");
     }
     
     setLoading(false);
@@ -56,6 +66,21 @@ export default function ProfileEditor({ vendor }: { vendor: Vendor }) {
 
   return (
     <form onSubmit={handleSave} className="space-y-6 mt-6 border-t border-slate-100 pt-6">
+      <p className="text-sm text-slate-600">
+        Edits are reviewed before they appear publicly. Your current listing stays unchanged while a request is pending.
+      </p>
+
+      {(latestChange?.change_status === "pending" || submitted) && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+          Changes awaiting review. A new request can be submitted after this one is decided.
+        </div>
+      )}
+      {latestChange?.change_status === "rejected" && (
+        <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+          <p className="font-semibold">The previous changes were not approved.</p>
+          {latestChange.operator_note && <p className="mt-2">Operator note: {latestChange.operator_note}</p>}
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-slate-700 mb-1">Business Name</label>
@@ -131,10 +156,10 @@ export default function ProfileEditor({ vendor }: { vendor: Vendor }) {
       <div className="flex justify-end pt-4">
         <button 
           type="submit" 
-          disabled={loading}
+          disabled={loading || latestChange?.change_status === "pending" || submitted}
           className="btn btn-primary px-8"
         >
-          {loading ? "Saving..." : "Save Profile"}
+          {loading ? "Submitting…" : latestChange?.change_status === "pending" || submitted ? "Awaiting review" : "Submit changes for review"}
         </button>
       </div>
     </form>

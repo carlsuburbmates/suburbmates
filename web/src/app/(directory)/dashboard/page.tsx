@@ -7,10 +7,9 @@ import ProfileEditor from './ProfileEditor'
 export default async function DashboardPage() {
   const supabase = await createClient()
   
-  // Secure route via server-side session validation
-  const { data: { session }, error } = await supabase.auth.getSession()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  if (error || !session) {
+  if (error || !user) {
     redirect('/login?next=/dashboard')
   }
 
@@ -18,7 +17,13 @@ export default async function DashboardPage() {
   const { data: ownedVendors } = await supabase
     .from('vendors')
     .select('id, business_name, suburb_slug, category_slug, tier, is_published, street_address, contact_email, phone, website, description')
-    .eq('owner_id', session.user.id)
+    .eq('owner_id', user.id)
+
+  const { data: profileChanges } = await supabase.rpc('list_current_owner_profile_changes')
+  const latestChangeByVendor = new Map<string, (typeof profileChanges)[number]>()
+  for (const change of profileChanges ?? []) {
+    if (!latestChangeByVendor.has(change.vendor_id)) latestChangeByVendor.set(change.vendor_id, change)
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 p-8">
@@ -73,7 +78,7 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                   
-                  <ProfileEditor vendor={vendor} />
+                  <ProfileEditor vendor={vendor} latestChange={latestChangeByVendor.get(vendor.id) ?? null} />
                 </div>
               ))}
             </div>

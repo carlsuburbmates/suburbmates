@@ -23,6 +23,7 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
           <nav aria-label="Operations" className="flex items-center gap-5 text-sm font-semibold">
             <Link href="/ops">Overview</Link>
             <Link href="/ops/claims">Claims</Link>
+            <Link href="/ops/profile-edits">Profile edits</Link>
             <form action="/auth/signout" method="post">
               <button className="underline decoration-slate-500 underline-offset-4">Sign out</button>
             </form>

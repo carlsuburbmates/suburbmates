@@ -9,23 +9,37 @@ type ClaimOverview = {
   revoked_count: number;
 };
 
+type ProfileChangeOverview = {
+  pending_count: number;
+  approved_count: number;
+  rejected_count: number;
+};
+
 export default async function OpsOverviewPage() {
   const { supabase } = await verifyOpsAdmin("/ops");
-  const { data, error } = await supabase.rpc("ops_claim_overview");
+  const [claimResult, profileResult] = await Promise.all([
+    supabase.rpc("ops_claim_overview"),
+    supabase.rpc("ops_profile_change_overview"),
+  ]);
 
-  if (error) {
+  if (claimResult.error || profileResult.error) {
     throw new Error("The operations overview could not be loaded.");
   }
 
-  const overview = (data?.[0] ?? {
+  const overview = (claimResult.data?.[0] ?? {
     pending_count: 0,
     needs_information_count: 0,
     approved_count: 0,
     rejected_count: 0,
     revoked_count: 0,
   }) as ClaimOverview;
+  const profileOverview = (profileResult.data?.[0] ?? {
+    pending_count: 0,
+    approved_count: 0,
+    rejected_count: 0,
+  }) as ProfileChangeOverview;
 
-  const attentionCount = Number(overview.pending_count) + Number(overview.needs_information_count);
+  const attentionCount = Number(overview.pending_count) + Number(overview.needs_information_count) + Number(profileOverview.pending_count);
 
   return (
     <div className="space-y-8">
@@ -41,7 +55,17 @@ export default async function OpsOverviewPage() {
         <SummaryCard label="Open claim work" value={attentionCount} urgent={attentionCount > 0} />
         <SummaryCard label="Pending" value={Number(overview.pending_count)} />
         <SummaryCard label="Needs information" value={Number(overview.needs_information_count)} />
-        <SummaryCard label="Approved" value={Number(overview.approved_count)} />
+        <SummaryCard label="Profile edits" value={Number(profileOverview.pending_count)} />
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-bold">Owner profile edits</h3>
+            <p className="mt-1 text-sm text-slate-600">Owner proposals stay separate from the public listing until approved.</p>
+          </div>
+          <Link href="/ops/profile-edits" className="btn btn-primary">Open profile edit queue</Link>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
