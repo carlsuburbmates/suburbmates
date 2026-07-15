@@ -170,7 +170,7 @@ After deployment, verify the served production response—not only browser cache
 2. Confirm one real Supabase/Resend magic-link delivery and saved session.
 3. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
 4. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
-5. Add outbound website safety/freshness checks and a constrained media/logo pipeline only after the core launch gates pass.
+5. Review weekly outbound-website evidence reports. The automated checker follows HTTPS redirects only after public-DNS validation, records evidence, and opens one review issue when needed; it never changes a listing automatically. A constrained media/logo pipeline remains deferred until the core launch gates pass.
 
 ## Cleanup boundary
 
