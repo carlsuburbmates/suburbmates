@@ -32,13 +32,36 @@ async function verify() {
 
   const vendorError = totalResult.error ?? publishedResult.error ?? unpublishedResult.error;
   if (vendorError) {
-    console.error("Error fetching vendors:", vendorError.message || JSON.stringify(vendorError));
+    throw new Error(`Error fetching vendors: ${vendorError.message || JSON.stringify(vendorError)}`);
   } else {
-    console.table({
+    const counts = {
       total: totalResult.count ?? 0,
       published: publishedResult.count ?? 0,
       unpublished: unpublishedResult.data.length,
+    };
+    console.table({
+      ...counts,
     });
+
+    if (counts.total !== counts.published + counts.unpublished) {
+      throw new Error('Vendor publication counts do not partition the full catalogue.');
+    }
+
+    const expected = {
+      total: Number(process.env.EXPECTED_VENDOR_TOTAL ?? counts.total),
+      published: Number(process.env.EXPECTED_VENDOR_PUBLISHED ?? counts.published),
+      unpublished: Number(process.env.EXPECTED_VENDOR_UNPUBLISHED ?? counts.unpublished),
+    };
+    if (
+      counts.total !== expected.total ||
+      counts.published !== expected.published ||
+      counts.unpublished !== expected.unpublished
+    ) {
+      throw new Error(
+        `Vendor counts changed: expected ${JSON.stringify(expected)}, received ${JSON.stringify(counts)}.`,
+      );
+    }
+
     if (unpublishedResult.data.length > 0) {
       console.log("\nUnpublished vendors (read-only inspection):");
       console.table(unpublishedResult.data);

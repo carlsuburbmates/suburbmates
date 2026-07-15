@@ -27,6 +27,20 @@ type CsvRecord = Record<string, string>;
 type LookupTable = 'categories' | 'suburbs';
 type ExistingVendor = { id: string; streetAddress: string | null };
 
+export function importPublicationPolicy(existingId: string | null): {
+  label: string;
+  isPublished?: false;
+} {
+  if (existingId) {
+    return { label: 'Existing: preserve publication state' };
+  }
+
+  return {
+    label: 'New: keep unpublished for operator review',
+    isPublished: false,
+  };
+}
+
 function parseCsv(input: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -263,8 +277,8 @@ async function runSeed(): Promise<void> {
 
       if (dryRun) {
         succeeded++;
-        const status = existingId ? 'Existing: preserve is_published' : 'New/Existing-unknown: auto-publish';
-        console.log(`Validated ${businessName} (${sourceKey}) [${status}]`);
+        const publicationPolicy = importPublicationPolicy(existingId);
+        console.log(`Validated ${businessName} (${sourceKey}) [${publicationPolicy.label}]`);
         continue;
       }
 
@@ -289,8 +303,11 @@ async function runSeed(): Promise<void> {
       if (existingId) {
         queryResult = await supabase.from('vendors').update(vendor).eq('id', existingId).select('id').single();
       } else {
-        vendor.is_published = true;
-        queryResult = await supabase.from('vendors').upsert(vendor, { onConflict: 'source_key' }).select('id').single();
+        const publicationPolicy = importPublicationPolicy(existingId);
+        vendor.is_published = publicationPolicy.isPublished;
+        // Insert rather than upsert so a concurrent duplicate cannot have its
+        // existing publication state changed by an import race.
+        queryResult = await supabase.from('vendors').insert(vendor).select('id').single();
       }
 
       const { data, error } = queryResult;

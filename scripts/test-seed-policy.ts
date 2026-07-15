@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
-import { sourceKeyFor } from './seed';
-import { extractUniqueLookups } from './seed';
+import { extractUniqueLookups, importPublicationPolicy, sourceKeyFor } from './seed';
 
 const tempDir = path.resolve(process.cwd(), '.tmp-test-seed');
 
@@ -52,7 +51,7 @@ Test Plumbing,"1 Example Street, Northcote VIC 3070",plumber,northcote,,0418 555
   fs.writeFileSync(validPath, validCsv);
   
   const res1 = runSeed(validPath);
-  if (!res1.success || !res1.output.includes('Validated Test Plumbing (catalogue:test-plumbing:northcote:plumber) [New/Existing-unknown: auto-publish]')) {
+  if (!res1.success || !res1.output.includes('Validated Test Plumbing (catalogue:test-plumbing:northcote:plumber) [New: keep unpublished for operator review]')) {
     console.error('Test 1 Failed: Valid candidate file should pass audit and reach dry-run validation (New).');
     console.error(res1.output);
     process.exit(1);
@@ -80,7 +79,7 @@ Generic Plumbing,"1 Example Street, Northcote VIC 3070",plumber,northcote,,0418 
   fs.writeFileSync(otherPath, otherCsv);
   
   const res3 = runSeed(otherPath);
-  if (!res3.success || !res3.output.includes('Validated Generic Plumbing (catalogue:generic-plumbing:northcote:plumber) [New/Existing-unknown: auto-publish]')) {
+  if (!res3.success || !res3.output.includes('Validated Generic Plumbing (catalogue:generic-plumbing:northcote:plumber) [New: keep unpublished for operator review]')) {
     console.error('Test 3 Failed: Non-candidate CSV should bypass audit and reach dry-run (New).');
     console.error(res3.output);
     process.exit(1);
@@ -93,7 +92,7 @@ Generic Plumbing,"1 Example Street, Northcote VIC 3070",plumber,northcote,,0418 
 No Website Plumbing,"1 Example Street, Northcote VIC 3070",plumber,northcote,hello@example.org,,,,,,Recorded from a public source page.`;
   fs.writeFileSync(noWebsitePath, noWebsiteCsv);
   const res4 = runSeed(noWebsitePath);
-  if (!res4.success || !res4.output.includes('Validated No Website Plumbing (catalogue:no-website-plumbing:northcote:plumber) [New/Existing-unknown: auto-publish]')) {
+  if (!res4.success || !res4.output.includes('Validated No Website Plumbing (catalogue:no-website-plumbing:northcote:plumber) [New: keep unpublished for operator review]')) {
     console.error('Test 4 Failed: Business without a website should reach dry-run validation (New).');
     console.error(res4.output);
     process.exit(1);
@@ -107,12 +106,12 @@ Existing Plumbing,"1 Example Street, Northcote VIC 3070",plumber,northcote,,0418
 Another Plumbing,"1 Example Street, Northcote VIC 3070",plumber,northcote,existing.email@test.com,0418 555 804,https://www.another.com/,,,,`;
   fs.writeFileSync(existingPath, existingCsv);
   const res5 = runSeed(existingPath, { TEST_MOCK_EXISTING_VENDOR: '1' });
-  if (!res5.success || !res5.output.includes('Validated Existing Plumbing (catalogue:existing-plumbing:northcote:plumber) [Existing: preserve is_published]')) {
+  if (!res5.success || !res5.output.includes('Validated Existing Plumbing (catalogue:existing-plumbing:northcote:plumber) [Existing: preserve publication state]')) {
     console.error('Test 5 Failed: Existing business by source_key should preserve is_published status.');
     console.error(res5.output);
     process.exit(1);
   }
-  if (!res5.success || !res5.output.includes('Validated Another Plumbing (catalogue:another-plumbing:northcote:plumber) [Existing: preserve is_published]')) {
+  if (!res5.success || !res5.output.includes('Validated Another Plumbing (catalogue:another-plumbing:northcote:plumber) [Existing: preserve publication state]')) {
     console.error('Test 5 Failed: Existing business by email should preserve is_published status.');
     console.error(res5.output);
     process.exit(1);
@@ -131,14 +130,23 @@ Incomplete Plumbing,,plumber,northcote,,,,,,,Recorded from a flyer.`;
     SUPABASE_SECRET_KEY: 'fake-key-that-doesnt-matter'
   });
   
-  if (!res6.success || !res6.output.includes('Validated Incomplete Plumbing (catalogue:incomplete-plumbing:northcote:plumber) [New/Existing-unknown: auto-publish]')) {
+  if (!res6.success || !res6.output.includes('Validated Incomplete Plumbing (catalogue:incomplete-plumbing:northcote:plumber) [New: keep unpublished for operator review]')) {
     console.error('Test 6 Failed: Incomplete candidate should reach dry-run validation (New).');
     console.error(res6.output);
     process.exit(1);
   }
   console.log('Test 6 Passed: Incomplete candidate reaches normal validation and proves dry-run makes absolutely zero database calls.');
 
-  // Test 7: Different addressed locations with a legacy key remain distinct and stable.
+  // Test 7: Import publication policy is explicit and cannot publish new rows.
+  const newPolicy = importPublicationPolicy(null);
+  const existingPolicy = importPublicationPolicy('existing-id');
+  if (newPolicy.isPublished !== false || existingPolicy.isPublished !== undefined) {
+    console.error('Test 7 Failed: New rows must be unpublished and existing rows must preserve publication state.');
+    process.exit(1);
+  }
+  console.log('Test 7 Passed: Import publication policy keeps new rows unpublished and preserves existing rows.');
+
+  // Test 8: Different addressed locations with a legacy key remain distinct and stable.
   const existingLocations = new Map([
     ['catalogue:lui-boss:darebin:restaurant', { id: 'first-location', streetAddress: '298 High Street' }],
     ['catalogue:lui-boss:darebin:restaurant:1-cook-street', { id: 'second-location', streetAddress: '1 Cook Street' }],
@@ -148,12 +156,12 @@ Incomplete Plumbing,,plumber,northcote,,,,,,,Recorded from a flyer.`;
     existingLocations,
   );
   if (secondLocation !== 'catalogue:lui-boss:darebin:restaurant:1-cook-street' || !existingLocations.has(secondLocation)) {
-    console.error('Test 7 Failed: A distinct addressed location must receive and reuse an address-qualified key.');
+    console.error('Test 8 Failed: A distinct addressed location must receive and reuse an address-qualified key.');
     process.exit(1);
   }
-  console.log('Test 7 Passed: Different addressed locations receive stable distinct source keys.');
+  console.log('Test 8 Passed: Different addressed locations receive stable distinct source keys.');
 
-  // Test 7: extractUniqueLookups deduplicates repeated slugs
+  // Test 9: extractUniqueLookups deduplicates repeated slugs
   const mockRecords = [
     { category_slug: 'plumber', suburb_slug: 'northcote' },
     { category_slug: 'plumber', suburb_slug: 'preston' },
@@ -163,14 +171,14 @@ Incomplete Plumbing,,plumber,northcote,,,,,,,Recorded from a flyer.`;
   
   const { categories, suburbs } = extractUniqueLookups(mockRecords);
   if (categories.size !== 2 || !categories.has('plumber') || !categories.has('electrician')) {
-    console.error(`Test 7 Failed: Categories not deduplicated properly. Got ${categories.size}`);
+    console.error(`Test 9 Failed: Categories not deduplicated properly. Got ${categories.size}`);
     process.exit(1);
   }
   if (suburbs.size !== 2 || !suburbs.has('northcote') || !suburbs.has('preston')) {
-    console.error(`Test 7 Failed: Suburbs not deduplicated properly. Got ${suburbs.size}`);
+    console.error(`Test 9 Failed: Suburbs not deduplicated properly. Got ${suburbs.size}`);
     process.exit(1);
   }
-  console.log('Test 7 Passed: Unique lookup preparation deduplicates repeated slugs properly.');
+  console.log('Test 9 Passed: Unique lookup preparation deduplicates repeated slugs properly.');
 
   console.log('\nAll seed policy tests passed!');
 }
