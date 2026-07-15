@@ -22,15 +22,23 @@ type ListingOverview = {
   unpublished_count: number;
 };
 
+type SystemOverview = {
+  failed_count: number;
+  degraded_count: number;
+  stale_count: number;
+  failed_job_count: number;
+};
+
 export default async function OpsOverviewPage() {
   const { supabase } = await verifyOpsAdmin("/ops");
-  const [listingResult, claimResult, profileResult] = await Promise.all([
+  const [listingResult, claimResult, profileResult, systemResult] = await Promise.all([
     supabase.rpc("ops_listing_overview"),
     supabase.rpc("ops_claim_overview"),
     supabase.rpc("ops_profile_change_overview"),
+    supabase.rpc("ops_system_overview"),
   ]);
 
-  if (listingResult.error || claimResult.error || profileResult.error) {
+  if (listingResult.error || claimResult.error || profileResult.error || systemResult.error) {
     throw new Error("The operations overview could not be loaded.");
   }
 
@@ -52,8 +60,15 @@ export default async function OpsOverviewPage() {
     rejected_count: 0,
     unpublished_count: 0,
   }) as ListingOverview;
+  const systemOverview = (systemResult.data?.[0] ?? {
+    failed_count: 0,
+    degraded_count: 0,
+    stale_count: 0,
+    failed_job_count: 0,
+  }) as SystemOverview;
 
-  const attentionCount = Number(listingOverview.review_count) + Number(overview.pending_count) + Number(overview.needs_information_count) + Number(profileOverview.pending_count);
+  const systemExceptions = Number(systemOverview.failed_count) + Number(systemOverview.degraded_count) + Number(systemOverview.stale_count) + Number(systemOverview.failed_job_count);
+  const attentionCount = Number(listingOverview.review_count) + Number(overview.pending_count) + Number(overview.needs_information_count) + Number(profileOverview.pending_count) + systemExceptions;
 
   return (
     <div className="space-y-8">
@@ -65,11 +80,19 @@ export default async function OpsOverviewPage() {
         </p>
       </div>
 
-      <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4" aria-label="Claim status summary">
+      <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5" aria-label="Operations summary">
         <SummaryCard label="Open claim work" value={attentionCount} urgent={attentionCount > 0} />
         <SummaryCard label="Listings to review" value={Number(listingOverview.review_count)} />
         <SummaryCard label="Claims to review" value={Number(overview.pending_count) + Number(overview.needs_information_count)} />
         <SummaryCard label="Profile edits" value={Number(profileOverview.pending_count)} />
+        <SummaryCard label="System exceptions" value={systemExceptions} urgent={systemExceptions > 0} />
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div><h3 className="text-xl font-bold">System health</h3><p className="mt-1 text-sm text-slate-600">Internal monitoring reports failures and stale checks without changing business state.</p></div>
+          <Link href="/ops/system" className="btn btn-outline">Open system health</Link>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
