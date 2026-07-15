@@ -151,12 +151,14 @@ npm run cf:build
 
 After deployment, verify the served production response—not only browser cache—for `/`, `/contact`, `/sitemap.xml`, `/categories`, one populated taxonomy page, one empty/noindex taxonomy page, one vendor page, and unauthenticated `/ops` denial.
 
+`.github/workflows/production-smoke.yml` repeats the public and access-control checks daily at no service cost. `scripts/production-smoke.mjs` paginates the public catalogue, reconstructs the expected sitemap, requires exact bidirectional URL equality, checks every category link, and samples a real vendor page. A failure opens or updates one GitHub issue; the workflow never writes to Supabase.
+
 ## Remaining work
 
 1. Select and enrol one permanent operator, then test every authenticated `/ops` queue in the browser.
 2. Confirm one real Supabase/Resend magic-link delivery and saved session.
-3. Add reviewed business-submission intake for businesses not already in the catalogue.
-4. Conservatively normalise existing listing-source/evidence records without inventing provenance.
+3. Reconcile the 20 exact unpublished legacy duplicates that deliberately remain without a proven listing source; do not silently publish or relabel them.
+4. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
 5. Separate SEO eligibility from publication and adopt an evidence-based usefulness threshold for thin taxonomy pages.
 6. Add stable public vendor slugs plus permanent redirect history while preserving current UUID URLs.
 7. Decide the mixed `darebin` council/suburb taxonomy and document the migration rule.

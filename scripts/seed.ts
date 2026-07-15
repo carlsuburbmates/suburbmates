@@ -26,6 +26,7 @@ function requireSupabase() {
 const REQUIRED_HEADERS = ['business_name', 'category_slug', 'suburb_slug'] as const;
 const VALID_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const NEW_IMPORT_LISTING_SOURCE = 'approved_import' as const;
 
 type CsvRecord = Record<string, string>;
 type LookupTable = 'categories' | 'suburbs';
@@ -310,7 +311,7 @@ async function runSeed(): Promise<void> {
         const publicationPolicy = importPublicationPolicy(existingId);
         vendor.is_published = publicationPolicy.isPublished;
         vendor.listing_status = 'pending_review';
-        vendor.listing_source = 'imported';
+        vendor.listing_source = NEW_IMPORT_LISTING_SOURCE;
         // Insert rather than upsert so a concurrent duplicate cannot have its
         // existing publication state changed by an import race.
         queryResult = await requireSupabase().from('vendors').insert(vendor).select('id').single();

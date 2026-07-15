@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
-import { extractUniqueLookups, importPublicationPolicy, sourceKeyFor } from './seed';
+import { extractUniqueLookups, importPublicationPolicy, NEW_IMPORT_LISTING_SOURCE, sourceKeyFor } from './seed';
 
 const tempDir = path.resolve(process.cwd(), '.tmp-test-seed');
 
@@ -142,6 +142,10 @@ Incomplete Plumbing,,plumber,northcote,,,,,,,Recorded from a flyer.`;
   const existingPolicy = importPublicationPolicy('existing-id');
   if (newPolicy.isPublished !== false || existingPolicy.isPublished !== undefined) {
     console.error('Test 7 Failed: New rows must be unpublished and existing rows must preserve publication state.');
+    process.exit(1);
+  }
+  if (NEW_IMPORT_LISTING_SOURCE !== 'approved_import') {
+    console.error('Test 7 Failed: New imports must use the canonical approved_import provenance.');
     process.exit(1);
   }
   console.log('Test 7 Passed: Import publication policy keeps new rows unpublished and preserves existing rows.');
