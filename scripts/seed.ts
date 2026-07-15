@@ -7,17 +7,21 @@ import { auditFile } from './audit-vendor-candidates';
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
-  console.error(
-    'Error: Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_SECRET_KEY ' +
-      '(or the legacy NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY names).',
-  );
-  process.exit(1);
-}
+const supabase = SUPABASE_URL && SUPABASE_SECRET_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+  : null;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+function requireSupabase() {
+  if (!supabase) {
+    throw new Error(
+      'Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_SECRET_KEY ' +
+        '(or the legacy NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY names).',
+    );
+  }
+  return supabase;
+}
 
 const REQUIRED_HEADERS = ['business_name', 'category_slug', 'suburb_slug'] as const;
 const VALID_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -154,7 +158,7 @@ export function sourceKeyFor(
 }
 
 async function ensureLookup(table: LookupTable, slug: string): Promise<void> {
-  const { error } = await supabase.from(table).upsert(
+  const { error } = await requireSupabase().from(table).upsert(
     { slug, name: displayNameFromSlug(slug) },
     { onConflict: 'slug', ignoreDuplicates: true },
   );
@@ -177,7 +181,7 @@ async function loadExistingVendors(): Promise<Array<{
   }> = [];
 
   for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
+    const { data, error } = await requireSupabase()
       .from('vendors')
       .select('id, contact_email, source_key, street_address')
       .range(from, from + pageSize - 1);
@@ -301,7 +305,7 @@ async function runSeed(): Promise<void> {
 
       let queryResult;
       if (existingId) {
-        queryResult = await supabase.from('vendors').update(vendor).eq('id', existingId).select('id').single();
+        queryResult = await requireSupabase().from('vendors').update(vendor).eq('id', existingId).select('id').single();
       } else {
         const publicationPolicy = importPublicationPolicy(existingId);
         vendor.is_published = publicationPolicy.isPublished;
@@ -309,7 +313,7 @@ async function runSeed(): Promise<void> {
         vendor.listing_source = 'imported';
         // Insert rather than upsert so a concurrent duplicate cannot have its
         // existing publication state changed by an import race.
-        queryResult = await supabase.from('vendors').insert(vendor).select('id').single();
+        queryResult = await requireSupabase().from('vendors').insert(vendor).select('id').single();
       }
 
       const { data, error } = queryResult;
