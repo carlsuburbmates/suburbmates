@@ -9,6 +9,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(canonicalUrl, 308)
   }
 
+  // Supabase falls back to the configured Site URL when a requested redirect
+  // URL is not on its allow list. Preserve the one-time code and complete the
+  // existing server-side exchange route rather than leaving the user at home.
+  if (request.nextUrl.pathname === '/' && request.nextUrl.searchParams.has('code')) {
+    const callbackUrl = request.nextUrl.clone()
+    callbackUrl.pathname = '/auth/callback'
+    return NextResponse.redirect(callbackUrl)
+  }
+
   return await updateSession(request)
 }
 
