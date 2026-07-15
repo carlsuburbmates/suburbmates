@@ -83,9 +83,15 @@ export async function submitContactAction(formData: FormData) {
       .map((hostname) => hostname.trim().toLowerCase())
       .filter(Boolean),
   );
+  const isOfficialTestMode =
+    runtimeEnv("TURNSTILE_TEST_MODE") === "true" &&
+    turnstileSecret === "1x0000000000000000000000000000000AA";
   if (
-    verification.success !== true || verification.action !== "contact" ||
-    !verification.hostname || !allowedHostnames.has(verification.hostname.toLowerCase())
+    verification.success !== true ||
+    (!isOfficialTestMode && (
+      verification.action !== "contact" || !verification.hostname ||
+      !allowedHostnames.has(verification.hostname.toLowerCase())
+    ))
   ) {
     fail("verification");
   }
@@ -98,8 +104,8 @@ export async function submitContactAction(formData: FormData) {
       p_requester_email: requesterEmail,
       p_business_name: businessName || null,
       p_message: message,
-      p_turnstile_hostname: verification.hostname,
-      p_turnstile_action: verification.action,
+      p_turnstile_hostname: isOfficialTestMode ? "cloudflare-official-test" : verification.hostname,
+      p_turnstile_action: isOfficialTestMode ? "contact" : verification.action,
     });
     if (error) {
       if (error.message.includes("Too many recent requests")) fail("rate_limit");
