@@ -25,11 +25,12 @@ Reverified on 16 July 2026 (Australia/Melbourne):
 
 - 1,621 vendor rows total;
 - 1,600 published rows;
-- 21 unpublished legacy rows awaiting classification;
+- 20 exact unpublished legacy duplicates rejected with audited links to their published peers;
+- 1 original seeded listing remains unpublished and needs evidence review;
 - 0 active operators pending selection of the permanent operator email;
-- 0 open claims, profile changes, listing drafts, or genuine contact requests at the verification checkpoint;
+- 0 open claims, profile changes, or genuine contact requests at the verification checkpoint;
 - three failed claim-test identities were removed; their three truthfully labelled audit events remain immutable;
-- the public sitemap contains all 1,600 vendor URLs, 175 category URLs, 10 location URLs, and 406 suburb/category URLs (2,197 URLs total).
+- after the privacy-page deployment, the public sitemap contains all 1,600 vendor URLs, 175 category URLs, 10 location URLs, 406 suburb/category URLs, and 7 static URLs (2,198 URLs total).
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
@@ -58,6 +59,7 @@ npm run cf:build
 - `/vendor/[id]`: published business profile, canonical metadata, and evidence-limited LocalBusiness JSON-LD.
 - `/sitemap.xml`: force-dynamic, complete paginated published catalogue; never includes `/ops`.
 - `/contact`: private support intake protected by hostname-restricted Cloudflare Turnstile.
+- `/privacy`: current handling, access, complaint, security, provider and retention notice.
 - `/how-it-works`: plain-language publication, claim, and owner-edit model.
 
 Public catalogue reads that can exceed 1,000 rows must use `web/src/lib/public-catalogue.ts`. Never restore a single unpaginated Supabase vendor query for sitemap, category, or location coverage.
@@ -109,6 +111,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 - `actor_user_id` is an immutable historical UUID, intentionally not a live-auth foreign key; deleting an account must not rewrite history.
 - hosted mutation tests are prohibited by default because labelled audit evidence cannot be deleted.
 - destructive legacy inactivity pruning and the legacy AI publication function are disabled.
+- resolved contact content is deleted after 12 months and spam content after 30 days by a private daily retention job; audit history retains no deleted message content.
 - listing imports, claim decisions, profile edits, contact intake, and listing lifecycle actions preserve unrelated business state.
 - generated or test build output is ignored and must not be committed.
 
@@ -117,7 +120,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716100000` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716122000` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth SMTP only at launch | Domain verified; confirm the actual Supabase SMTP path with one controlled magic-link test |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
@@ -157,7 +160,7 @@ After deployment, verify the served production response—not only browser cache
 
 1. Select and enrol one permanent operator, then test every authenticated `/ops` queue in the browser.
 2. Confirm one real Supabase/Resend magic-link delivery and saved session.
-3. Reconcile the 20 exact unpublished legacy duplicates that deliberately remain without a proven listing source; do not silently publish or relabel them.
+3. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
 4. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
 5. Separate SEO eligibility from publication and adopt an evidence-based usefulness threshold for thin taxonomy pages.
 6. Add stable public vendor slugs plus permanent redirect history while preserving current UUID URLs.

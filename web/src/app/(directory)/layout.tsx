@@ -87,6 +87,13 @@ export default function DirectoryLayout({
             >
               Contact
             </Link>
+            <Link
+              href="/privacy"
+              className="text-xs uppercase tracking-widest font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded px-1"
+              style={{ color: "var(--sm-text-on-inverse-secondary)" }}
+            >
+              Privacy
+            </Link>
           </nav>
 
           {/* Copyright — gray-300 on black = 10.7:1 ✅ */}

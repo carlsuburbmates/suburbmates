@@ -107,6 +107,7 @@ export function buildPublicSitemapUrls(
     `${base}/categories`,
     `${base}/how-it-works`,
     `${base}/contact`,
+    `${base}/privacy`,
   ]);
 
   for (const row of rows) {

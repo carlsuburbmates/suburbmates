@@ -54,7 +54,7 @@ export default async function JoinPage({ searchParams }: {
             <Field label="Phone (optional)" name="phone" type="tel" maxLength={40} autoComplete="tel" />
             <Field label="Website (optional, HTTPS)" name="website" type="url" maxLength={500} placeholder="https://" />
             <Field label="Street address (optional)" name="streetAddress" maxLength={500} autoComplete="street-address" />
-            <label className="flex items-start gap-3 text-sm leading-6 text-slate-700 sm:col-span-2"><input name="consent" type="checkbox" required className="mt-1 h-4 w-4" /><span>I confirm these are genuine business details and agree that SuburbMates may review them for directory publication.</span></label>
+            <label className="flex items-start gap-3 text-sm leading-6 text-slate-700 sm:col-span-2"><input name="consent" type="checkbox" required className="mt-1 h-4 w-4" /><span>I confirm these are genuine business details and agree that SuburbMates may review them for directory publication as described in the <Link href="/privacy" className="font-bold underline">privacy notice</Link>.</span></label>
             <div className="sm:col-span-2"><div className="cf-turnstile" data-sitekey={siteKey} data-action="business_submission" data-theme="light" /></div>
             <div className="sm:col-span-2"><button className="btn btn-primary">Submit for review</button></div>
           </form>

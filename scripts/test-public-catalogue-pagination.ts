@@ -80,7 +80,7 @@ async function run() {
   assert(urls.includes("https://suburbmates.com.au/categories/after-page-one"));
   assert(urls.includes("https://suburbmates.com.au/late-suburb"));
   assert(urls.includes("https://suburbmates.com.au/late-suburb/after-page-one"));
-  for (const route of ["", "/businesses", "/locations", "/categories", "/how-it-works", "/contact"]) {
+  for (const route of ["", "/businesses", "/locations", "/categories", "/how-it-works", "/contact", "/privacy"]) {
     assert(urls.includes(`https://suburbmates.com.au${route}`));
   }
   assert(publishedCategorySlugs(sixteenHundred).includes("after-page-one"));

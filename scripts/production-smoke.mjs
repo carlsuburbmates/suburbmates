@@ -130,6 +130,7 @@ function buildExpectedSitemap(vendors) {
     `${BASE_URL}/categories`,
     `${BASE_URL}/how-it-works`,
     `${BASE_URL}/contact`,
+    `${BASE_URL}/privacy`,
   ]);
   for (const vendor of vendors) {
     urls.add(`${BASE_URL}/vendor/${vendor.id}`);
@@ -172,13 +173,14 @@ function compareUrlSets(actual, expected) {
 }
 
 async function main() {
-  const [home, businesses, categories, locations, howItWorks, contact, sitemapXml] = await Promise.all([
+  const [home, businesses, categories, locations, howItWorks, contact, privacy, sitemapXml] = await Promise.all([
     expectResponse("/", 200, "text/html", /SuburbMates/i),
     expectResponse("/businesses", 200, "text/html", /business/i),
     expectResponse("/categories", 200, "text/html", /categor/i),
     expectResponse("/locations", 200, "text/html", /location|suburb/i),
     expectResponse("/how-it-works", 200, "text/html", /how it works/i),
     expectResponse("/contact", 200, "text/html", /contact/i),
+    expectResponse("/privacy", 200, "text/html", /privacy/i),
     expectResponse("/sitemap.xml", 200, "xml"),
     expectResponse("/robots.txt", 200, "text/plain"),
   ]);
@@ -187,6 +189,7 @@ async function main() {
   void locations;
   void howItWorks;
   void contact;
+  void privacy;
 
   const protectedRoutes = ["/ops", "/ops/claims", "/ops/listings", "/ops/profile-edits", "/ops/system"];
   await Promise.all(protectedRoutes.map((path) => expectRedirect(

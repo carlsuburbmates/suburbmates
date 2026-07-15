@@ -101,7 +101,7 @@ export default async function ContactPage({
 
             <label className="flex items-start gap-3 text-sm leading-6 text-slate-700">
               <input name="consent" type="checkbox" required className="mt-1 h-4 w-4" />
-              <span>I agree that SuburbMates may use these details to review and respond to my request.</span>
+              <span>I agree that SuburbMates may use these details to review and respond to my request as described in the <Link href="/privacy" className="font-bold underline">privacy notice</Link>.</span>
             </label>
 
             <div className="cf-turnstile" data-sitekey={siteKey} data-action="contact" data-theme="light" />
