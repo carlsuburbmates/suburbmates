@@ -23,11 +23,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const suburbName = suburbRes.data?.name || suburbSlug;
   const categoryName = categoryRes.data?.name || serviceSlug;
   const { count } = await supabase
-    .from("vendors")
+    .from("published_vendors")
     .select("id", { count: "exact", head: true })
     .eq("suburb_slug", suburbSlug)
-    .eq("category_slug", serviceSlug)
-    .eq("is_published", true);
+    .eq("category_slug", serviceSlug);
   
   return {
     title: `Local ${categoryName} in ${suburbName} | SuburbMates`,
@@ -54,11 +53,10 @@ export default async function Page({ params }: PageProps) {
       .eq("slug", serviceSlug)
       .single(),
     supabase
-      .from("vendors")
-      .select("id, business_name, description, contact_email, phone, website, tier, is_claimed, street_address")
+      .from("published_vendors")
+      .select("id, slug, business_name, description, contact_email, phone, website, tier, is_claimed, street_address")
       .eq("suburb_slug", suburbSlug)
       .eq("category_slug", serviceSlug)
-      .eq("is_published", true)
       .order("tier", { ascending: false }) // premium/claimed first
   ]);
 
@@ -192,7 +190,7 @@ export default async function Page({ params }: PageProps) {
                       )}
 
                       <Link
-                        href={`/vendor/${vendor.id}`}
+                        href={`/vendor/${vendor.slug}`}
                         className="btn btn-ghost w-full flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100"
                         aria-label={`View full profile for ${vendor.business_name}`}
                       >

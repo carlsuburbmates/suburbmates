@@ -8,9 +8,10 @@ export default async function Home() {
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase
-      .from("vendors")
+      .from("published_vendors")
       .select(`
-        id, 
+        id,
+        slug,
         business_name, 
         description, 
         phone, 
@@ -24,7 +25,6 @@ export default async function Home() {
           name
         )
       `)
-      .eq("is_published", true)
       .order("tier", { ascending: false })
       .limit(6)
   ]);

@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone } from "lucide-react";
@@ -8,6 +8,7 @@ import { HeroSplit } from "@/components/minisite/heroes/HeroSplit";
 import { HeroCentered } from "@/components/minisite/heroes/HeroCentered";
 import { HeroMinimal } from "@/components/minisite/heroes/HeroMinimal";
 import { ContactSticky, ContactInline } from "@/components/minisite/contact/ContactComponents";
+import { resolvePublicVendorRoute } from "@/lib/public-vendor-route";
 
 // Approved listing changes must be visible immediately after operator review.
 export const dynamic = "force-dynamic";
@@ -22,11 +23,13 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
+  const route = await resolvePublicVendorRoute(supabase, slug);
+  if (!route) return { title: "Not Found" };
   
   const { data: vendor } = await supabase
-    .from("vendors")
+    .from("published_vendors")
     .select("business_name, description, suburb_slug, category_slug, is_published, suburbs(name), categories(name)")
-    .eq("id", slug)
+    .eq("id", route.vendorId)
     .single();
     
   if (!vendor) {
@@ -41,7 +44,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${vendor.business_name} | ${categoryName} in ${suburbName}`,
     description: vendor.description ? vendor.description.substring(0, 155) : `View public contact details for ${vendor.business_name} in ${suburbName}.`,
-    alternates: { canonical: `/vendor/${slug}` },
+    alternates: { canonical: `/vendor/${route.currentSlug}` },
     robots: vendor.is_published ? undefined : { index: false, follow: false },
   };
 }
@@ -49,16 +52,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function VendorWebsite({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createClient();
+  const route = await resolvePublicVendorRoute(supabase, slug);
+  if (!route) notFound();
+  if (route.redirectRequired) permanentRedirect(`/vendor/${route.currentSlug}`);
 
   const { data: vendor, error } = await supabase
-    .from("vendors")
+    .from("published_vendors")
     .select(`
       *,
       suburbs (name),
       categories (name)
     `)
-    .eq("id", slug)
-    .eq("is_published", true)
+    .eq("id", route.vendorId)
     .single();
 
   if (error || !vendor) {
@@ -68,7 +73,7 @@ export default async function VendorWebsite({ params }: PageProps) {
   // Compute design parameters out of existing data deterministically
   const design = getVendorDesign(vendor.id, vendor.created_at);
   const profileDescription = vendor.description || `This is a public directory profile for ${vendor.business_name} in ${vendor.suburbs?.name}. Business details may be added or corrected when the owner claims this profile.`;
-  const canonicalUrl = `https://suburbmates.com.au/vendor/${vendor.id}`;
+  const canonicalUrl = `https://suburbmates.com.au/vendor/${route.currentSlug}`;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",

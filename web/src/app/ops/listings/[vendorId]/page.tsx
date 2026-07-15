@@ -41,11 +41,12 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const { vendorId } = await params;
   const message = await searchParams;
   const { supabase } = await verifyOpsAdmin(`/ops/listings/${vendorId}`);
-  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult] = await Promise.all([
+  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult] = await Promise.all([
     supabase.rpc("ops_list_listings", { p_status: "all", p_query: null, p_vendor_id: vendorId, p_limit: 1, p_offset: 0 }),
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase.rpc("ops_list_listing_evidence", { p_vendor_id: vendorId }),
+    supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId }),
   ]);
   if (error || categoriesResult.error || suburbsResult.error || evidenceResult.error) throw new Error("The listing could not be loaded.");
   const listing = data?.[0] as Listing | undefined;
@@ -53,6 +54,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const values = listing.draft_values ?? listing;
   const status = listing.listing_status;
   const evidence = (evidenceResult.data ?? []) as ListingEvidence[];
+  const publicSlug = routeResult.data?.[0]?.current_slug as string | undefined;
 
   return (
     <div className="space-y-7">
@@ -63,7 +65,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
           <h2 className="mt-2 text-4xl font-black tracking-tight">{listing.business_name}</h2>
           <p className="mt-2 text-slate-600">{statusLabel(status ?? "unclassified")} · {listing.ownership_status} · {listing.tier}</p>
         </div>
-        {listing.is_published && <Link href={`/vendor/${vendorId}`} className="btn btn-outline">View public profile</Link>}
+        {listing.is_published && publicSlug && <Link href={`/vendor/${publicSlug}`} className="btn btn-outline">View public profile</Link>}
       </div>
 
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}

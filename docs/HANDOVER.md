@@ -60,13 +60,15 @@ npm run cf:build
 
 - `/`, `/businesses`, `/categories`, `/locations`: discovery surfaces.
 - `/[suburb]` and `/[suburb]/[service]`: taxonomy pages; empty combinations use `noindex, follow`.
-- `/vendor/[id]`: published business profile, canonical metadata, and evidence-limited LocalBusiness JSON-LD.
+- `/vendor/[slug]`: published business profile, canonical metadata, and evidence-limited LocalBusiness JSON-LD. Current human-readable slugs are canonical; legacy UUID routes permanently redirect, while unpublished listings have no public route.
 - `/sitemap.xml`: force-dynamic, complete paginated published catalogue; never includes `/ops`.
 - `/contact`: private support intake protected by hostname-restricted Cloudflare Turnstile.
 - `/privacy`: current handling, access, complaint, security, provider and retention notice.
 - `/how-it-works`: plain-language publication, claim, and owner-edit model.
 
 Public catalogue reads that can exceed 1,000 rows must use `web/src/lib/public-catalogue.ts`. Never restore a single unpaginated Supabase vendor query for sitemap, category, or location coverage.
+
+Public directory reads use `public.published_vendors`, a safe projection containing only displayed listing fields. Never re-grant anonymous or authenticated `SELECT` on `public.vendors`; owner dashboard data comes from `list_current_owner_vendors()`.
 
 ### Owners
 
@@ -124,7 +126,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716123000` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716127000` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth SMTP only at launch | Domain verified; confirm the actual Supabase SMTP path with one controlled magic-link test |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
@@ -167,9 +169,8 @@ After deployment, verify the served production response—not only browser cache
 3. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
 4. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
 5. Separate SEO eligibility from publication and adopt an evidence-based usefulness threshold for thin taxonomy pages.
-6. Add stable public vendor slugs plus permanent redirect history while preserving current UUID URLs.
-7. Decide the mixed `darebin` council/suburb taxonomy and document the migration rule.
-8. Add outbound website safety/freshness checks and a constrained media/logo pipeline only after the core launch gates pass.
+6. Decide the mixed `darebin` council/suburb taxonomy and document the migration rule.
+7. Add outbound website safety/freshness checks and a constrained media/logo pipeline only after the core launch gates pass.
 
 ## Cleanup boundary
 

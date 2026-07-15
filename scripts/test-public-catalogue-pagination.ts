@@ -11,6 +11,7 @@ import {
 function rows(count: number): PublicVendorRouteRow[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `vendor-${String(index + 1).padStart(4, "0")}`,
+    slug: `business-${String(index + 1).padStart(4, "0")}`,
     category_slug: index >= 1000 ? "after-page-one" : `category-${index % 7}`,
     suburb_slug: index >= 1000 ? "late-suburb" : `suburb-${index % 3}`,
   }));
@@ -76,7 +77,8 @@ async function run() {
   const urls = buildPublicSitemapUrls(sixteenHundred);
   assert.equal(new Set(urls).size, urls.length);
   assert(urls.every((url) => url.startsWith("https://suburbmates.com.au")));
-  assert(urls.includes("https://suburbmates.com.au/vendor/vendor-1600"));
+  assert(urls.includes("https://suburbmates.com.au/vendor/business-1600"));
+  assert(!urls.some((url) => url.includes("/vendor/vendor-")));
   assert(urls.includes("https://suburbmates.com.au/categories/after-page-one"));
   assert(urls.includes("https://suburbmates.com.au/late-suburb"));
   assert(urls.includes("https://suburbmates.com.au/late-suburb/after-page-one"));

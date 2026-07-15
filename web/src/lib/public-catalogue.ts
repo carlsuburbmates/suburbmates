@@ -4,6 +4,7 @@ export const PUBLIC_CATALOGUE_PAGE_SIZE = 1000;
 
 export type PublicVendorRouteRow = {
   id: string;
+  slug: string;
   category_slug: string | null;
   suburb_slug: string | null;
 };
@@ -78,9 +79,8 @@ export async function fetchAllPublishedVendorRouteRows(
 ): Promise<PublicVendorRouteRow[]> {
   return collectAllPages(async (from, to) => {
     const result = await client
-      .from("vendors")
-      .select("id, category_slug, suburb_slug", { count: "exact" })
-      .eq("is_published", true)
+      .from("published_vendors")
+      .select("id, slug, category_slug, suburb_slug", { count: "exact" })
       .order("id", { ascending: true })
       .range(from, to);
     return result as CataloguePage<PublicVendorRouteRow>;
@@ -111,7 +111,7 @@ export function buildPublicSitemapUrls(
   ]);
 
   for (const row of rows) {
-    urls.add(`${base}/vendor/${row.id}`);
+    urls.add(`${base}/vendor/${row.slug}`);
     if (row.suburb_slug) urls.add(`${base}/${row.suburb_slug}`);
     if (row.category_slug) urls.add(`${base}/categories/${row.category_slug}`);
     if (row.suburb_slug && row.category_slug) urls.add(`${base}/${row.suburb_slug}/${row.category_slug}`);

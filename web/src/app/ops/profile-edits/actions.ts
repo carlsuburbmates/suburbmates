@@ -31,6 +31,10 @@ export async function reviewProfileChangeAction(formData: FormData) {
   revalidatePath(detailPath);
   revalidatePath("/dashboard");
   revalidatePath("/businesses");
-  if (vendorId) revalidatePath(`/vendor/${vendorId}`);
+  if (vendorId) {
+    revalidatePath(`/vendor/${vendorId}`);
+    const { data: route } = await supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId });
+    if (route?.[0]?.current_slug) revalidatePath(`/vendor/${route[0].current_slug}`);
+  }
   redirect(`${detailPath}?success=${encodeURIComponent(decision)}`);
 }

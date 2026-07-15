@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ suburb: s
   const supabase = await createClient();
   const [suburbResult, vendorResult] = await Promise.all([
     supabase.from('suburbs').select('name').eq('slug', suburb).single(),
-    supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('suburb_slug', suburb).eq('is_published', true),
+    supabase.from('published_vendors').select('id', { count: 'exact', head: true }).eq('suburb_slug', suburb),
   ]);
   const name = suburbResult.data?.name ?? suburb;
   return {
@@ -34,10 +34,9 @@ export default async function SuburbPage({ params }: { params: Promise<{ suburb:
   }
 
   const { data: vendorCategories } = await supabase
-    .from('vendors')
+    .from('published_vendors')
     .select('category_slug')
-    .eq('suburb_slug', suburb)
-    .eq('is_published', true);
+    .eq('suburb_slug', suburb);
   const categorySlugs = [...new Set((vendorCategories ?? []).map((vendor) => vendor.category_slug).filter(Boolean))] as string[];
   const { data: categories } = categorySlugs.length
     ? await supabase.from('categories').select('name, slug').in('slug', categorySlugs).order('name')

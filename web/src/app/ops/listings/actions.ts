@@ -42,6 +42,7 @@ export async function decideListingAction(formData: FormData) {
   if (!uuidPattern.test(vendorId) || !decisions.has(decision) || note.length < 1 || note.length > 2000) {
     redirect(`${detailPath}?error=invalid`);
   }
+  const { data: beforeRoute } = await supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId });
   const { error } = await supabase.rpc("ops_decide_listing", {
     p_vendor_id: vendorId,
     p_action: decision,
@@ -49,6 +50,7 @@ export async function decideListingAction(formData: FormData) {
     p_operator_note: note,
   });
   if (error) redirect(`${detailPath}?error=decision`);
+  const { data: afterRoute } = await supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId });
 
   revalidatePath("/ops");
   revalidatePath("/ops/listings");
@@ -56,6 +58,9 @@ export async function decideListingAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/businesses");
   revalidatePath(`/vendor/${vendorId}`);
+  for (const slug of new Set([beforeRoute?.[0]?.current_slug, afterRoute?.[0]?.current_slug].filter(Boolean))) {
+    revalidatePath(`/vendor/${slug}`);
+  }
   revalidatePath("/sitemap.xml");
   redirect(`${detailPath}?success=${encodeURIComponent(decision)}`);
 }

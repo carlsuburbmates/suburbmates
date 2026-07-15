@@ -79,9 +79,8 @@ function parseContentRange(value) {
 }
 
 async function fetchPublishedVendors() {
-  const endpoint = new URL("/rest/v1/vendors", SUPABASE_URL);
-  endpoint.searchParams.set("select", "id,category_slug,suburb_slug");
-  endpoint.searchParams.set("is_published", "eq.true");
+  const endpoint = new URL("/rest/v1/published_vendors", SUPABASE_URL);
+  endpoint.searchParams.set("select", "id,slug,category_slug,suburb_slug");
   endpoint.searchParams.set("order", "id.asc");
 
   const rows = [];
@@ -133,7 +132,7 @@ function buildExpectedSitemap(vendors) {
     `${BASE_URL}/privacy`,
   ]);
   for (const vendor of vendors) {
-    urls.add(`${BASE_URL}/vendor/${vendor.id}`);
+    urls.add(`${BASE_URL}/vendor/${vendor.slug}`);
     if (vendor.suburb_slug) urls.add(`${BASE_URL}/${vendor.suburb_slug}`);
     if (vendor.category_slug) urls.add(`${BASE_URL}/categories/${vendor.category_slug}`);
     if (vendor.suburb_slug && vendor.category_slug) {
@@ -208,10 +207,15 @@ async function main() {
 
   const vendors = await fetchPublishedVendors();
   assert(vendors.length > 0, "Public catalogue unexpectedly contains no published vendors.");
-  const sampleVendor = await request(`${BASE_URL}/vendor/${vendors[0].id}`);
+  const sampleVendor = await request(`${BASE_URL}/vendor/${vendors[0].slug}`);
   assert(sampleVendor.status === 200, `Published vendor sample returned ${sampleVendor.status}.`);
   const sampleBody = await sampleVendor.text();
-  assert(sampleBody.includes(`${BASE_URL}/vendor/${vendors[0].id}`), "Published vendor sample is missing its canonical URL.");
+  assert(sampleBody.includes(`${BASE_URL}/vendor/${vendors[0].slug}`), "Published vendor sample is missing its canonical URL.");
+  await expectRedirect(
+    `${BASE_URL}/vendor/${vendors[0].id}`,
+    308,
+    `${BASE_URL}/vendor/${vendors[0].slug}`,
+  );
 
   const expected = buildExpectedSitemap(vendors);
   const actual = parseSitemap(sitemapXml);

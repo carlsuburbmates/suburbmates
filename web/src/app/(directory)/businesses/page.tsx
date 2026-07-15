@@ -36,9 +36,8 @@ export default async function BusinessesPage({
 
   // 1. Get total count and clamp page
   let countQuery = supabase
-    .from('vendors')
-    .select('id', { count: 'exact', head: true })
-    .eq('is_published', true);
+    .from('published_vendors')
+    .select('id', { count: 'exact', head: true });
 
   const escapedQ = q ? q.replace(/[%_\\]/g, '\\$&') : '';
 
@@ -54,9 +53,8 @@ export default async function BusinessesPage({
 
   // 2. Fetch clamped page data
   let query = supabase
-    .from('vendors')
-    .select('id, business_name, description, contact_email, phone, website, tier, is_claimed, street_address, suburb_slug, category_slug')
-    .eq('is_published', true);
+    .from('published_vendors')
+    .select('id, slug, business_name, description, contact_email, phone, website, tier, is_claimed, street_address, suburb_slug, category_slug');
 
   if (escapedQ) query = query.ilike('business_name', `%${escapedQ}%`);
   if (suburb) query = query.eq('suburb_slug', suburb);

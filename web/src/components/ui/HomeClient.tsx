@@ -10,6 +10,7 @@ interface HomeClientProps {
   suburbs: { name: string; slug: string }[];
   featuredVendors: Array<{
     id: string;
+    slug: string;
     business_name: string;
     description: string | null;
     phone: string | null;
@@ -183,7 +184,7 @@ export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientP
                       
                       <div className="grid grid-cols-2 gap-2">
                         <Link
-                          href={`/vendor/${vendor.id}`}
+                          href={`/vendor/${vendor.slug}`}
                           className="btn btn-ghost w-full flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 text-xs"
                         >
                           <Star size={14} aria-hidden="true" />

@@ -7,6 +7,7 @@ import { Search, MapPin, Phone, Globe, Star, Mail, ExternalLink, Filter, Chevron
 
 type DirectoryVendor = {
   id: string;
+  slug: string;
   business_name: string;
   description: string | null;
   contact_email: string | null;
@@ -229,7 +230,7 @@ export function DirectoryBrowseClient({
                       )}
 
                       <Link
-                        href={`/vendor/${vendor.id}`}
+                        href={`/vendor/${vendor.slug}`}
                         className="btn w-full flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded px-4 py-2 font-medium"
                         aria-label={`View profile for ${vendor.business_name}`}
                       >

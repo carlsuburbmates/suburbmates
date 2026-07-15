@@ -4,6 +4,21 @@ import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import ProfileEditor from './ProfileEditor'
 
+type OwnerVendor = {
+  id: string
+  slug: string
+  business_name: string
+  suburb_slug: string | null
+  category_slug: string | null
+  tier: string
+  is_published: boolean
+  street_address: string | null
+  contact_email: string | null
+  phone: string | null
+  website: string | null
+  description: string | null
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   
@@ -13,11 +28,8 @@ export default async function DashboardPage() {
     redirect('/login?next=/dashboard')
   }
 
-  // Fetch owned vendors
-  const { data: ownedVendors } = await supabase
-    .from('vendors')
-    .select('id, business_name, suburb_slug, category_slug, tier, is_published, street_address, contact_email, phone, website, description')
-    .eq('owner_id', user.id)
+  const { data: ownerVendorRows } = await supabase.rpc('list_current_owner_vendors')
+  const ownedVendors = ownerVendorRows as OwnerVendor[] | null
 
   const { data: profileChanges } = await supabase.rpc('list_current_owner_profile_changes')
   const latestChangeByVendor = new Map<string, (typeof profileChanges)[number]>()
@@ -72,7 +84,7 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Link href={`/vendor/${vendor.id}`} className="btn btn-ghost text-sm flex items-center gap-2">
+                      <Link href={`/vendor/${vendor.slug}`} className="btn btn-ghost text-sm flex items-center gap-2">
                         <ExternalLink size={16} /> View
                       </Link>
                     </div>

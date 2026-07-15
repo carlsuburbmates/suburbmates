@@ -162,6 +162,14 @@ async function runTests() {
       if (error) cleanupErrors.push(new Error(`Could not delete test claim: ${error.message}`));
     }
     if (vendorId) {
+      // The fixture is deliberately made non-public before deletion. Production
+      // public identities are permanent; this cleanup path is only available
+      // to the service-backed disposable/explicitly authorised test fixture.
+      const { error: unpublishError } = await serviceClient
+        .from('vendors')
+        .update({ is_published: false, published_at: null })
+        .eq('id', vendorId);
+      if (unpublishError) cleanupErrors.push(new Error(`Could not unpublish test listing before cleanup: ${unpublishError.message}`));
       const { error } = await serviceClient.from('vendors').delete().eq('id', vendorId);
       if (error) cleanupErrors.push(new Error(`Could not delete test listing: ${error.message}`));
     }
