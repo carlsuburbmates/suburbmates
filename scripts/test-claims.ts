@@ -156,10 +156,28 @@ async function runTests() {
 
     console.log('Reviewed claim submission integration test passed.');
   } finally {
-    if (claimRequestId) await serviceClient.from('claim_requests').delete().eq('id', claimRequestId);
-    if (vendorId) await serviceClient.from('vendors').delete().eq('id', vendorId);
-    if (ownerId) await serviceClient.auth.admin.deleteUser(ownerId);
-    if (otherId) await serviceClient.auth.admin.deleteUser(otherId);
+    const cleanupErrors: Error[] = [];
+    if (claimRequestId) {
+      const { error } = await serviceClient.from('claim_requests').delete().eq('id', claimRequestId);
+      if (error) cleanupErrors.push(new Error(`Could not delete test claim: ${error.message}`));
+    }
+    if (vendorId) {
+      const { error } = await serviceClient.from('vendors').delete().eq('id', vendorId);
+      if (error) cleanupErrors.push(new Error(`Could not delete test listing: ${error.message}`));
+    }
+    for (const [label, userId] of [['owner', ownerId], ['non-owner', otherId]] as const) {
+      if (!userId) continue;
+      const { error } = await serviceClient.auth.admin.deleteUser(userId);
+      if (error) {
+        cleanupErrors.push(new Error(`Could not delete ${label} test identity: ${error.message}`));
+        continue;
+      }
+      const verification = await serviceClient.auth.admin.getUserById(userId);
+      if (!verification.error) cleanupErrors.push(new Error(`${label} test identity still exists after cleanup.`));
+    }
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(cleanupErrors, 'Claim test cleanup was incomplete.');
+    }
   }
 }
 
