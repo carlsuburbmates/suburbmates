@@ -26,7 +26,7 @@ Reverified on 16 July 2026 (Australia/Melbourne):
 - 1,621 vendor rows total;
 - 1,600 published rows;
 - 20 exact unpublished legacy duplicates rejected with audited links to their published peers;
-- 1 original seeded listing remains unpublished and needs evidence review;
+- 1 original seeded listing is an explicit unpublished draft awaiting evidence review;
 - 0 active operators pending selection of the permanent operator email;
 - 0 open claims, profile changes, or genuine contact requests at the verification checkpoint;
 - three failed claim-test identities were removed; their three truthfully labelled audit events remain immutable;
@@ -124,7 +124,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716122000` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716123000` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth SMTP only at launch | Domain verified; confirm the actual Supabase SMTP path with one controlled magic-link test |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
