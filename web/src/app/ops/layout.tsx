@@ -25,6 +25,7 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
             <Link href="/ops/listings">Listings</Link>
             <Link href="/ops/claims">Claims</Link>
             <Link href="/ops/profile-edits">Profile edits</Link>
+            <Link href="/ops/contact">Contact</Link>
             <Link href="/ops/system">System</Link>
             <form action="/auth/signout" method="post">
               <button className="underline decoration-slate-500 underline-offset-4">Sign out</button>

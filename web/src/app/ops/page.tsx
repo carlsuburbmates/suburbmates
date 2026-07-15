@@ -29,16 +29,24 @@ type SystemOverview = {
   failed_job_count: number;
 };
 
+type ContactOverview = {
+  new_count: number;
+  in_progress_count: number;
+  resolved_count: number;
+  spam_count: number;
+};
+
 export default async function OpsOverviewPage() {
   const { supabase } = await verifyOpsAdmin("/ops");
-  const [listingResult, claimResult, profileResult, systemResult] = await Promise.all([
+  const [listingResult, claimResult, profileResult, contactResult, systemResult] = await Promise.all([
     supabase.rpc("ops_listing_overview"),
     supabase.rpc("ops_claim_overview"),
     supabase.rpc("ops_profile_change_overview"),
+    supabase.rpc("ops_contact_overview"),
     supabase.rpc("ops_system_overview"),
   ]);
 
-  if (listingResult.error || claimResult.error || profileResult.error || systemResult.error) {
+  if (listingResult.error || claimResult.error || profileResult.error || contactResult.error || systemResult.error) {
     throw new Error("The operations overview could not be loaded.");
   }
 
@@ -66,9 +74,16 @@ export default async function OpsOverviewPage() {
     stale_count: 0,
     failed_job_count: 0,
   }) as SystemOverview;
+  const contactOverview = (contactResult.data?.[0] ?? {
+    new_count: 0,
+    in_progress_count: 0,
+    resolved_count: 0,
+    spam_count: 0,
+  }) as ContactOverview;
 
   const systemExceptions = Number(systemOverview.failed_count) + Number(systemOverview.degraded_count) + Number(systemOverview.stale_count) + Number(systemOverview.failed_job_count);
-  const attentionCount = Number(listingOverview.review_count) + Number(overview.pending_count) + Number(overview.needs_information_count) + Number(profileOverview.pending_count) + systemExceptions;
+  const openContactCount = Number(contactOverview.new_count) + Number(contactOverview.in_progress_count);
+  const attentionCount = Number(listingOverview.review_count) + Number(overview.pending_count) + Number(overview.needs_information_count) + Number(profileOverview.pending_count) + openContactCount + systemExceptions;
 
   return (
     <div className="space-y-8">
@@ -80,12 +95,23 @@ export default async function OpsOverviewPage() {
         </p>
       </div>
 
-      <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5" aria-label="Operations summary">
-        <SummaryCard label="Open claim work" value={attentionCount} urgent={attentionCount > 0} />
+      <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-6" aria-label="Operations summary">
+        <SummaryCard label="All open work" value={attentionCount} urgent={attentionCount > 0} />
         <SummaryCard label="Listings to review" value={Number(listingOverview.review_count)} />
         <SummaryCard label="Claims to review" value={Number(overview.pending_count) + Number(overview.needs_information_count)} />
         <SummaryCard label="Profile edits" value={Number(profileOverview.pending_count)} />
+        <SummaryCard label="Contact requests" value={openContactCount} />
         <SummaryCard label="System exceptions" value={systemExceptions} urgent={systemExceptions > 0} />
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-bold">Contact requests</h3>
+            <p className="mt-1 text-sm text-slate-600">Review private support, correction, claim-help, and privacy messages.</p>
+          </div>
+          <Link href="/ops/contact" className="btn btn-primary">Open contact queue</Link>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
