@@ -7,6 +7,7 @@ import { getDomain } from "tldts";
 
 const TIMEOUT_MS = 12_000;
 const MAX_REDIRECTS = 3;
+const PAGE_SIZE = 1000;
 
 export function parseHttpsUrl(value) {
   const url = new URL(value);
@@ -95,6 +96,22 @@ export async function inspectWebsite(value) {
   throw new Error("Redirect limit exceeded.");
 }
 
+export async function collectWebsitePages(fetchPage, pageSize = PAGE_SIZE) {
+  const rows = [];
+  let expectedTotal;
+  for (let from = 0; expectedTotal === undefined || rows.length < expectedTotal; from += pageSize) {
+    const { data, count } = await fetchPage(from, from + pageSize - 1);
+    if (!Array.isArray(data)) throw new Error("Published website page data is missing.");
+    if (!Number.isInteger(count) || count < 0) throw new Error("Published website count is invalid.");
+    if (expectedTotal === undefined) expectedTotal = count;
+    if (count !== expectedTotal) throw new Error("Published website count changed during pagination.");
+    if (data.length === 0 && rows.length !== expectedTotal) throw new Error("Published website pagination ended early.");
+    rows.push(...data);
+    if (rows.length > expectedTotal) throw new Error("Published website pagination exceeded its count.");
+  }
+  return rows;
+}
+
 async function fetchPublishedWebsites() {
   const base = requireEnv("WEBSITE_CHECK_SUPABASE_URL").replace(/\/$/, "");
   const key = requireEnv("WEBSITE_CHECK_SUPABASE_PUBLISHABLE_KEY");
@@ -102,9 +119,23 @@ async function fetchPublishedWebsites() {
   endpoint.searchParams.set("select", "id,slug,business_name,website");
   endpoint.searchParams.set("website", "not.is.null");
   endpoint.searchParams.set("order", "id.asc");
-  const response = await fetch(endpoint, { headers: { apikey: key, authorization: `Bearer ${key}` } });
-  if (!response.ok) throw new Error(`Public website catalogue returned ${response.status}.`);
-  return response.json();
+  return collectWebsitePages(async (from, to) => {
+    const response = await fetch(endpoint, {
+      headers: {
+        apikey: key,
+        authorization: `Bearer ${key}`,
+        prefer: "count=exact",
+        range: `${from}-${to}`,
+        "range-unit": "items",
+      },
+    });
+    if (response.status !== 200 && response.status !== 206) {
+      throw new Error(`Public website catalogue returned ${response.status}.`);
+    }
+    const range = response.headers.get("content-range")?.match(/^(?:\d+-\d+|\*)\/(\d+)$/);
+    if (!range) throw new Error("Public website catalogue returned no exact count.");
+    return { data: await response.json(), count: Number(range[1]) };
+  });
 }
 
 function requireEnv(name) {
