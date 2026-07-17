@@ -1,20 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#121212]" />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setMessage(null);
     
-    // Get the next parameter from the current URL if it exists
-    const searchParams = new URLSearchParams(window.location.search);
     const next = searchParams.get("next");
     const redirectTo = new URL(`${window.location.origin}/auth/callback`);
     if (next) redirectTo.searchParams.set("next", next);
@@ -28,9 +36,12 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setMessage(error.message);
+      const text = error.message.toLowerCase().includes("rate")
+        ? "Too many sign-in links were requested. Wait a little while, then try again."
+        : "We could not send a sign-in link. Check the email address and try again.";
+      setMessage({ kind: "error", text });
     } else {
-      setMessage("Check your email for the magic link!");
+      setMessage({ kind: "success", text: "Check your email for the sign-in link. Open the newest link in this same browser." });
     }
     setLoading(false);
   };
@@ -39,9 +50,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#121212] text-white p-4">
       <div className="w-full max-w-md space-y-8 bg-white text-[#121212] p-8 rounded-lg shadow-xl">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight">Vendor Portal</h2>
-          <p className="mt-2 text-sm text-gray-600">Sign in with your email</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">Sign in to SuburbMates</h1>
+          <p className="mt-2 text-sm text-gray-600">Enter your email to receive a one-time sign-in link for your authorised area.</p>
         </div>
+        {searchParams.get("error") === "magic-link" && (
+          <p role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900">
+            This sign-in link could not be completed. Open the newest link in the same browser that requested it. Do not request another link until the email rate limit has cleared.
+          </p>
+        )}
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div>
             <label htmlFor="email" className="sr-only">Email address</label>
@@ -65,7 +81,14 @@ export default function LoginPage() {
               {loading ? "Sending magic link..." : "Send Magic Link"}
             </button>
           </div>
-          {message && <p className="mt-2 text-center text-sm font-medium">{message}</p>}
+          {message && (
+            <p
+              role={message.kind === "error" ? "alert" : "status"}
+              className={`rounded-md border p-3 text-center text-sm font-medium ${message.kind === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-green-300 bg-green-50 text-green-800"}`}
+            >
+              {message.text}
+            </p>
+          )}
         </form>
       </div>
     </div>

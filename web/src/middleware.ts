@@ -1,6 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
+// Public release is opt-in. Until the owner explicitly enables it at build
+// time, only the holding page and private operational paths are reachable.
+const publicLaunchEnabled = process.env.NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED === 'true'
+
+function isHoldingPostureAllowedPath(pathname: string) {
+  return pathname === '/' ||
+    pathname === '/sitemap.xml' ||
+    pathname === '/login' ||
+    pathname.startsWith('/auth/') ||
+    pathname === '/ops' ||
+    pathname.startsWith('/ops/') ||
+    pathname.startsWith('/api/')
+}
+
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.hostname === 'www.suburbmates.com.au') {
     const canonicalUrl = request.nextUrl.clone()
@@ -18,7 +32,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(callbackUrl)
   }
 
-  return await updateSession(request)
+  if (!publicLaunchEnabled && !isHoldingPostureAllowedPath(request.nextUrl.pathname)) {
+    const holdingUrl = request.nextUrl.clone()
+    holdingUrl.pathname = '/'
+    holdingUrl.search = ''
+    return NextResponse.redirect(holdingUrl, 307)
+  }
+
+  const response = await updateSession(request)
+  if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname.startsWith('/auth/')) {
+    response.headers.set('Cache-Control', 'private, no-cache, no-store, max-age=0, must-revalidate')
+  }
+  return response
 }
 
 export const config = {

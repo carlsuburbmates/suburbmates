@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const requestedNext = searchParams.get('next')
   const next = requestedNext?.startsWith('/') && !requestedNext.startsWith('//')
     ? requestedNext
-    : '/dashboard'
+    : '/ops'
 
   if (code) {
     const supabase = await createClient()
@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Return the user to an error page with some instructions
-  return NextResponse.redirect(`${origin}/login?error=Invalid%20magic%20link`)
+  // A magic link is bound to the browser that requested it. Keep the intended
+  // destination so the login page can give the operator a safe recovery step.
+  return NextResponse.redirect(`${origin}/login?next=${encodeURIComponent(next)}&error=magic-link`)
 }

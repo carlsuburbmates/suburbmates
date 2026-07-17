@@ -22,12 +22,12 @@ export function LaunchPage() {
       });
 
       if (error) {
-        router.replace("/login?error=Unable%20to%20complete%20sign-in");
+        router.replace("/login?next=%2Fops&error=magic-link");
         return;
       }
 
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
-      window.location.replace("/dashboard");
+      window.location.replace("/ops");
     };
 
     void completeMagicLink();
