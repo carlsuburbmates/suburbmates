@@ -4,6 +4,8 @@ SuburbMates is a public, hyper-local business directory for the City of Darebin.
 
 Read [`docs/HANDOVER.md`](docs/HANDOVER.md) before changing the project. It is the canonical project context, current-state record, operating guide, and next-work queue.
 
+Automation workflows, triggers, integrations, and safety boundaries are mapped in [`docs/AUTOMATION/`](docs/AUTOMATION/).
+
 ## Core commands
 
 ```bash
