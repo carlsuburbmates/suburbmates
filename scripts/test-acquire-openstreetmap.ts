@@ -1,7 +1,7 @@
-import { filterAndProcessElements, slugify, escapeCsv, COMMERCIAL_AMENITIES } from './acquire-openstreetmap';
+import { filterAndProcessElements, slugify, escapeCsv, getTodayAest, requestOverpass } from './acquire-openstreetmap';
 import assert from 'node:assert';
 
-function runTests() {
+async function runTests() {
   const catchments = ['northcote', 'preston', 'darebin'];
   
   // Test 1: filter out missing name
@@ -58,9 +58,31 @@ function runTests() {
   assert.strictEqual(escapeCsv('Hello "World"'), '"Hello ""World"""');
   assert.strictEqual(escapeCsv('Line\nBreak'), '"Line\nBreak"');
 
+  // Test 8: Melbourne dates stay ISO-formatted across a UTC day boundary.
+  assert.strictEqual(getTodayAest(new Date('2026-07-18T14:30:00Z')), '2026-07-19');
+
+  // Test 9: an Overpass response must be successful JSON with an elements array.
+  const response = await requestOverpass('https://example.test/interpreter', '[out:json];', async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ elements: [] }),
+  }) as Response);
+  assert.deepStrictEqual(response.elements, []);
+  await assert.rejects(
+    requestOverpass('https://example.test/interpreter', '[out:json];', async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ invalid: true }),
+    }) as Response),
+    /invalid Overpass response/,
+  );
+
   console.log('All tests passed.');
 }
 
 if (process.argv[1] && process.argv[1].endsWith('test-acquire-openstreetmap.ts')) {
-  runTests();
+  runTests().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
 }
