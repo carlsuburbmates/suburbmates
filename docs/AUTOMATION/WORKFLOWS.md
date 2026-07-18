@@ -31,7 +31,7 @@ GitHub production smoke (active on main; repaired run pending)
   -> GitHub issue only on failure
   -> no database write
 
-Supabase internal health monitor (active)
+Supabase internal health monitor (active Ops process; outside Automation lane)
   -> automation_jobs, listing/claim/profile-change queues
   -> integration_health records
   -> /ops/system display
@@ -46,8 +46,8 @@ Supabase internal health monitor (active)
 | Catalogue candidate discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; print coverage report; upload OSM and merged CSVs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days | **Active on `main`; repair pending promotion** — controlled run failed only because CI had no `.env.local` | No seed command, Supabase write, or publication command |
 | Website-safety evidence | Monday schedule at `08:41` UTC; manual dispatch | Read `published_vendors`; validate public DNS; make DNS-pinned HTTPS `HEAD` requests; follow at most three HTTPS redirects; write JSON report; fail when review is required; open/update one GitHub issue on failure | GitHub Actions, Supabase public projection, DNS, HTTPS, GitHub artifacts/issues | JSON report retained 30 days; one review issue if flagged | **Active on `main`; evidence run completed** — 588 checked, 86 flagged for review | No listing write; no automatic contact or publication decision |
 | Production smoke | Daily schedule at `19:23` Australia/Melbourne; manual dispatch | Check public routes; require unauthenticated Ops redirects; verify canonical redirects and invalid vendor 404; paginate safe Supabase projections; reconstruct and compare sitemap; sample a public vendor page; open/update one GitHub issue on failure | GitHub Actions, production Cloudflare site, Supabase public projections, GitHub issues | Pass/fail run; one failure issue if needed | **Active on `main`; repair pending promotion** — controlled run used directory checks against the intentional holding page | No Supabase write; no deployment; no listing change |
-| Internal operations health | Supabase `pg_cron`, hourly at minute 5 | Count failed and overdue automation jobs; count listings needing review, pending claims, and pending profile changes; update integration-health rows; expose them through authenticated Ops RPCs | Supabase PostgreSQL, `pg_cron`, `automation_jobs`, operator workflow tables, `/ops/system` | `integration_health` status and queue counts | **Active** | Observes and writes health records only; does not change listings, ownership, claims, billing, or tier |
-| Contact retention | Supabase `pg_cron`, daily at `03:17` UTC | Delete spam requests unchanged for 30 days and resolved requests unchanged for 12 months; append a retention audit event if content was deleted; update retention health | Supabase PostgreSQL, `pg_cron`, `contact_requests`, `audit_events`, `integration_health` | Retention health, deletion count, immutable audit evidence | **Active; governed exception** | Deletes only eligible private contact-request content; never touches vendor, publication, claim, or ownership state |
+| Internal operations health | Supabase `pg_cron`, hourly at minute 5 | Count failed and overdue automation jobs; count listings needing review, pending claims, and pending profile changes; update integration-health rows; expose them through authenticated Ops RPCs | Supabase PostgreSQL, `pg_cron`, `automation_jobs`, operator workflow tables, `/ops/system` | `integration_health` status and queue counts | **Active Ops process; outside Automation lane** | Writes health records only; never changes listings, ownership, claims, payments, publication, billing, or tier |
+| Contact retention | Supabase `pg_cron`, daily at `03:17` UTC | Delete spam requests unchanged for 30 days and resolved requests unchanged for 12 months; append a retention audit event if content was deleted; update retention health | Supabase PostgreSQL, `pg_cron`, `contact_requests`, `audit_events`, `integration_health` | Retention health, deletion count, immutable audit evidence | **Active Ops process; outside Automation lane** | Deletes only eligible private contact-request content; never touches listings, ownership, claims, payments, or publication |
 | On-demand path revalidation | Authenticated `POST /api/webhook/revalidate` | Require bearer token; require a path/tag; call `revalidatePath`; return response | Next.js, Cloudflare runtime secret `REVALIDATION_TOKEN` | Cache revalidation response | **Available on demand** — no scheduled caller is evidenced | Does not write listing data; changes only rendered-path cache state |
 | Stripe webhook | `POST /api/webhook/stripe` | Return `501 Billing integration not configured` | Next.js / Cloudflare route | Explicit disabled response | **Disabled** | No Stripe event processing, payment write, or publication change |
 | Legacy inactivity pruner | None; unscheduled by migration | Unschedule the legacy cron; record that it is disabled in integration health and audit history | Supabase PostgreSQL, `pg_cron`, `integration_health`, `audit_events` | Disabled status and audit event | **Disabled** | It cannot archive vendors or alter commercial tier |
@@ -75,7 +75,7 @@ Verified sequence:
 7. Print coverage information in the workflow log.
 8. Upload the OSM and merged CSVs as 30-day GitHub artifacts.
 
-The workflow deliberately does not run `seed`, does not call Supabase, and does not publish a listing. Its first controlled run failed before acquisition because CI had no `.env.local`. Commit `92eef2f` makes that file optional and awaits Main promotion. There is currently no implemented import of these artifacts into an authenticated `/ops` candidate review queue.
+The workflow deliberately does not run `seed`, does not call Supabase, and does not publish a listing. Its first controlled run failed before acquisition because CI had no `.env.local`. Commit `92eef2f` makes that file optional and awaits Main promotion. Import of these artifacts into an authenticated `/ops` candidate review queue is deliberately deferred: it is not a requirement of the current evidence-only workflow.
 
 ### 3. Website-safety evidence
 
@@ -93,19 +93,19 @@ It checks the public site and public database projections together: public route
 
 Source: `supabase/migrations/20260715173000_internal_health_monitoring.sql`.
 
-The scheduler calls `refresh_internal_operations_health()` hourly. It reports the state held in database tables; it does not observe GitHub Action runs or GitHub artifacts. Therefore an empty `automation_jobs` table can report healthy even when the GitHub-based automations have not run. `/ops/system` presents the health rows, jobs, and audit events to an authenticated active operator.
+The scheduler calls `refresh_internal_operations_health()` hourly. It reports the state held in database tables; it does not observe GitHub Action runs or GitHub artifacts. Therefore an empty `automation_jobs` table can report healthy even when the GitHub-based automations have not run. `/ops/system` presents the health rows, jobs, and audit events to an authenticated active operator. Main classifies this as a narrow, audited Ops process outside the Automation lane; it must never affect listings, ownership, claims, payments, or publication.
 
 ### 6. Contact retention
 
 Source: `supabase/migrations/20260716122000_automate_contact_retention.sql`.
 
-This is intentionally narrower than general data pruning. It deletes only private contact-request content after the stated spam/resolution retention periods and retains an audit record without the deleted message content. It must remain treated as an explicit retention-policy exception.
+This is intentionally narrower than general data pruning. It deletes only private contact-request content after the stated spam/resolution retention periods and retains an audit record without the deleted message content. Main classifies it as a narrow, audited Ops retention process outside the Automation lane; it must never affect listings, ownership, claims, payments, or publication.
 
 ## Explicitly absent or disabled automation
 
 | Area | Actual implementation state | Consequence |
 | --- | --- | --- |
-| Candidate artifact to Ops review queue | Not implemented | Candidate CSVs remain GitHub artifacts; no operator queue entry, persisted provenance, job, or audit event is created |
+| Candidate artifact to Ops review queue | Deliberately deferred | Candidate CSVs remain GitHub artifacts by design. No operator queue entry, persisted provenance, job, or audit event is created by the current evidence-only workflow |
 | Job execution and retry | No job producer or retry action implemented | `automation_jobs` can be displayed but does not currently receive GitHub workflow results or support a retry |
 | Stripe billing | Webhook returns `501` | No payment or subscription automation exists |
 | Bulk ABR/ABN lookup | Disabled | No ABN automation exists |
@@ -124,6 +124,6 @@ This is intentionally narrower than general data pruning. It deletes only privat
 | GitHub Issues | Surface one actionable exception | Replace the authenticated Ops queue or decide a listing |
 | Stripe, ABR, AI, media services | None while disabled | Change public listing state |
 
-## Operational handoff required
+## Future optional Ops handoff
 
-Before the candidate discovery automation can be considered complete, an approved design must add a safe, auditable transfer from the GitHub artifact into `/ops`. The transfer must retain source provenance and exceptions, create no public listing, require the active operator for any final decision, and leave immutable audit evidence.
+Candidate discovery is complete for the current evidence-only scope without an Ops import. If Main later chooses to introduce one, it needs an approved design for a safe, auditable transfer from the GitHub artifact into `/ops`. It must retain source provenance and exceptions, create no public listing, require the active operator for any final decision, and leave immutable audit evidence.
