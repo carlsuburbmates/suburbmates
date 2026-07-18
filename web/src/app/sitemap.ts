@@ -5,6 +5,12 @@ import { buildPublicSitemapUrls, fetchAllPublishedVendorRouteRows, fetchAllTaxon
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // While launch is intentionally contained, no unfinished public routes
+  // should be advertised to search engines.
+  if (process.env.NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED !== 'true') {
+    return [];
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
