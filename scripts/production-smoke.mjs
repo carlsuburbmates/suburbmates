@@ -1,6 +1,4 @@
 const BASE_URL = normalizeBaseUrl(process.env.BASE_URL || "https://suburbmates.com.au");
-const SUPABASE_URL = requireEnv("SMOKE_SUPABASE_URL").replace(/\/+$/, "");
-const SUPABASE_KEY = requireEnv("SMOKE_SUPABASE_PUBLISHABLE_KEY");
 const PAGE_SIZE = 1000;
 const REQUEST_TIMEOUT_MS = 15_000;
 const REQUEST_ATTEMPTS = 3;
@@ -79,7 +77,9 @@ function parseContentRange(value) {
 }
 
 async function fetchPublishedVendors() {
-  const endpoint = new URL("/rest/v1/published_vendors", SUPABASE_URL);
+  const supabaseUrl = requireEnv("SMOKE_SUPABASE_URL").replace(/\/+$/, "");
+  const supabaseKey = requireEnv("SMOKE_SUPABASE_PUBLISHABLE_KEY");
+  const endpoint = new URL("/rest/v1/published_vendors", supabaseUrl);
   endpoint.searchParams.set("select", "id,slug,category_slug,suburb_slug");
   endpoint.searchParams.set("order", "id.asc");
 
@@ -92,8 +92,8 @@ async function fetchPublishedVendors() {
     const to = from + PAGE_SIZE - 1;
     const response = await request(endpoint, {
       headers: {
-        apikey: SUPABASE_KEY,
-        authorization: `Bearer ${SUPABASE_KEY}`,
+        apikey: supabaseKey,
+        authorization: `Bearer ${supabaseKey}`,
         prefer: "count=exact",
         range: `${from}-${to}`,
         "range-unit": "items",
@@ -122,7 +122,9 @@ async function fetchPublishedVendors() {
 }
 
 async function fetchTaxonomyPageEligibility() {
-  const endpoint = new URL("/rest/v1/taxonomy_page_eligibility", SUPABASE_URL);
+  const supabaseUrl = requireEnv("SMOKE_SUPABASE_URL").replace(/\/+$/, "");
+  const supabaseKey = requireEnv("SMOKE_SUPABASE_PUBLISHABLE_KEY");
+  const endpoint = new URL("/rest/v1/taxonomy_page_eligibility", supabaseUrl);
   endpoint.searchParams.set("select", "route_type,suburb_slug,category_slug,qualified_listing_count");
   endpoint.searchParams.set("order", "route_type.asc,suburb_slug.asc,category_slug.asc");
 
@@ -135,8 +137,8 @@ async function fetchTaxonomyPageEligibility() {
     const to = from + PAGE_SIZE - 1;
     const response = await request(endpoint, {
       headers: {
-        apikey: SUPABASE_KEY,
-        authorization: `Bearer ${SUPABASE_KEY}`,
+        apikey: supabaseKey,
+        authorization: `Bearer ${supabaseKey}`,
         prefer: "count=exact",
         range: `${from}-${to}`,
         "range-unit": "items",
@@ -219,8 +221,26 @@ function compareUrlSets(actual, expected) {
 }
 
 async function main() {
-  const [home, businesses, categories, locations, howItWorks, contact, privacy, sitemapXml] = await Promise.all([
-    expectResponse("/", 200, "text/html", /SuburbMates/i),
+  const home = await expectResponse("/", 200, "text/html", /SuburbMates/i);
+
+  const protectedRoutes = ["/ops", "/ops/claims", "/ops/listings", "/ops/profile-edits", "/ops/system"];
+  await Promise.all(protectedRoutes.map((path) => expectRedirect(
+    `${BASE_URL}${path}`,
+    307,
+    `${BASE_URL}/login?next=${encodeURIComponent("/ops")}`,
+  )));
+
+  if (/Preparing for launch/i.test(home)) {
+    assert(
+      /<meta[^>]+(?:name="robots"[^>]+content="noindex, nofollow"|content="noindex, nofollow"[^>]+name="robots")/i.test(home),
+      "Holding homepage is missing noindex, nofollow robots metadata.",
+    );
+    assert(!/href="\/(?:businesses|categories|locations|contact|claim|dashboard)"/i.test(home), "Holding homepage exposes an unfinished public journey.");
+    console.log("Production holding smoke passed: launch page is noindex and Ops remains protected.");
+    return;
+  }
+
+  const [businesses, categories, locations, howItWorks, contact, privacy, sitemapXml] = await Promise.all([
     expectResponse("/businesses", 200, "text/html", /business/i),
     expectResponse("/categories", 200, "text/html", /categor/i),
     expectResponse("/locations", 200, "text/html", /location|suburb/i),
@@ -230,19 +250,11 @@ async function main() {
     expectResponse("/sitemap.xml", 200, "xml"),
     expectResponse("/robots.txt", 200, "text/plain"),
   ]);
-  void home;
   void businesses;
   void locations;
   void howItWorks;
   void contact;
   void privacy;
-
-  const protectedRoutes = ["/ops", "/ops/claims", "/ops/listings", "/ops/profile-edits", "/ops/system"];
-  await Promise.all(protectedRoutes.map((path) => expectRedirect(
-    `${BASE_URL}${path}`,
-    307,
-    `${BASE_URL}/login?next=${encodeURIComponent("/ops")}`,
-  )));
   await expectRedirect(
     "https://www.suburbmates.com.au/businesses?suburb=northcote",
     308,
