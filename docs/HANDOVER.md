@@ -21,16 +21,16 @@ The launch model is deliberately review-first:
 
 ## Current hosted state
 
-Reverified on 16 July 2026 (Australia/Melbourne):
+Reverified on 18 July 2026 (Australia/Melbourne):
 
 - 1,621 vendor rows total;
 - 1,600 published rows;
 - 20 exact unpublished legacy duplicates rejected with audited links to their published peers;
 - 1 original seeded listing is an explicit unpublished draft awaiting evidence review;
-- 0 active operators pending selection of the permanent operator email;
+- exactly 1 active operator: `admin@suburbmates.com.au`;
 - 0 open claims, profile changes, or genuine contact requests at the verification checkpoint;
 - three failed claim-test identities were removed; their three truthfully labelled audit events remain immutable;
-- the public sitemap contains all 1,600 vendor URLs, 14 qualified category hubs, 5 qualified suburb hubs, 58 qualified suburb/category pages, and 7 static URLs (1,684 URLs total). All other valid taxonomy pages remain browseable but `noindex` and absent from the sitemap.
+- production is intentionally contained behind the noindex holding page: unfinished public routes redirect home and the public sitemap is empty.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
@@ -95,7 +95,7 @@ Implemented queues:
 
 Operator actions use authenticated `SECURITY DEFINER` RPCs that call `private.require_active_operator()`, lock mutable records, validate transitions, and append audit events atomically. Publication never changes as a side effect of ownership, ABN, payment, or tier.
 
-No permanent operator is enrolled yet. Do not enrol the temporary `carl@suburbmates.com.au` identity or the Stripe-only Yahoo identity by assumption. After the owner selects the permanent email, that person must sign in once before a single active operator row is added and audited.
+The permanent operator is `admin@suburbmates.com.au`; the hosted database has exactly one active operator record for that identity. Do not enrol the temporary `carl@suburbmates.com.au` identity or the Stripe-only Yahoo identity by assumption. Any future operator change must be explicitly authorised, audited, and reverified.
 
 ## Data and acquisition workflow
 
@@ -130,7 +130,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
 | Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716128000` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
-| Resend | Supabase Auth SMTP only at launch | Domain verified; confirm the actual Supabase SMTP path with one controlled magic-link test |
+| Resend | Supabase Auth SMTP only at launch | Domain verified; one controlled magic-link sign-in into `/ops` is complete |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
 | ABN Lookup | Optional supporting evidence | Credential works; no workflow enabled; never gate listing, claim, or publication on ABN alone |
 
@@ -166,11 +166,10 @@ After deployment, verify the served production response—not only browser cache
 
 ## Remaining work
 
-1. Select and enrol one permanent operator, then test every authenticated `/ops` queue in the browser.
-2. Confirm one real Supabase/Resend magic-link delivery and saved session.
-3. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
-4. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
-5. Review weekly outbound-website evidence reports. The automated checker follows HTTPS redirects only after public-DNS validation, records evidence, and opens one review issue when needed; it never changes a listing automatically. A constrained media/logo pipeline remains deferred until the core launch gates pass.
+1. Exercise every authenticated `/ops` queue in the browser, confirming each routine decision is clear to the non-technical operator and leaves the required audit evidence.
+2. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
+3. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
+4. Review weekly outbound-website evidence reports. The automated checker follows HTTPS redirects only after public-DNS validation, records evidence, and opens one review issue when needed; it never changes a listing automatically. A constrained media/logo pipeline remains deferred until the core launch gates pass.
 
 ## Cleanup boundary
 
