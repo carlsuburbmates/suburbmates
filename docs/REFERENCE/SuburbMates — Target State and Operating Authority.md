@@ -8,6 +8,8 @@ Where this document makes an explicit owner decision that differs from an older 
 
 Owner decisions and material implementation deviations are recorded in [SuburbMates — Decision Log](./SuburbMates%20%E2%80%94%20Decision%20Log.md). Linear holds the linked work and verification record; this repository holds the durable product authority.
 
+The complete non-technical experience is defined in [SuburbMates — Complete User Journey Map](./SuburbMates%20%E2%80%94%20Complete%20User%20Journey%20Map.md). Its technical automation companion is `docs/AUTOMATION/WORKFLOWS.md`.
+
 ## Product outcome
 
 SuburbMates is a directory-first service for discovering local Darebin businesses and contacting them directly. It is not a lead-selling marketplace, quote funnel, merchant of record, or a platform that invents business facts.
