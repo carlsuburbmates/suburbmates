@@ -61,6 +61,14 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Guardrail:** No automatic merge, reset, deployment, production data change or policy change follows from that refresh. Unmerged lane work is candidate work, not accepted truth.
 - **Evidence to close:** Relevant CI evidence, persisted run and exception evidence, tests, review and live verification where a public or production behaviour changes.
 
+### D-006 — Communications and account access
+
+- **Date:** 19 July 2026
+- **Decision:** Communications is a first-class user journey. During the holding posture, passwordless sign-in from `auth@suburbmates.com.au` is the only approved outbound email. A public contact dispatcher, support inbox, marketing mail, bulk notification system and uncontrolled retries remain disabled.
+- **Decision required before expansion:** `SUB-15` must approve the exact post-release message catalogue: trigger, recipient, sender, content boundary, contact/consent basis, retained evidence, failure state, retention and Ops action.
+- **Guardrail:** A user must retain an in-product status/recovery path if a message cannot be delivered. A message never changes publication, ownership, trust, commercial or claim state.
+- **Evidence to close:** Approved journey/map, message catalogue, authorised implementation and end-to-end delivery/failure evidence for each enabled message.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |

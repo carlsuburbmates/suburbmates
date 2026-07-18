@@ -35,11 +35,13 @@ mindmap
       Find business
         Claim listing
           Sign in by email link
-          Provide ownership evidence
-          Track request
-            Approved
+          Follow approved claim policy
+            Track request or claim outcome
               Manage profile changes
-            More evidence needed or declined
+      Communications and account access
+        Magic-link sign in and recovery
+        Approved status messages only
+        Contact help and privacy intake
     Business not listed
       Add a business
         Protected submission
@@ -110,9 +112,9 @@ The site should retain only the minimum useful operational evidence: anonymous a
 1. The owner enters through **Find or claim your business** or finds their listing through search.
 2. They open the existing unclaimed profile and select **Claim this business**.
 3. They sign in through the approved passwordless email path.
-4. They provide the evidence required by the eventual claim policy and can see what happens next.
-5. The system shows a clear request state: received, more information needed, under review, approved, declined or withdrawn.
-6. An authorised operator reviews the evidence and makes the ownership decision.
+4. They follow the claim method approved for public release and can see what happens next.
+5. The system shows a clear, explainable outcome or request state.
+6. If the approved policy requires review, an authorised operator reviews the evidence and makes the ownership decision.
 7. If approved, the owner can propose profile changes; those changes follow the moderation rule appropriate to the field. If not approved, the listing remains independently valid or invalid according to its publication state.
 8. The journey is complete when the owner sees a final, explained claim result and any accepted profile change is reflected.
 
@@ -123,15 +125,50 @@ The site should retain only the minimum useful operational evidence: anonymous a
 - Approval changes ownership only. It never creates publication, an ABN signal, payment status or a general "verified" badge by itself.
 - Necessary transactional messages may confirm sign-in, request receipt, requests for more information and final outcomes. No uncontrolled marketing or automatic retries are implied.
 
+### Claim-policy decision gate
+
+The current repository includes a self-service email-match claim design. Older Operations material describes a reviewed claim queue. The finished public claim policy is not yet approved: `SUB-7` must choose and document the evidence, review, conflict, recovery and revocation rules before this journey is released. This map does not silently select either model.
+
+### Media and logo changes
+
+An owner may eventually propose a logo or other listing media through the moderated profile-change journey. The flow must identify the source or permission basis, apply safe file/storage handling, show a pending state, and give Ops an approve, reject or remove decision. Media is never accepted merely because a user is authenticated.
+
 ### What Ops needs to retain
 
 - claimant account reference, listing reference and request timestamps;
 - submitted ownership evidence, redaction/access rules and conflict flags;
 - claim status, decision, reason, reviewer and audit trail;
 - proposed profile changes, before/after values, source/evidence and moderation outcome; and
-- message-delivery outcome only where a necessary transactional message was sent.
+- message-delivery outcome only where an approved transactional message was sent; and
+- media source/permission evidence and moderation outcome when media is proposed.
 
-## 4. New-business journey: add a business that is not yet listed
+## 4. Communications and account-access journey
+
+This is a first-class service journey, not a background detail of claims or forms. It has two intentionally separate states.
+
+### Current holding posture
+
+The only approved outbound email is the passwordless sign-in link from `auth@suburbmates.com.au`. It supports the authorised operator's sign-in and recovery path. There is no public support inbox, contact dispatcher, marketing mail, bulk notification system or automatic retry loop.
+
+### Finished public posture
+
+Before any new message is enabled, `SUB-15` must approve a message catalogue. Each message must name its trigger, recipient, sender, content boundary, contact/consent basis, data retained, delivery failure state, retention rule and Ops action. A person must still be able to see their request status if a message cannot be delivered.
+
+The possible public intents are:
+
+1. **Account access:** request a magic link, use it in the same browser, recover safely from an expired or superseded link, and reach only the authorised private area.
+2. **Claim or profile request status:** see the status in the authenticated product; any email is an approved supplement, never the only record.
+3. **Contact, help and privacy request:** select a plain-language request type, submit a private request, receive an honest on-screen outcome and, only where approved and permitted, a transactional reply.
+4. **Submission or report outcome:** receive a status through the approved channel only when a contact basis exists and the message catalogue permits it.
+
+### What Ops needs to retain
+
+- message/request type, trigger, recipient reference and correlation identifier;
+- the approved template/version or on-screen outcome, delivery result and failure reason where delivery occurs;
+- contact permission, retention state and the private request/claim/report link; and
+- the operator action and audit record for a material response, privacy request or delivery exception.
+
+## 5. New-business journey: add a business that is not yet listed
 
 1. A person selects **Add a business** from Home or a directory empty state.
 2. They provide the minimum useful details and a way to support the business's existence and local relevance.
@@ -155,7 +192,7 @@ The site should retain only the minimum useful operational evidence: anonymous a
 - review queue state, decision reason, reviewer and audit history; and
 - a link to the final listing only after a deliberate lifecycle decision.
 
-## 5. Community-reporter journey: correct or flag a concern
+## 6. Community-reporter journey: correct or flag a concern
 
 1. A visitor selects **Report a problem** from a business profile or the contact path.
 2. They choose a plain-language reason such as wrong details, duplicate, closed business, unsafe destination or another concern.
@@ -164,6 +201,10 @@ The site should retain only the minimum useful operational evidence: anonymous a
 5. An operator checks evidence and corrects, withholds, merges, rejects or escalates the concern.
 6. The journey is complete when the public record is safely resolved and, if a reply is appropriate and permitted, the reporter receives a factual outcome.
 
+### Reconsideration, removal and privacy
+
+A reporter, business owner or affected person must be able to understand the safe next step when they disagree with an outcome, need a factual correction, request removal/withholding, or make a privacy request. The request is private, explained and audit-recorded; it never silently deletes a listing or audit history. The exact public policy and eligibility rules are an approval item in `SUB-7`.
+
 ### What Ops needs to retain
 
 - report type, listing reference, evidence and timestamps;
@@ -171,7 +212,7 @@ The site should retain only the minimum useful operational evidence: anonymous a
 - moderation status, decision, reason, reviewer and linked audit event; and
 - any resulting listing-state or public-fact change, with before/after evidence.
 
-## 6. Operator journey: run the directory safely
+## 7. Operator journey: run the directory safely
 
 1. The authorised operator signs in and reaches protected **Ops**.
 2. The overview identifies work needing attention: listing exceptions, candidate reviews, claims, profile changes, reports, contacts and system health.
@@ -194,7 +235,7 @@ The site should retain only the minimum useful operational evidence: anonymous a
 - queue state, retry/recovery information and links to relevant system/job evidence; and
 - immutable audit history for material lifecycle, claim, correction and security-sensitive actions.
 
-## 7. Automation journey: evidence, not unchecked authority
+## 8. Automation journey: evidence, not unchecked authority
 
 1. A scheduled or manually initiated workflow starts with a visible run identity.
 2. It acquires data from approved sources, applies bounded requests and validates the returned data.
@@ -214,7 +255,7 @@ The site should retain only the minimum useful operational evidence: anonymous a
 - retry/fallback/error evidence and operator-visible exception state; and
 - proof that no prohibited state-changing action was performed.
 
-## 8. Search-engine journey: public discovery after release
+## 9. Search-engine journey: public discovery after release
 
 1. Once the public launch gate is deliberately enabled, a crawler reaches only public, indexable routes.
 2. It receives canonical URLs, permitted metadata and a sitemap containing only eligible public pages.
@@ -240,9 +281,10 @@ The site should retain only the minimum useful operational evidence: anonymous a
 
 1. Approve this map and reconcile it with the Target State, Operations Specification and current implementation.
 2. Build the public directory discovery and profile journey with safe holding/release controls.
-3. Build claims, owner status and moderated profile changes.
-4. Build protected missing-business and concern-report journeys with Ops queues.
-5. Build the audited candidate-to-Ops qualification handoff currently parked in Linear as `SUB-6`.
-6. Verify each journey end-to-end: browser behaviour, database records, authorisation, background evidence and Ops observability.
+3. Approve the Communications and account-access journey in `SUB-15`; do not activate expanded delivery before this gate.
+4. Build claims, owner status and moderated profile changes.
+5. Build protected missing-business and concern-report journeys with Ops queues.
+6. Build the audited candidate-to-Ops qualification handoff currently parked in Linear as `SUB-6`.
+7. Verify each journey end-to-end: browser behaviour, database records, authorisation, background evidence and Ops observability.
 
 Monetisation is intentionally absent from this sequence until a separate paid offer is approved.

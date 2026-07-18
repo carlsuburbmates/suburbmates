@@ -9,7 +9,7 @@ The map does not imply that a configured workflow has run successfully, or that 
 ## End-to-end map
 
 ```text
-GitHub catalogue discovery (active on main; repaired run pending)
+GitHub catalogue discovery (active on main; controlled run succeeded after the environment fix)
   -> OpenStreetMap / Overpass public data
   -> candidate CSV
   -> data-hygiene audit
@@ -25,7 +25,7 @@ GitHub website-safety evidence (active on main)
   -> GitHub issue only when review is needed
   -> no database write; no listing change
 
-GitHub production smoke (active on main; repaired run pending)
+GitHub production smoke (active on main; controlled holding-posture run succeeded)
   -> public site + Supabase safe projections
   -> route, sitemap, access-control, and catalogue consistency checks
   -> GitHub issue only on failure
@@ -43,9 +43,9 @@ Supabase internal health monitor (active Ops process; outside Automation lane)
 | Workflow | Trigger | Verified steps | Services / infrastructure | Output | Current status | State-changing boundary |
 | --- | --- | --- | --- | --- | --- | --- |
 | Repository verification | GitHub pull request; push to `main` or `codex/**` | Check out code; install Node 22 dependencies; run root checks; lint, build, and Cloudflare build for `web/` | GitHub Actions, Node.js, npm, Next.js, OpenNext/Cloudflare build tooling | Pass/fail GitHub check | **Active** | No hosted data write or deployment command |
-| Catalogue candidate discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; print coverage report; upload OSM and merged CSVs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days | **Active on `main`; repair pending promotion** — controlled run failed only because CI had no `.env.local` | No seed command, Supabase write, or publication command |
+| Catalogue candidate discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; print coverage report; upload OSM and merged CSVs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days | **Active on `main`; controlled run succeeded after the environment fix**. External-request hardening remains under review. | No seed command, Supabase write, or publication command |
 | Website-safety evidence | Monday schedule at `08:41` UTC; manual dispatch | Read `published_vendors`; validate public DNS; make DNS-pinned HTTPS `HEAD` requests; follow at most three HTTPS redirects; write JSON report; fail when review is required; open/update one GitHub issue on failure | GitHub Actions, Supabase public projection, DNS, HTTPS, GitHub artifacts/issues | JSON report retained 30 days; one review issue if flagged | **Active on `main`; evidence run completed** — 588 checked, 86 flagged for review | No listing write; no automatic contact or publication decision |
-| Production smoke | Daily schedule at `19:23` Australia/Melbourne; manual dispatch | Check public routes; require unauthenticated Ops redirects; verify canonical redirects and invalid vendor 404; paginate safe Supabase projections; reconstruct and compare sitemap; sample a public vendor page; open/update one GitHub issue on failure | GitHub Actions, production Cloudflare site, Supabase public projections, GitHub issues | Pass/fail run; one failure issue if needed | **Active on `main`; repair pending promotion** — controlled run used directory checks against the intentional holding page | No Supabase write; no deployment; no listing change |
+| Production smoke | Daily schedule at `19:23` Australia/Melbourne; manual dispatch | Check public routes; require unauthenticated Ops redirects; verify canonical redirects and invalid vendor 404; paginate safe Supabase projections; reconstruct and compare sitemap; sample a public vendor page; open/update one GitHub issue on failure | GitHub Actions, production Cloudflare site, Supabase public projections, GitHub issues | Pass/fail run; one failure issue if needed | **Active on `main`; controlled holding-posture run succeeded after the route-expectation fix** | No Supabase write; no deployment; no listing change |
 | Internal operations health | Supabase `pg_cron`, hourly at minute 5 | Count failed and overdue automation jobs; count listings needing review, pending claims, and pending profile changes; update integration-health rows; expose them through authenticated Ops RPCs | Supabase PostgreSQL, `pg_cron`, `automation_jobs`, operator workflow tables, `/ops/system` | `integration_health` status and queue counts | **Active Ops process; outside Automation lane** | Writes health records only; never changes listings, ownership, claims, payments, publication, billing, or tier |
 | Contact retention | Supabase `pg_cron`, daily at `03:17` UTC | Delete spam requests unchanged for 30 days and resolved requests unchanged for 12 months; append a retention audit event if content was deleted; update retention health | Supabase PostgreSQL, `pg_cron`, `contact_requests`, `audit_events`, `integration_health` | Retention health, deletion count, immutable audit evidence | **Active Ops process; outside Automation lane** | Deletes only eligible private contact-request content; never touches listings, ownership, claims, payments, or publication |
 | On-demand path revalidation | Authenticated `POST /api/webhook/revalidate` | Require bearer token; require a path/tag; call `revalidatePath`; return response | Next.js, Cloudflare runtime secret `REVALIDATION_TOKEN` | Cache revalidation response | **Available on demand** — no scheduled caller is evidenced | Does not write listing data; changes only rendered-path cache state |
@@ -75,7 +75,7 @@ Verified sequence:
 7. Print coverage information in the workflow log.
 8. Upload the OSM and merged CSVs as 30-day GitHub artifacts.
 
-The workflow deliberately does not run `seed`, does not call Supabase, and does not publish a listing. Its first controlled run failed before acquisition because CI had no `.env.local`. Commit `92eef2f` makes that file optional and awaits Main promotion. Import of these artifacts into an authenticated `/ops` candidate review queue is deliberately deferred: it is not a requirement of the current evidence-only workflow.
+The workflow deliberately does not run `seed`, does not call Supabase, and does not publish a listing. The environment fix is merged and a controlled run succeeded on `main`. The current hardening work bounds external requests, validates provider responses and records fallback failures before review. Import of these artifacts into an authenticated `/ops` candidate review queue is not yet implemented; it remains evidence-only until a reviewed handoff exists.
 
 ### 3. Website-safety evidence
 
@@ -87,7 +87,7 @@ For every published listing with a website, it retrieves only the safe `publishe
 
 Sources: `.github/workflows/production-smoke.yml` and `scripts/production-smoke.mjs`.
 
-It checks the public site and public database projections together: public routes, unauthenticated Ops redirects, canonical redirects, an invalid vendor route, public catalogue pagination, taxonomy eligibility, exact sitemap membership, category links, and one vendor page. A failure creates or updates one GitHub issue. It never writes to Supabase. The first controlled run failed because it expected the unfinished public contact route while the approved holding page was live. Commit `92eef2f` adds a holding-page check and awaits Main promotion.
+It checks the public site and public database projections together: public routes, unauthenticated Ops redirects, canonical redirects, an invalid vendor route, public catalogue pagination, taxonomy eligibility, exact sitemap membership, category links, and one vendor page. A failure creates or updates one GitHub issue. It never writes to Supabase. Its holding-page expectation is merged and a controlled run succeeded on `main`.
 
 ### 5. Internal health and Ops display
 
@@ -105,7 +105,7 @@ This is intentionally narrower than general data pruning. It deletes only privat
 
 | Area | Actual implementation state | Consequence |
 | --- | --- | --- |
-| Candidate artifact to Ops review queue | Deliberately deferred | Candidate CSVs remain GitHub artifacts by design. No operator queue entry, persisted provenance, job, or audit event is created by the current evidence-only workflow |
+| Candidate artifact to Ops review queue | Not yet implemented | Candidate CSVs remain GitHub artifacts today. The target product requires a reviewed, auditable handoff with persisted provenance and exception handling; it must not create an unreviewed production data path. |
 | Job execution and retry | No job producer or retry action implemented | `automation_jobs` can be displayed but does not currently receive GitHub workflow results or support a retry |
 | Stripe billing | Webhook returns `501` | No payment or subscription automation exists |
 | Bulk ABR/ABN lookup | Disabled | No ABN automation exists |
