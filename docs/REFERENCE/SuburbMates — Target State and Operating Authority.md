@@ -12,6 +12,8 @@ The complete non-technical experience is defined in [SuburbMates — Complete Us
 
 All execution follows [SuburbMates — Execution Governance and Readiness Protocol](./SuburbMates%20%E2%80%94%20Execution%20Governance%20and%20Readiness%20Protocol.md).
 
+The unresolved owner choices that gate implementation are collected in [SUB-7 — Owner Decision Sheet](./SuburbMates%20%E2%80%94%20SUB-7%20Owner%20Decision%20Sheet.md).
+
 ## Product outcome
 
 SuburbMates is a directory-first service for discovering local Darebin businesses and contacting them directly. It is not a lead-selling marketplace, quote funnel, merchant of record, or a platform that invents business facts.
