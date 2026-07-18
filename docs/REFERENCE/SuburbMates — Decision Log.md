@@ -69,6 +69,17 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Guardrail:** A user must retain an in-product status/recovery path if a message cannot be delivered. A message never changes publication, ownership, trust, commercial or claim state.
 - **Evidence to close:** Approved journey/map, message catalogue, authorised implementation and end-to-end delivery/failure evidence for each enabled message.
 
+### D-007 — SUB-7 owner decisions: directory, claims, communications and release
+
+- **Date:** 19 July 2026
+- **Claim policy:** An exact match to the listing's recorded contact email is the normal claim path. Conflicts, sensitive changes, challenges, recovery, revocation and non-matching evidence enter a protected, auditable exception path. Claims change ownership only.
+- **Missing-business policy:** A submission is private first. Deterministically qualified, approved-source, in-scope, identifiable and deduplicated candidates may become unclaimed listings; uncertain or risky candidates enter Ops exception review. Direct self-service public profile creation is not allowed.
+- **Communications policy:** Keep the current sign-in email. After public release, introduce only explicitly approved transactional status messages in stages, with an in-product status/recovery path and no marketing, general support inbox, bulk notifications or uncontrolled retries. `SUB-15` defines the exact catalogue before `SUB-13` implements any message.
+- **Release policy:** Lift holding only after thin end-to-end acceptance proves the resident, owner, submission/report, Ops, automation and public-route journeys. Records existing in the database are not sufficient.
+- **Correction/privacy policy:** Use a private tracked request with operator decision reason and audit history. Never silently delete a listing or audit history, and never automatically remove public information solely from an unreviewed request.
+- **First launch:** The initial public launch is complete when the minimum end-to-end journeys above are proven. Stripe, broad email, bulk ABN checks, AI publication and optional polish are not launch prerequisites.
+- **Evidence to close:** Update authority/issue descriptions; build the ready foundation work; then verify each public journey and release gate.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |

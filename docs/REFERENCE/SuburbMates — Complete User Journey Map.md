@@ -127,7 +127,9 @@ The site should retain only the minimum useful operational evidence: anonymous a
 
 ### Claim-policy decision gate
 
-The current repository includes a self-service email-match claim design. Older Operations material describes a reviewed claim queue. The finished public claim policy is not yet approved: `SUB-7` must choose and document the evidence, review, conflict, recovery and revocation rules before this journey is released. This map does not silently select either model.
+**Approved owner decision:** an exact match to the listing's recorded contact email is the normal low-friction claim path. It must be paired with a protected exception, challenge, recovery and revocation path for conflicts, sensitive changes and non-matching evidence. A successful claim changes ownership only; it does not publish a listing or confer unrelated trust/commercial status.
+
+The current repository's direct email-match implementation is not, by itself, proof that the full exception and revocation path exists. That work remains governed by the owner journey and Ops issues.
 
 ### Media and logo changes
 

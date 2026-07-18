@@ -4,6 +4,10 @@
 
 These are the few decisions that affect many future issues. Choose the recommended position, select another option, or write a short variation. No choice in this document changes the live site by itself.
 
+## Approved owner decisions — 19 July 2026
+
+The owner approved the recommended position for every decision: **1C, 2B, 3B, 4B, 5B**, and the recommended first-launch definition in decision 6. The Decision Log is the durable policy record; this sheet remains the concise explanation of the choices.
+
 Current fact remains: the site is in holding mode; the directory is not publicly browsable; the only approved outbound email is the operator magic-link sign-in path; Stripe is disabled.
 
 ## 1. How an existing business owner claims a listing

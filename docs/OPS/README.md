@@ -25,6 +25,8 @@ Open `/ops` and sign in with `admin@suburbmates.com.au`. Open the email link in 
 4. **Contact** — handle support, correction, claim-help, and privacy messages.
 5. **System** — notice warnings and confirm decisions appear in the permanent record.
 
+Routine exact-email claims are intended to be low-friction. Claims requiring a challenge, recovery, revocation, conflict resolution or sensitive-change review belong in the protected Claims queue. A claim never publishes a listing or changes unrelated trust/commercial state.
+
 If a queue grows, use **Next page** and **Previous page** at the bottom. Each page has up to 100 items. An empty queue needs no action.
 
 ## Decisions
