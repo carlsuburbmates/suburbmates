@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { formatOpsDateTime } from "@/lib/ops/date";
 import { reviewContactAction } from "../actions";
 
 type ContactRequest = {
@@ -48,7 +49,7 @@ export default async function OpsContactDetailPage({
     <div className="space-y-7">
       <Link href={`/ops/contact?status=${request.contact_status}`} className="text-sm font-bold underline underline-offset-4">← Back to contact queue</Link>
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div><p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">{formatStatus(request.topic)}</p><h2 className="mt-2 text-4xl font-black tracking-tight">{request.requester_name}</h2><p className="mt-2 text-slate-600">Received {new Date(request.created_at).toLocaleString("en-AU")}</p></div>
+        <div><p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">{formatStatus(request.topic)}</p><h2 className="mt-2 text-4xl font-black tracking-tight">{request.requester_name}</h2><p className="mt-2 text-slate-600">Received {formatOpsDateTime(request.created_at)}</p></div>
         <span className="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white">{formatStatus(request.contact_status)}</span>
       </div>
 
@@ -57,7 +58,7 @@ export default async function OpsContactDetailPage({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <InfoCard title="Contact details"><InfoRow label="Reply email" value={request.requester_email} /><InfoRow label="Business" value={request.business_name ?? "Not provided"} /></InfoCard>
-        <InfoCard title="Request state"><InfoRow label="Topic" value={formatStatus(request.topic)} /><InfoRow label="Status" value={formatStatus(request.contact_status)} /><InfoRow label="Last decision" value={request.decided_at ? new Date(request.decided_at).toLocaleString("en-AU") : "Not reviewed"} /></InfoCard>
+        <InfoCard title="Request state"><InfoRow label="Topic" value={formatStatus(request.topic)} /><InfoRow label="Status" value={formatStatus(request.contact_status)} /><InfoRow label="Last decision" value={request.decided_at ? formatOpsDateTime(request.decided_at) : "Not reviewed"} /></InfoCard>
       </div>
 
       <InfoCard title="Message"><p className="whitespace-pre-wrap break-words text-sm leading-7">{request.message}</p></InfoCard>

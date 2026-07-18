@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { QueuePagination } from "@/components/ops/QueuePagination";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { formatOpsDate } from "@/lib/ops/date";
 
 const statuses = ["pending", "needs_information", "approved", "rejected", "revoked"] as const;
 type ClaimStatus = (typeof statuses)[number];
@@ -85,7 +86,7 @@ export default async function OpsClaimsPage({
                     </td>
                     <td className="px-5 py-4">{claim.claimant_email}</td>
                     <td className="px-5 py-4">{claim.evidence?.email_match ? "Email match" : "Manual review"}</td>
-                    <td className="px-5 py-4">{new Date(claim.created_at).toLocaleDateString("en-AU")}</td>
+                    <td className="px-5 py-4">{formatOpsDate(claim.created_at)}</td>
                     <td className="px-5 py-4 text-right">
                       <Link className="font-bold underline underline-offset-4" href={`/ops/claims/${claim.claim_request_id}`}>Review</Link>
                     </td>

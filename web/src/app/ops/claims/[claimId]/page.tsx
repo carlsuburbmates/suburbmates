@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { formatOpsDateTime } from "@/lib/ops/date";
 import { reviewClaimAction } from "../actions";
 
 type OpsClaim = {
@@ -75,7 +76,7 @@ export default async function OpsClaimDetailPage({
       <div className="grid gap-6 lg:grid-cols-2">
         <InfoCard title="Claimant">
           <InfoRow label="Email" value={claim.claimant_email} />
-          <InfoRow label="Submitted" value={new Date(claim.created_at).toLocaleString("en-AU")} />
+          <InfoRow label="Submitted" value={formatOpsDateTime(claim.created_at)} />
           <InfoRow label="Claimant note" value={claim.claimant_note ?? "None provided"} />
         </InfoCard>
         <InfoCard title="Listing">

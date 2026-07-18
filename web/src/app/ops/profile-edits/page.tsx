@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { QueuePagination } from "@/components/ops/QueuePagination";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { formatOpsDate } from "@/lib/ops/date";
 
 const statuses = ["pending", "approved", "rejected"] as const;
 type Status = (typeof statuses)[number];
@@ -67,7 +68,7 @@ export default async function OpsProfileEditsPage({ searchParams }: { searchPara
                     <p className="mt-2 text-sm text-slate-600">Changed: {changedFields.map(formatStatus).join(", ")}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500">{new Date(request.created_at).toLocaleDateString("en-AU")}</p>
+                    <p className="text-xs text-slate-500">{formatOpsDate(request.created_at)}</p>
                     <Link href={`/ops/profile-edits/${request.change_request_id}`} className="mt-2 inline-block font-bold underline underline-offset-4">Review</Link>
                   </div>
                 </div>
