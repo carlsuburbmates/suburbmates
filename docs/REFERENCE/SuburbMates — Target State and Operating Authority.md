@@ -6,6 +6,8 @@ This is the owner-approved, concise definition of the expected SuburbMates produ
 
 Where this document makes an explicit owner decision that differs from an older planning document, this document governs the operating direction. The detailed documents and implementation must then be aligned through reviewed issues and migrations; no conflicting behaviour should be changed silently.
 
+Owner decisions and material implementation deviations are recorded in [SuburbMates — Decision Log](./SuburbMates%20%E2%80%94%20Decision%20Log.md). Linear holds the linked work and verification record; this repository holds the durable product authority.
+
 ## Product outcome
 
 SuburbMates is a directory-first service for discovering local Darebin businesses and contacting them directly. It is not a lead-selling marketplace, quote funnel, merchant of record, or a platform that invents business facts.
