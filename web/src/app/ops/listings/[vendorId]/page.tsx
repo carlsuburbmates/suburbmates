@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { formatOpsDateTime } from "@/lib/ops/date";
 import { decideListingAction, saveListingDraftAction } from "../actions";
 
 type Listing = {
@@ -154,7 +155,7 @@ function EvidenceCard({ evidence }: { evidence: ListingEvidence }) {
       {evidence.summary && <p className="mt-3 text-sm text-slate-700">{evidence.summary}</p>}
       {evidence.source_url && <p className="mt-2 break-all text-sm text-slate-600">Source: {evidence.source_url}</p>}
       {fields.length > 0 && <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">{fields.map(([key, fieldValue]) => <div key={key} className="rounded-lg bg-slate-50 p-3"><dt className="font-semibold text-slate-500">{statusLabel(key)}</dt><dd className="mt-1 break-words">{typeof fieldValue === "object" ? JSON.stringify(fieldValue) : String(fieldValue)}</dd></div>)}</dl>}
-      <p className="mt-3 text-xs text-slate-500">Recorded {new Date(evidence.created_at).toLocaleString("en-AU")}{evidence.checked_at ? ` · Checked ${new Date(evidence.checked_at).toLocaleString("en-AU")}` : ""}</p>
+      <p className="mt-3 text-xs text-slate-500">Recorded {formatOpsDateTime(evidence.created_at)}{evidence.checked_at ? ` · Checked ${formatOpsDateTime(evidence.checked_at)}` : ""}</p>
     </article>
   );
 }

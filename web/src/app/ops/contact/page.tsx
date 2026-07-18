@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { QueuePagination } from "@/components/ops/QueuePagination";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { formatOpsDate } from "@/lib/ops/date";
 
 const statuses = ["new", "in_progress", "resolved", "spam"] as const;
 type ContactStatus = (typeof statuses)[number];
@@ -70,7 +71,7 @@ export default async function OpsContactPage({
                     <td className="px-5 py-4"><p className="font-bold">{request.requester_name}</p><p className="mt-1 text-xs text-slate-500">{request.business_name ?? request.requester_email}</p></td>
                     <td className="px-5 py-4">{formatStatus(request.topic)}</td>
                     <td className="max-w-md truncate px-5 py-4">{request.message}</td>
-                    <td className="px-5 py-4">{new Date(request.created_at).toLocaleDateString("en-AU")}</td>
+                    <td className="px-5 py-4">{formatOpsDate(request.created_at)}</td>
                     <td className="px-5 py-4 text-right"><Link className="font-bold underline underline-offset-4" href={`/ops/contact/${request.contact_request_id}`}>Review</Link></td>
                   </tr>
                 ))}

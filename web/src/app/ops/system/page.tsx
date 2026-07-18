@@ -1,4 +1,5 @@
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { formatOpsDateTime } from "@/lib/ops/date";
 
 type Health = {
   integration_name: string;
@@ -74,5 +75,5 @@ function jobMessage(status: string, attempt: number, maxAttempts: number) {
   if (status === "running" || status === "queued") return `Still being handled automatically (attempt ${attempt} of ${maxAttempts}). No listing has changed automatically.`;
   return "This task has an updated status. No listing has changed automatically.";
 }
-function date(value: string) { return new Date(value).toLocaleString("en-AU"); }
+function date(value: string) { return formatOpsDateTime(value); }
 function label(value: string) { return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()); }
