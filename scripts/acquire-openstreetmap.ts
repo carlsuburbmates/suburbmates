@@ -66,6 +66,30 @@ export async function requestOverpass(endpoint: string, query: string, fetchImpl
   return data as { elements: any[] };
 }
 
+export async function requestFromOverpassEndpoints(
+  endpoints: string[],
+  query: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ elements: any[] }> {
+  let lastError: unknown;
+
+  for (const endpoint of endpoints) {
+    console.log(`Trying ${endpoint}...`);
+    try {
+      const data = await requestOverpass(endpoint, query, fetchImpl);
+      console.log(`Successfully fetched from ${endpoint}`);
+      return data;
+    } catch (error) {
+      lastError = error;
+      console.warn(`Endpoint ${endpoint} failed:`, error instanceof Error ? error.message : error);
+    }
+  }
+
+  throw new Error(
+    `Failed to acquire OSM data from all endpoints${lastError instanceof Error ? `: ${lastError.message}` : ''}`,
+  );
+}
+
 export function filterAndProcessElements(elements: any[], catchments: string[]): any[] {
   const results = [];
   const seen = new Set<string>();
@@ -182,20 +206,11 @@ area["name"="City of Darebin"]->.searchArea;
 );
 out tags center;`;
 
-  let data = null;
-  for (const endpoint of endpoints) {
-    console.log(`Trying ${endpoint}...`);
-    try {
-      data = await requestOverpass(endpoint, query);
-      console.log(`Successfully fetched from ${endpoint}`);
-      break;
-    } catch (e) {
-      console.warn(`Endpoint ${endpoint} failed:`, e instanceof Error ? e.message : e);
-    }
-  }
-
-  if (!data || !data.elements) {
-    console.error('Failed to acquire OSM data from all endpoints.');
+  let data: { elements: any[] };
+  try {
+    data = await requestFromOverpassEndpoints(endpoints, query);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   }
 

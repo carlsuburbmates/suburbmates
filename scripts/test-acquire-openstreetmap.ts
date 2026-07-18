@@ -1,4 +1,4 @@
-import { filterAndProcessElements, slugify, escapeCsv, getTodayAest, requestOverpass } from './acquire-openstreetmap';
+import { filterAndProcessElements, slugify, escapeCsv, getTodayAest, requestFromOverpassEndpoints, requestOverpass } from './acquire-openstreetmap';
 import assert from 'node:assert';
 
 async function runTests() {
@@ -76,6 +76,29 @@ async function runTests() {
     }) as Response),
     /invalid Overpass response/,
   );
+
+  // Test 10: a failed provider leaves a clear trail and the next provider can supply the evidence.
+  const attemptedEndpoints: string[] = [];
+  const fallbackResponse = await requestFromOverpassEndpoints(
+    ['https://first.example.test/interpreter', 'https://second.example.test/interpreter'],
+    '[out:json];',
+    async (endpoint) => {
+      attemptedEndpoints.push(String(endpoint));
+      if (String(endpoint).includes('first')) {
+        throw new Error('provider unavailable');
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ elements: [] }),
+      } as Response;
+    },
+  );
+  assert.deepStrictEqual(attemptedEndpoints, [
+    'https://first.example.test/interpreter',
+    'https://second.example.test/interpreter',
+  ]);
+  assert.deepStrictEqual(fallbackResponse.elements, []);
 
   console.log('All tests passed.');
 }
