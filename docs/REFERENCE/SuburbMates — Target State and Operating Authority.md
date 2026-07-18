@@ -10,6 +10,8 @@ Owner decisions and material implementation deviations are recorded in [SuburbMa
 
 The complete non-technical experience is defined in [SuburbMates — Complete User Journey Map](./SuburbMates%20%E2%80%94%20Complete%20User%20Journey%20Map.md). Its technical automation companion is `docs/AUTOMATION/WORKFLOWS.md`.
 
+All execution follows [SuburbMates — Execution Governance and Readiness Protocol](./SuburbMates%20%E2%80%94%20Execution%20Governance%20and%20Readiness%20Protocol.md).
+
 ## Product outcome
 
 SuburbMates is a directory-first service for discovering local Darebin businesses and contacting them directly. It is not a lead-selling marketplace, quote funnel, merchant of record, or a platform that invents business facts.
