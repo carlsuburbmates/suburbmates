@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { QueuePagination } from "@/components/ops/QueuePagination";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
 
 const statuses = ["review", "unclassified", "draft", "pending_review", "published", "rejected", "unpublished"] as const;
@@ -17,20 +18,24 @@ type OpsListing = {
   active_draft_id: string | null;
 };
 
-export default async function OpsListingsPage({ searchParams }: { searchParams: Promise<{ status?: string; q?: string }> }) {
+export default async function OpsListingsPage({ searchParams }: { searchParams: Promise<{ status?: string; q?: string; page?: string }> }) {
   const params = await searchParams;
   const status = statuses.includes(params.status as Status) ? (params.status as Status) : "review";
   const q = typeof params.q === "string" ? params.q.slice(0, 200) : "";
+  const page = pageNumber(params.page);
   const { supabase } = await verifyOpsAdmin(`/ops/listings?status=${status}`);
   const { data, error } = await supabase.rpc("ops_list_listings", {
     p_status: status,
     p_query: q || null,
     p_vendor_id: null,
-    p_limit: 100,
-    p_offset: 0,
+    p_limit: 101,
+    p_offset: page * 100,
   });
   if (error) throw new Error("The listing review queue could not be loaded.");
-  const listings = (data ?? []) as OpsListing[];
+  const results = (data ?? []) as OpsListing[];
+  const listings = results.slice(0, 100);
+  const hasNextPage = results.length > 100;
+  const pageHref = (targetPage: number) => `/ops/listings?${new URLSearchParams({ status, ...(q ? { q } : {}), ...(targetPage ? { page: String(targetPage) } : {}) }).toString()}`;
 
   return (
     <div className="space-y-7">
@@ -75,6 +80,7 @@ export default async function OpsListingsPage({ searchParams }: { searchParams: 
           </div>
         )}
       </section>
+      <QueuePagination page={page} hasNextPage={hasNextPage} hrefForPage={pageHref} />
     </div>
   );
 }
@@ -87,4 +93,9 @@ function statusLabel(value: string) {
   if (value === "review") return "Attention";
   if (value === "unclassified") return "Needs classification";
   return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function pageNumber(value: string | undefined) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, 10_000) : 0;
 }

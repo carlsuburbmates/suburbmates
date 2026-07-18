@@ -48,6 +48,7 @@ export default async function OpsClaimDetailPage({
 
   const open = claim.claim_status === "pending" || claim.claim_status === "needs_information";
   const approved = claim.claim_status === "approved";
+  const successfulAction = ["needs_information", "approve", "reject", "revoke"].includes(message.success ?? "");
 
   return (
     <div className="space-y-7">
@@ -67,7 +68,7 @@ export default async function OpsClaimDetailPage({
           {message.error === "invalid" ? "Enter a reason before making a valid decision." : "The decision could not be completed. Refresh and check the current claim state."}
         </p>
       )}
-      {message.success && (
+      {successfulAction && (
         <p className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800">Decision recorded with an audit event.</p>
       )}
 
@@ -96,7 +97,7 @@ export default async function OpsClaimDetailPage({
       {(open || approved) && (
         <section className="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm">
           <h3 className="text-xl font-bold">Record a decision</h3>
-          <p className="mt-2 text-sm text-slate-600">A clear reason is required and will be stored in the immutable audit history.</p>
+          <p className="mt-2 text-sm text-slate-600">A clear reason is required and will be stored permanently. Approving gives the claimant control of this listing only; it does not publish it or change its public details.</p>
           <form action={reviewClaimAction} className="mt-5 space-y-4">
             <input type="hidden" name="claimId" value={claim.claim_request_id} />
             <label className="block text-sm font-bold" htmlFor="reason">Decision basis or reason</label>
@@ -107,6 +108,7 @@ export default async function OpsClaimDetailPage({
               {open && <button name="decision" value="approve" className="btn btn-primary">Approve ownership</button>}
               {approved && <button name="decision" value="revoke" className="btn btn-outline">Revoke ownership</button>}
             </div>
+            <p className="text-sm text-slate-600">Request information keeps the claim open. Reject keeps the listing unclaimed. Revoke removes the current ownership approval without changing publication.</p>
           </form>
         </section>
       )}
