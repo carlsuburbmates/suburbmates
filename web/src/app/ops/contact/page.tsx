@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { QueuePagination } from "@/components/ops/QueuePagination";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
 
 const statuses = ["new", "in_progress", "resolved", "spam"] as const;
@@ -18,20 +19,24 @@ type ContactRequest = {
 export default async function OpsContactPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const status = statuses.includes(params.status as ContactStatus) ? (params.status as ContactStatus) : "new";
+  const page = pageNumber(params.page);
   const { supabase } = await verifyOpsAdmin(`/ops/contact?status=${status}`);
   const { data, error } = await supabase.rpc("ops_list_contact_requests", {
     p_status: status,
     p_contact_request_id: null,
-    p_limit: 100,
-    p_offset: 0,
+    p_limit: 101,
+    p_offset: page * 100,
   });
 
   if (error) throw new Error("The contact queue could not be loaded.");
-  const requests = (data ?? []) as ContactRequest[];
+  const results = (data ?? []) as ContactRequest[];
+  const requests = results.slice(0, 100);
+  const hasNextPage = results.length > 100;
+  const pageHref = (targetPage: number) => `/ops/contact?${new URLSearchParams({ status, ...(targetPage ? { page: String(targetPage) } : {}) }).toString()}`;
 
   return (
     <div className="space-y-7">
@@ -74,10 +79,16 @@ export default async function OpsContactPage({
           </div>
         )}
       </section>
+      <QueuePagination page={page} hasNextPage={hasNextPage} hrefForPage={pageHref} />
     </div>
   );
 }
 
 function formatStatus(value: string) {
   return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function pageNumber(value: string | undefined) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, 10_000) : 0;
 }

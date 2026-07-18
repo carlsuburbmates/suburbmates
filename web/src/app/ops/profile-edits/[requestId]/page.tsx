@@ -54,6 +54,7 @@ export default async function OpsProfileEditDetailPage({
   const isStale = Object.keys(fieldLabels).some(
     (field) => request.current_values[field] !== request.base_values[field],
   );
+  const successfulAction = ["approve", "reject"].includes(message.success ?? "");
 
   return (
     <div className="space-y-7">
@@ -66,7 +67,7 @@ export default async function OpsProfileEditDetailPage({
 
       {isStale && <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 font-semibold text-amber-900">The public listing changed after this request was submitted. Approval is blocked; reject it so the owner can submit a fresh request.</p>}
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "invalid" ? "Enter a decision reason." : "The decision failed. Check whether the request is stale or already decided."}</p>}
-      {message.success && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">Decision recorded with an audit event.</p>}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">Decision recorded with an audit event.</p>}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="grid grid-cols-[10rem_1fr_1fr] gap-4 bg-slate-100 px-5 py-4 text-xs font-bold uppercase tracking-wide text-slate-600">
@@ -86,7 +87,7 @@ export default async function OpsProfileEditDetailPage({
 
       {request.change_status === "pending" && (
         <section className="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-600">Approval updates only these public fields. Publication, ownership, tier, ABN and payment state remain unchanged.</p>
+          <p className="text-sm text-slate-600">Approval updates only these public fields. Rejection makes no public change. Publication, ownership, tier, ABN and payment state remain unchanged. Your reason is recorded permanently.</p>
           <form action={reviewProfileChangeAction} className="mt-5 space-y-4">
             <input type="hidden" name="requestId" value={request.change_request_id} />
             <label htmlFor="reason" className="block text-sm font-bold">Decision basis or reason</label>

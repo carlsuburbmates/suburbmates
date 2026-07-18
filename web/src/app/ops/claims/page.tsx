@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { QueuePagination } from "@/components/ops/QueuePagination";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
 
 const statuses = ["pending", "needs_information", "approved", "rejected", "revoked"] as const;
@@ -18,23 +19,27 @@ type OpsClaim = {
 export default async function OpsClaimsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const status = statuses.includes(params.status as ClaimStatus) ? (params.status as ClaimStatus) : "pending";
+  const page = pageNumber(params.page);
   const { supabase } = await verifyOpsAdmin(`/ops/claims?status=${status}`);
   const { data, error } = await supabase.rpc("ops_list_claim_requests", {
     p_status: status,
     p_claim_request_id: null,
-    p_limit: 100,
-    p_offset: 0,
+    p_limit: 101,
+    p_offset: page * 100,
   });
 
   if (error) {
     throw new Error("The claim queue could not be loaded.");
   }
 
-  const claims = (data ?? []) as OpsClaim[];
+  const results = (data ?? []) as OpsClaim[];
+  const claims = results.slice(0, 100);
+  const hasNextPage = results.length > 100;
+  const pageHref = (targetPage: number) => `/ops/claims?${new URLSearchParams({ status, ...(targetPage ? { page: String(targetPage) } : {}) }).toString()}`;
 
   return (
     <div className="space-y-7">
@@ -91,10 +96,16 @@ export default async function OpsClaimsPage({
           </div>
         )}
       </section>
+      <QueuePagination page={page} hasNextPage={hasNextPage} hrefForPage={pageHref} />
     </div>
   );
 }
 
 function formatStatus(status: string) {
   return status.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function pageNumber(value: string | undefined) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, 10_000) : 0;
 }

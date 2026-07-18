@@ -42,6 +42,7 @@ export default async function OpsContactDetailPage({
   if (error) throw new Error("The contact request could not be loaded.");
   const request = data?.[0] as ContactRequest | undefined;
   if (!request) notFound();
+  const successfulAction = message.success === "1";
 
   return (
     <div className="space-y-7">
@@ -52,7 +53,7 @@ export default async function OpsContactDetailPage({
       </div>
 
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-800">{message.error === "invalid" ? "Choose a valid action and enter a reason." : "The status could not be changed. Refresh and check its current state."}</p>}
-      {message.success && <p className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800">Status and audit history updated.</p>}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800">Status and audit history updated.</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <InfoCard title="Contact details"><InfoRow label="Reply email" value={request.requester_email} /><InfoRow label="Business" value={request.business_name ?? "Not provided"} /></InfoCard>
@@ -64,12 +65,13 @@ export default async function OpsContactDetailPage({
 
       <section className="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Update request</h3>
-        <p className="mt-2 text-sm text-slate-600">Record what was done. The status change and reason are written to immutable audit history.</p>
+        <p className="mt-2 text-sm text-slate-600">Record what was done. The status change and reason are written permanently. This never changes a listing or ownership.</p>
         <form action={reviewContactAction} className="mt-5 space-y-4">
           <input type="hidden" name="requestId" value={request.contact_request_id} />
           <label className="block text-sm font-bold" htmlFor="reason">Action taken or review note</label>
           <textarea id="reason" name="reason" required maxLength={2000} rows={4} className="w-full rounded-xl border border-slate-300 p-3" />
           <div className="flex flex-wrap gap-3">{transitions[request.contact_status].map((transition) => <button key={transition.status} name="status" value={transition.status} className={transition.status === "resolved" ? "btn btn-primary" : "btn btn-outline"}>{transition.label}</button>)}</div>
+          <p className="text-sm text-slate-600">Start work keeps the request active. Resolve records that you finished it. Mark as spam hides a non-genuine request from normal work; it can be restored later.</p>
         </form>
       </section>
     </div>

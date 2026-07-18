@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { QueuePagination } from "@/components/ops/QueuePagination";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
 
 const statuses = ["pending", "approved", "rejected"] as const;
@@ -15,19 +16,23 @@ type ProfileChange = {
   created_at: string;
 };
 
-export default async function OpsProfileEditsPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+export default async function OpsProfileEditsPage({ searchParams }: { searchParams: Promise<{ status?: string; page?: string }> }) {
   const params = await searchParams;
   const status = statuses.includes(params.status as Status) ? (params.status as Status) : "pending";
+  const page = pageNumber(params.page);
   const { supabase } = await verifyOpsAdmin(`/ops/profile-edits?status=${status}`);
   const { data, error } = await supabase.rpc("ops_list_profile_changes", {
     p_status: status,
     p_change_request_id: null,
-    p_limit: 100,
-    p_offset: 0,
+    p_limit: 101,
+    p_offset: page * 100,
   });
 
   if (error) throw new Error("The profile edit queue could not be loaded.");
-  const requests = (data ?? []) as ProfileChange[];
+  const results = (data ?? []) as ProfileChange[];
+  const requests = results.slice(0, 100);
+  const hasNextPage = results.length > 100;
+  const pageHref = (targetPage: number) => `/ops/profile-edits?${new URLSearchParams({ status, ...(targetPage ? { page: String(targetPage) } : {}) }).toString()}`;
 
   return (
     <div className="space-y-7">
@@ -71,10 +76,16 @@ export default async function OpsProfileEditsPage({ searchParams }: { searchPara
           </div>
         )}
       </section>
+      <QueuePagination page={page} hasNextPage={hasNextPage} hrefForPage={pageHref} />
     </div>
   );
 }
 
 function formatStatus(value: string) {
   return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function pageNumber(value: string | undefined) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, 10_000) : 0;
 }

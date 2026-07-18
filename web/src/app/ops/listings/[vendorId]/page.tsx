@@ -55,6 +55,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const status = listing.listing_status;
   const evidence = (evidenceResult.data ?? []) as ListingEvidence[];
   const publicSlug = routeResult.data?.[0]?.current_slug as string | undefined;
+  const successfulAction = ["draft", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(message.success ?? "");
 
   return (
     <div className="space-y-7">
@@ -69,7 +70,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
       </div>
 
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
-      {message.success && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{message.success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : "Decision recorded with an audit event."}</p>}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{message.success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : "Decision recorded with an audit event."}</p>}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Source evidence</h3>
@@ -99,7 +100,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Lifecycle action</h3>
-        <p className="mt-2 text-sm text-slate-600">Publication is an operator decision. Ownership, ABN, payment and tier remain independent.</p>
+        <p className="mt-2 text-sm text-slate-600">Publication is your explicit decision. Ownership, ABN, payment and tier remain unchanged. Your decision note becomes a permanent record.</p>
         <form action={decideListingAction} className="mt-5 space-y-4">
           <input type="hidden" name="vendorId" value={vendorId} />
           {(status === "pending_review" || status === "published") && listing.active_draft_id && (
@@ -112,6 +113,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
             {status === "pending_review" && listing.active_draft_id && <button name="decision" value="publish" className="btn btn-primary">Approve &amp; publish</button>}
             {status === "published" && listing.active_draft_id && <button name="decision" value="approve_changes" className="btn btn-primary">Approve changes</button>}
           </div>
+          <p className="text-sm text-slate-600">Moving a listing to review keeps it private. Publishing makes the approved listing public. Approving changes updates an already public listing.</p>
         </form>
 
         {status === "pending_review" && <ReasonDecision vendorId={vendorId} decision="reject" label="Reject listing" reasons={rejectReasons} />}
@@ -130,7 +132,8 @@ function SelectField({ label, name, defaultValue, options, required }: { label: 
 }
 
 function ReasonDecision({ vendorId, decision, label, reasons }: { vendorId: string; decision: string; label: string; reasons: readonly { value: string; label: string }[] }) {
-  return <form action={decideListingAction} className="mt-8 space-y-4 border-t border-slate-200 pt-6"><input type="hidden" name="vendorId" value={vendorId} /><input type="hidden" name="decision" value={decision} /><label className="block text-sm font-bold">Reason<select name="reasonCode" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal"><option value="">Select a reason</option>{reasons.map((reason) => <option key={reason.value} value={reason.value}>{reason.label}</option>)}</select></label><label className="block text-sm font-bold">Operator note<textarea name="operatorNote" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label><button className="btn btn-outline">{label}</button></form>;
+  const outcome = decision === "unpublish" ? "This removes the listing from public access but keeps the record and its decision history." : "This keeps the listing private and retains the record and its decision history.";
+  return <form action={decideListingAction} className="mt-8 space-y-4 border-t border-slate-200 pt-6"><p className="text-sm text-slate-600">{outcome}</p><input type="hidden" name="vendorId" value={vendorId} /><input type="hidden" name="decision" value={decision} /><label className="block text-sm font-bold">Reason<select name="reasonCode" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal"><option value="">Select a reason</option>{reasons.map((reason) => <option key={reason.value} value={reason.value}>{reason.label}</option>)}</select></label><label className="block text-sm font-bold">Operator note<textarea name="operatorNote" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label><button className="btn btn-outline">{label}</button></form>;
 }
 
 function value(source: Listing | Record<string, string | null>, key: string) {
