@@ -2,7 +2,7 @@
 -- and remove its PL/pgSQL column-name ambiguity. This does not enable or send
 -- transactional email.
 
-+CREATE OR REPLACE FUNCTION public.prepare_contact_communications(p_contact_request_id UUID)
+CREATE OR REPLACE FUNCTION public.prepare_contact_communications(p_contact_request_id UUID)
 RETURNS TABLE (
   communication_delivery_id UUID,
   contact_request_id UUID,
