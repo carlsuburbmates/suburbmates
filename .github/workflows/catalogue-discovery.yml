@@ -31,7 +31,7 @@ jobs:
       - run: npm run audit -- data/vendor-candidates-merged.csv
       - run: npm run catalogue:report -- data/vendor-candidates-merged.csv
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: catalogue-candidates-${{ github.run_id }}
           retention-days: 30

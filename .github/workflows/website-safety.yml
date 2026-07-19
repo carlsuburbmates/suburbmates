@@ -29,7 +29,7 @@ jobs:
           WEBSITE_CHECK_SUPABASE_URL: ${{ secrets.SMOKE_SUPABASE_URL }}
           WEBSITE_CHECK_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SMOKE_SUPABASE_PUBLISHABLE_KEY }}
         run: npm run website-safety
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: website-safety-evidence-${{ github.run_id }}
           retention-days: 30

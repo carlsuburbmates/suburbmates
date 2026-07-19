@@ -14,6 +14,8 @@ export const NON_COMMERCIAL_TOKENS = new Set([
   'ngo', 'charity', 'library', 'townhall'
 ]);
 
+const OVERPASS_REQUEST_TIMEOUT_MS = 20_000;
+
 export function slugify(text: string): string {
   if (!text) return '';
   return text
@@ -30,14 +32,62 @@ export function escapeCsv(val: string): string {
   return val;
 }
 
-export function getTodayAest(): string {
+export function getTodayAest(now: Date = new Date()): string {
   const formatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Australia/Melbourne',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
   });
-  return formatter.format(new Date());
+  const parts = Object.fromEntries(
+    formatter.formatToParts(now)
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, part.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+export async function requestOverpass(endpoint: string, query: string, fetchImpl: typeof fetch = fetch): Promise<{ elements: any[] }> {
+  const response = await fetchImpl(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+      'User-Agent': 'SuburbMates-directory-importer/1.0 (+https://suburbmates.com.au/contact)',
+    },
+    body: new URLSearchParams({ data: query }),
+    signal: AbortSignal.timeout(OVERPASS_REQUEST_TIMEOUT_MS),
+  });
+  if (!response.ok) throw new Error(`Endpoint returned status ${response.status}`);
+  const data: unknown = await response.json();
+  if (!data || typeof data !== 'object' || !Array.isArray((data as { elements?: unknown }).elements)) {
+    throw new Error('Endpoint returned an invalid Overpass response.');
+  }
+  return data as { elements: any[] };
+}
+
+export async function requestFromOverpassEndpoints(
+  endpoints: string[],
+  query: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ elements: any[] }> {
+  let lastError: unknown;
+
+  for (const endpoint of endpoints) {
+    console.log(`Trying ${endpoint}...`);
+    try {
+      const data = await requestOverpass(endpoint, query, fetchImpl);
+      console.log(`Successfully fetched from ${endpoint}`);
+      return data;
+    } catch (error) {
+      lastError = error;
+      console.warn(`Endpoint ${endpoint} failed:`, error instanceof Error ? error.message : error);
+    }
+  }
+
+  throw new Error(
+    `Failed to acquire OSM data from all endpoints${lastError instanceof Error ? `: ${lastError.message}` : ''}`,
+  );
 }
 
 export function filterAndProcessElements(elements: any[], catchments: string[]): any[] {
@@ -156,33 +206,11 @@ area["name"="City of Darebin"]->.searchArea;
 );
 out tags center;`;
 
-  let data = null;
-  for (const endpoint of endpoints) {
-    console.log(`Trying ${endpoint}...`);
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-        'User-Agent': 'SuburbMates-directory-importer/1.0 (+https://suburbmates.com.au/contact)'
-        },
-        body: `data=${encodeURIComponent(query)}`
-      });
-      if (response.ok) {
-        data = await response.json();
-        console.log(`Successfully fetched from ${endpoint}`);
-        break;
-      } else {
-        console.warn(`Endpoint ${endpoint} returned status ${response.status}`);
-      }
-    } catch (e) {
-      console.warn(`Error connecting to ${endpoint}:`, e);
-    }
-  }
-
-  if (!data || !data.elements) {
-    console.error('Failed to acquire OSM data from all endpoints.');
+  let data: { elements: any[] };
+  try {
+    data = await requestFromOverpassEndpoints(endpoints, query);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   }
 
