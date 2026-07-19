@@ -60,7 +60,7 @@ export default async function BusinessesPage({
   if (suburb) query = query.eq('suburb_slug', suburb);
   if (category) query = query.eq('category_slug', category);
 
-  query = query.order('tier', { ascending: false }).order('business_name', { ascending: true });
+  query = query.order('business_name', { ascending: true });
   
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;

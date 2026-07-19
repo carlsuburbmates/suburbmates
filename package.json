@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run audit:test && npm run acquire:osm:test && npm run catalogue:merge:test && npm run seed:test && npm run public-catalogue:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test",
+    "check": "npm run audit:test && npm run acquire:osm:test && npm run catalogue:merge:test && npm run seed:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test",
     "dev": "npm --prefix web run dev",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "seed:test": "tsx --env-file-if-exists=.env.local scripts/test-seed-policy.ts",
@@ -17,6 +17,7 @@
     "catalogue:merge:test": "tsx --env-file-if-exists=.env.local scripts/test-merge-vendor-catalogues.ts",
     "catalogue:report": "tsx scripts/report-catalogue-coverage.ts",
     "public-catalogue:test": "tsx scripts/test-public-catalogue-pagination.ts",
+    "directory-ranking:test": "tsx scripts/test-directory-ranking-policy.ts",
     "edge-functions:test": "tsx scripts/test-disabled-edge-functions.ts",
     "vendor-slug:test": "tsx scripts/test-vendor-slug-policy.ts",
     "website-safety": "node scripts/website-safety.mjs",
