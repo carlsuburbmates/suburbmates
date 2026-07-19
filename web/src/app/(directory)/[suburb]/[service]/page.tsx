@@ -58,7 +58,7 @@ export default async function Page({ params }: PageProps) {
       .select("id, slug, business_name, description, contact_email, phone, website, tier, is_claimed, street_address")
       .eq("suburb_slug", suburbSlug)
       .eq("category_slug", serviceSlug)
-      .order("tier", { ascending: false }) // premium/claimed first
+      .order("business_name", { ascending: true })
   ]);
 
   // If the category or suburb does not exist, return a 404
