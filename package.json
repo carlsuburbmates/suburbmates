@@ -23,7 +23,8 @@
     "vendor-slug:test": "tsx scripts/test-vendor-slug-policy.ts",
     "website-safety": "node scripts/website-safety.mjs",
     "website-safety:test": "node scripts/test-website-safety.mjs",
-    "owner-status:test": "tsx scripts/test-owner-status-boundary.ts",
+    "owner-status:test": "tsx scripts/test-owner-status-boundary.ts && npm run owner-request-withdrawal:test",
+    "owner-request-withdrawal:test": "tsx scripts/test-owner-request-withdrawal-boundary.ts",
     "ops-system:test": "tsx scripts/test-ops-system-boundary.ts",
     "verify:db": "tsx --env-file=.env.local scripts/verify-db.ts"
   },

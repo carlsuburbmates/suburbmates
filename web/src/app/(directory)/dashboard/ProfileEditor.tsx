@@ -34,6 +34,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
   const [submitted, setSubmitted] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [withdrawn, setWithdrawn] = useState(false);
 
   const supabase = createClient();
 
@@ -64,13 +65,30 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
     setLoading(false);
   };
 
+  const handleWithdraw = async () => {
+    if (!latestChange) return;
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    const { error } = await supabase.rpc("withdraw_current_owner_profile_change", {
+      p_change_request_id: latestChange.change_request_id,
+    });
+    if (error) {
+      setError(error.message || "We could not withdraw this request. Please try again.");
+    } else {
+      setWithdrawn(true);
+      setSuccess("Your profile-change request was withdrawn. Your public listing was not changed.");
+    }
+    setLoading(false);
+  };
+
   return (
     <form onSubmit={handleSave} className="space-y-6 mt-6 border-t border-slate-100 pt-6">
       <p className="text-sm text-slate-600">
         Edits are reviewed before they appear publicly. Your current listing stays unchanged while a request is pending.
       </p>
 
-      {(latestChange?.change_status === "pending" || submitted) && (
+      {(latestChange?.change_status === "pending" || submitted) && !withdrawn && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
           Changes awaiting review. A new request can be submitted after this one is decided.
         </div>
@@ -153,13 +171,18 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
         </div>
       )}
 
-      <div className="flex justify-end pt-4">
+      <div className="flex flex-wrap justify-end gap-3 pt-4">
+        {latestChange?.change_status === "pending" && !withdrawn && (
+          <button type="button" onClick={handleWithdraw} disabled={loading} className="btn btn-outline px-6">
+            {loading ? "Withdrawing…" : "Withdraw request"}
+          </button>
+        )}
         <button 
           type="submit" 
-          disabled={loading || latestChange?.change_status === "pending" || submitted}
+          disabled={loading || (latestChange?.change_status === "pending" && !withdrawn) || submitted}
           className="btn btn-primary px-8"
         >
-          {loading ? "Submitting…" : latestChange?.change_status === "pending" || submitted ? "Awaiting review" : "Submit changes for review"}
+          {loading ? "Submitting…" : (latestChange?.change_status === "pending" && !withdrawn) || submitted ? "Awaiting review" : "Submit changes for review"}
         </button>
       </div>
     </form>
