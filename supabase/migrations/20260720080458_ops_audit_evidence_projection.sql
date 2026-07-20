@@ -19,6 +19,10 @@ $$;
 
 REVOKE ALL ON FUNCTION private.redact_ops_audit_state(JSONB) FROM PUBLIC, anon, authenticated, service_role;
 
+-- PostgreSQL cannot replace a function when its OUT-column row type changes.
+-- This migration is intentionally safe to apply over the earlier audit feed.
+DROP FUNCTION IF EXISTS public.ops_list_audit_events(INTEGER);
+
 CREATE OR REPLACE FUNCTION public.ops_list_audit_events(p_limit INTEGER DEFAULT 50)
 RETURNS TABLE (
   event_id UUID, actor_type TEXT, action TEXT, entity_type TEXT,

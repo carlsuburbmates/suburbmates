@@ -5,6 +5,7 @@ const migration = fs.readFileSync("supabase/migrations/20260720080458_ops_audit_
 const page = fs.readFileSync("web/src/app/ops/system/page.tsx", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION private\.redact_ops_audit_state/);
+assert.match(migration, /DROP FUNCTION IF EXISTS public\.ops_list_audit_events\(INTEGER\)/);
 assert.match(migration, /PERFORM private\.require_active_operator\(\)/);
 assert.match(migration, /REVOKE ALL ON FUNCTION public\.ops_list_audit_events\(INTEGER\) FROM PUBLIC, anon, service_role/);
 assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.ops_list_audit_events\(INTEGER\) TO authenticated/);
