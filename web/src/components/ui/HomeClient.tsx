@@ -18,7 +18,6 @@ interface HomeClientProps {
     description: string | null;
     phone: string | null;
     website: string | null;
-    tier: string;
     street_address: string | null;
     suburbs: Array<{ name: string }>;
   }>;
@@ -152,12 +151,12 @@ export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientP
         </div>
       </section>
 
-      {/* ── Featured Vendors ─────────────────────────────────────── */}
+      {/* ── Local businesses ─────────────────────────────────────── */}
       {featuredVendors && featuredVendors.length > 0 && (
         <section
           className="py-24"
           style={{ backgroundColor: "var(--sm-surface-default)" }}
-          aria-label="Featured Providers"
+          aria-label="Local businesses"
         >
           <div className="max-w-7xl mx-auto px-6">
             <motion.div
@@ -168,7 +167,7 @@ export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientP
             >
               <motion.div variants={fadeInUp} className="mb-12">
                 <h2 className="text-3xl font-black tracking-tight mb-4" style={{ color: "var(--sm-text-primary)" }}>
-                  Featured Local Businesses
+                  Local Businesses
                 </h2>
                 <p className="text-lg" style={{ color: "var(--sm-text-secondary)" }}>
                   A selection of real businesses from across the local directory.
@@ -182,11 +181,6 @@ export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientP
                     variants={fadeInUp}
                     className="card relative overflow-hidden transition-all duration-300 border-slate-200 hover:border-black hover:shadow-lg flex flex-col h-full"
                   >
-                    {vendor.tier === "premium" && (
-                      <div className="absolute top-0 right-0 bg-black text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl">
-                        Featured
-                      </div>
-                    )}
                     <div className="flex-1 p-6">
                       <div className="flex flex-wrap items-center gap-3 mb-3">
                         <h3 className="text-xl font-black tracking-tight text-black">

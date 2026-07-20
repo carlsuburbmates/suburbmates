@@ -13,7 +13,6 @@ type DirectoryVendor = {
   contact_email: string | null;
   phone: string | null;
   website: string | null;
-  tier: string;
   is_claimed: boolean;
   street_address: string | null;
   suburb_slug: string;
@@ -89,7 +88,9 @@ export function DirectoryBrowseClient({
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <label className="sr-only" htmlFor="directory-search">Search by business name</label>
               <input
+                id="directory-search"
                 type="text"
                 placeholder="Search by business name..."
                 value={q}
@@ -99,7 +100,9 @@ export function DirectoryBrowseClient({
             </div>
             
             <div className="md:w-64">
+              <label className="sr-only" htmlFor="directory-category">Filter by category</label>
               <select
+                id="directory-category"
                 value={category}
                 onChange={(e) => {
                   setCategory(e.target.value);
@@ -115,7 +118,9 @@ export function DirectoryBrowseClient({
             </div>
 
             <div className="md:w-64">
+              <label className="sr-only" htmlFor="directory-suburb">Filter by suburb</label>
               <select
+                id="directory-suburb"
                 value={suburb}
                 onChange={(e) => {
                   setSuburb(e.target.value);
@@ -163,22 +168,14 @@ export function DirectoryBrowseClient({
         ) : (
           <div className="grid gap-6">
             {vendors.map((vendor) => {
-              const isPremium = vendor.tier === "premium";
               const subName = suburbs.find(s => s.slug === vendor.suburb_slug)?.name || vendor.suburb_slug;
               const catName = categories.find(c => c.slug === vendor.category_slug)?.name || vendor.category_slug;
 
               return (
                 <article
                   key={vendor.id}
-                  className={`card relative overflow-hidden transition-all duration-300 bg-white p-6 rounded-xl ${
-                    isPremium ? 'border-black ring-1 ring-black/10 shadow-md' : 'border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300'
-                  }`}
+                  className="card relative overflow-hidden transition-all duration-300 bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
                 >
-                  {isPremium && (
-                    <div className="absolute top-0 right-0 bg-black text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl">
-                      Featured
-                    </div>
-                  )}
 
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                     <div className="flex-1">

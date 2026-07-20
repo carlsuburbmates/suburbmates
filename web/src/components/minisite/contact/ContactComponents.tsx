@@ -1,5 +1,5 @@
 import React from "react";
-import { Phone, Mail, Globe, MapPin } from "lucide-react";
+import { Phone, Mail, Globe, Navigation } from "lucide-react";
 import type { getVendorDesign } from "@/lib/minisite/engine";
 
 type ContactData = {
@@ -7,6 +7,7 @@ type ContactData = {
   phone?: string | null;
   contact_email?: string | null;
   website?: string | null;
+  suburb_name?: string | null;
 };
 
 type MinisiteStyling = ReturnType<typeof getVendorDesign>;
@@ -51,15 +52,21 @@ function ContactGridItems({
   return (
     <>
       {data.street_address && (
-        <div className={`flex items-center gap-4 p-4 ${corners.btn} ${palette.btnSecondary}`}>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([data.street_address, data.suburb_name].filter(Boolean).join(", "))}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex items-center gap-4 p-4 transition-all group ${corners.btn} ${palette.btnSecondary}`}
+          aria-label={`Get directions to ${data.street_address}`}
+        >
           <div className={`w-12 h-12 flex items-center justify-center shrink-0 opacity-80 ${corners.btn}`}>
-            <MapPin size={20} />
+            <Navigation size={20} />
           </div>
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider mb-0.5 opacity-60">Address</div>
+            <div className="text-xs font-bold uppercase tracking-wider mb-0.5 opacity-60">Get directions</div>
             <div className="font-bold">{data.street_address}</div>
           </div>
-        </div>
+        </a>
       )}
       {data.phone && (
         <a href={`tel:${data.phone}`} className={`flex items-center gap-4 p-4 transition-all group ${corners.btn} ${palette.btnSecondary}`}>
