@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run audit:test && npm run acquire:osm:test && npm run catalogue:merge:test && npm run seed:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run resident-journey:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test",
+    "check": "npm run audit:test && npm run acquire:osm:test && npm run catalogue:merge:test && npm run seed:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run resident-journey:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test && npm run ops-system:test",
     "dev": "npm --prefix web run dev",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "seed:test": "tsx --env-file-if-exists=.env.local scripts/test-seed-policy.ts",
@@ -24,6 +24,7 @@
     "website-safety": "node scripts/website-safety.mjs",
     "website-safety:test": "node scripts/test-website-safety.mjs",
     "owner-status:test": "tsx scripts/test-owner-status-boundary.ts",
+    "ops-system:test": "tsx scripts/test-ops-system-boundary.ts",
     "verify:db": "tsx --env-file=.env.local scripts/verify-db.ts"
   },
   "devDependencies": {
