@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const migration = fs.readFileSync("supabase/migrations/20260720080458_ops_audit_evidence_projection.sql", "utf8");
+const page = fs.readFileSync("web/src/app/ops/system/page.tsx", "utf8");
+
+assert.match(migration, /CREATE OR REPLACE FUNCTION private\.redact_ops_audit_state/);
+assert.match(migration, /PERFORM private\.require_active_operator\(\)/);
+assert.match(migration, /REVOKE ALL ON FUNCTION public\.ops_list_audit_events\(INTEGER\) FROM PUBLIC, anon, service_role/);
+assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.ops_list_audit_events\(INTEGER\) TO authenticated/);
+for (const privateField of ["contact_email", "requester_email", "requester_name", "message", "operator_note", "vendor_id", "entity_id"]) assert(!migration.includes(`'${privateField}'`), `Audit projection must not expose ${privateField}.`);
+assert.match(page, /Intentionally disabled/);
+assert.match(page, /Contact request retention/);
+assert.match(page, /Evidence reference/);
+assert.match(page, /safeHealthDetails/);
+assert.match(page, /Is anything needing attention\?/);
+assert.match(page, /Everything currently monitored is operating normally/);
+assert.match(page, /What to do: ask for technical help/);
+assert.match(page, /Technical details and recent checks/);
+assert.doesNotMatch(page, /metadata\.provider_error/);
+console.log("Ops System explanation and audit boundary checks passed.");

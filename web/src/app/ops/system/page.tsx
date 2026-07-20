@@ -5,11 +5,15 @@ type Health = {
   integration_name: string;
   status: string;
   last_success_at: string | null;
+  last_failure_at: string | null;
   next_expected_sync_at: string | null;
+  last_error: string | null;
+  metadata: Record<string, unknown> | null;
   updated_at: string;
 };
 type Job = { job_id: string; job_type: string; status: string; attempt_count: number; max_attempts: number; created_at: string };
-type Audit = { event_id: string; actor_type: string; action: string; entity_type: string; reason: string | null; created_at: string };
+type Audit = { event_id: string; actor_type: string; action: string; entity_type: string; reason: string | null; before_state: Record<string, unknown> | null; after_state: Record<string, unknown> | null; evidence_reference: string; created_at: string };
+type AttentionItem = { title: string; explanation: string; reference: string };
 
 export default async function OpsSystemPage() {
   const { supabase } = await verifyOpsAdmin("/ops/system");
@@ -22,58 +26,62 @@ export default async function OpsSystemPage() {
   const health = (healthResult.data ?? []) as Health[];
   const jobs = (jobsResult.data ?? []) as Job[];
   const events = (auditResult.data ?? []) as Audit[];
+  const attention = attentionItems(health, jobs);
+  const dormant = health.filter((item) => item.status === "disabled" || item.status === "unknown");
 
   return (
-    <div className="space-y-9">
+    <div className="space-y-8">
       <div>
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">System</p>
-        <h2 className="mt-2 text-4xl font-black tracking-tight">Health and decision record</h2>
-        <p className="mt-3 max-w-3xl text-slate-600">Use this page to notice a problem and confirm that your decisions were recorded. A warning never changes a listing, claim, or contact request by itself.</p>
+        <h2 className="mt-2 text-4xl font-black tracking-tight">Is anything needing attention?</h2>
+        <p className="mt-3 max-w-3xl text-slate-600">This page does not run or change anything. It simply tells you when an automated check needs help.</p>
       </div>
 
-      <section>
-        <h3 className="text-xl font-bold">Service checks</h3>
-        {health.length === 0 ? <p className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">No automated checks have reported yet. This is not an action request.</p> : (
-          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {health.map((item) => <article key={item.integration_name} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-3"><h4 className="font-bold">{label(item.integration_name)}</h4><Status value={item.status} /></div>
-              <p className="mt-3 text-sm text-slate-700">{healthMessage(item.status)}</p>
-              <p className="mt-3 text-xs text-slate-500">Last checked {date(item.updated_at)}</p>
-              {item.last_success_at && <p className="mt-1 text-xs text-slate-500">Last successful check {date(item.last_success_at)}</p>}
-              {item.next_expected_sync_at && <p className="mt-1 text-xs text-slate-500">Next check expected {date(item.next_expected_sync_at)}</p>}
-            </article>)}
-          </div>
-        )}
+      <section className={`rounded-2xl border p-6 shadow-sm ${attention.length === 0 ? "border-green-200 bg-green-50" : "border-amber-300 bg-amber-50"}`}>
+        <h3 className="text-xl font-bold">{attention.length === 0 ? "All clear" : `${attention.length} item${attention.length === 1 ? "" : "s"} need attention`}</h3>
+        {attention.length === 0 ? <p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p> : <div className="mt-4 space-y-3">{attention.map((item) => <article key={item.reference} className="rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: ask for technical help and quote reference {item.reference}.</p></article>)}</div>}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-5"><h3 className="text-xl font-bold">Automated work</h3><p className="mt-1 text-sm text-slate-600">These checks prepare information only. They do not publish listings or change ownership.</p></div>
-        {jobs.length === 0 ? <p className="p-8 text-slate-600">No automated work has run yet. Nothing needs your attention.</p> : <div className="divide-y divide-slate-200">{jobs.map((job) => <div key={job.job_id} className="flex flex-wrap items-center justify-between gap-4 p-5 text-sm"><div><p className="font-bold">{label(job.job_type)}</p><p className="mt-1 text-slate-600">{jobMessage(job.status, job.attempt_count, job.max_attempts)}</p><p className="mt-1 text-xs text-slate-500">Started {date(job.created_at)}</p></div><Status value={job.status} /></div>)}</div>}
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-xl font-bold">What is deliberately not active</h3>
+        <p className="mt-1 text-sm text-slate-600">These are planned or optional services. They are not faults and do not need action unless you decide to introduce them.</p>
+        {dormant.length === 0 ? <p className="mt-4 text-sm text-slate-600">No deliberately inactive services are currently recorded.</p> : <ul className="mt-4 space-y-2 text-sm text-slate-700">{dormant.map((item) => <li key={item.integration_name}><span className="font-semibold">{label(item.integration_name)}:</span> {dormantMessage(item)}</li>)}</ul>}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-5"><h3 className="text-xl font-bold">Decision record</h3><p className="mt-1 text-sm text-slate-600">This is the permanent record of recent operator and system actions.</p></div>
-        {events.length === 0 ? <p className="p-8 text-slate-600">No decisions have been recorded yet.</p> : <div className="divide-y divide-slate-200">{events.map((event) => <article key={event.event_id} className="grid gap-2 p-5 text-sm md:grid-cols-[1fr_12rem]"><div><p className="font-bold">{label(event.action)}</p><p className="mt-1 text-slate-600">{event.reason ?? `Recorded against ${label(event.entity_type)}.`}</p><p className="mt-1 text-xs text-slate-500">Recorded permanently by {label(event.actor_type)}.</p></div><time className="text-xs text-slate-500 md:text-right">{date(event.created_at)}</time></article>)}</div>}
-      </section>
+      <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <summary className="cursor-pointer p-5 text-lg font-bold">Technical details and recent checks</summary>
+        <div className="border-t border-slate-200 p-5">
+          <p className="text-sm text-slate-600">Use these details only when investigating an item above with technical help. A warning never publishes a listing or changes ownership by itself.</p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{health.map((item) => <article key={item.integration_name} className="rounded-xl border border-slate-200 p-4"><div className="flex items-center justify-between gap-3"><h4 className="font-bold">{label(item.integration_name)}</h4><Status value={item.status} /></div><p className="mt-2 text-sm text-slate-700">{healthMessage(item)}</p><p className="mt-3 text-xs text-slate-500">Last checked {date(item.updated_at)}</p>{item.last_success_at && <p className="mt-1 text-xs text-slate-500">Last successful check {date(item.last_success_at)}</p>}{item.last_failure_at && <p className="mt-1 text-xs text-slate-500">Last failure {date(item.last_failure_at)}</p>}{item.last_error && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Technical note: {item.last_error}</p>}<HealthDetails item={item} /></article>)}</div>
+          <JobDetails jobs={jobs} />
+        </div>
+      </details>
+
+      <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <summary className="cursor-pointer p-5 text-lg font-bold">Data safeguards and decision record</summary>
+        <div className="border-t border-slate-200 p-5"><RetentionDetails health={health.find((item) => item.integration_name === "contact_retention")} /><DecisionRecord events={events} /></div>
+      </details>
     </div>
   );
 }
 
-function Status({ value }: { value: string }) {
-  const colour = value === "healthy" || value === "succeeded" ? "bg-green-100 text-green-800" : value === "failed" ? "bg-red-100 text-red-800" : value === "degraded" || value === "stale" ? "bg-amber-100 text-amber-900" : "bg-slate-100 text-slate-700";
-  return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${colour}`}>{label(value)}</span>;
+function attentionItems(health: Health[], jobs: Job[]): AttentionItem[] {
+  const healthItems = health.filter((item) => ["failed", "degraded", "stale"].includes(item.status)).map((item) => ({ title: `${label(item.integration_name)} needs attention`, explanation: healthMessage(item), reference: `health-${item.integration_name}` }));
+  const jobItems = jobs.filter((job) => job.status === "failed").map((job) => ({ title: `${label(job.job_type)} did not complete`, explanation: "No listing, claim, or request was changed automatically. Technical help is needed before relying on this run.", reference: `job-${job.job_id.slice(0, 8)}` }));
+  return [...healthItems, ...jobItems];
 }
-function healthMessage(status: string) {
-  if (status === "healthy") return "This check is working normally. No action is needed.";
-  if (status === "degraded" || status === "stale") return "This information may be out of date. Record the issue and ask for technical help if it persists.";
-  if (status === "failed") return "The latest check did not finish. No listing or request has changed automatically. Record the issue and ask for technical help.";
-  return "No current automatic check is available. This does not mean there is a problem.";
-}
-function jobMessage(status: string, attempt: number, maxAttempts: number) {
-  if (status === "succeeded") return "Completed successfully. No action is needed.";
-  if (status === "failed") return `Did not complete after ${attempt} of ${maxAttempts} attempts. Record the issue and ask for technical help.`;
-  if (status === "running" || status === "queued") return `Still being handled automatically (attempt ${attempt} of ${maxAttempts}). No listing has changed automatically.`;
-  return "This task has an updated status. No listing has changed automatically.";
-}
+function Status({ value }: { value: string }) { const colour = value === "healthy" || value === "succeeded" ? "bg-green-100 text-green-800" : value === "failed" ? "bg-red-100 text-red-800" : value === "degraded" || value === "stale" ? "bg-amber-100 text-amber-900" : "bg-slate-100 text-slate-700"; return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${colour}`}>{label(value)}</span>; }
+function healthMessage(item: Health) { if (item.status === "healthy") return "This check is working normally."; if (item.status === "disabled") return dormantMessage(item); if (item.status === "degraded" || item.status === "stale") return "This information may be out of date. Nothing has changed automatically."; if (item.status === "failed") return "The latest check did not finish. Nothing has changed automatically."; return "This is not connected to automatic monitoring yet."; }
+function dormantMessage(item: Health) { const reason = text(item.metadata?.reason); return reason ? `Intentionally disabled — ${reason}` : item.status === "unknown" ? "Not connected to automatic monitoring yet." : "Intentionally disabled until it is explicitly approved."; }
+function JobDetails({ jobs }: { jobs: Job[] }) { return <section className="mt-6"><h4 className="font-bold">Automated work</h4>{jobs.length === 0 ? <p className="mt-2 text-sm text-slate-600">No automated work has run yet.</p> : <div className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200">{jobs.map((job) => <div key={job.job_id} className="flex flex-wrap items-center justify-between gap-4 p-4 text-sm"><div><p className="font-semibold">{label(job.job_type)}</p><p className="mt-1 text-slate-600">{job.status === "failed" ? `Stopped after ${job.attempt_count} of ${job.max_attempts} attempts.` : "Completed or still being handled without changing business state."}</p></div><Status value={job.status} /></div>)}</div>}</section>; }
+function RetentionDetails({ health }: { health: Health | undefined }) { const metadata = health?.metadata ?? {}; const resolved = text(metadata.resolved_retention) ?? "12 months"; const spam = text(metadata.spam_retention) ?? "30 days"; const deleted = number(metadata.last_deleted_count); return <section><h4 className="font-bold">Contact request retention</h4><p className="mt-1 text-sm text-slate-600">Private contact content is removed after it is no longer needed. The permanent audit record keeps only the request ID and status history.</p><div className="mt-3 grid gap-1 text-sm text-slate-700"><p><span className="font-semibold">Resolved requests:</span> {resolved}</p><p><span className="font-semibold">Spam requests:</span> {spam}</p>{deleted !== null && <p><span className="font-semibold">Last retention run:</span> removed {deleted} private request{deleted === 1 ? "" : "s"}.</p>}</div></section>; }
+function DecisionRecord({ events }: { events: Audit[] }) { return <section className="mt-7"><h4 className="font-bold">Recent decision record</h4>{events.length === 0 ? <p className="mt-2 text-sm text-slate-600">No decisions have been recorded yet.</p> : <div className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200">{events.map((event) => <article key={event.event_id} className="grid gap-2 p-4 text-sm md:grid-cols-[1fr_10rem]"><div><p className="font-semibold">{label(event.action)}</p><p className="mt-1 text-slate-600">{event.reason ?? `Recorded against ${label(event.entity_type)}.`}</p><AuditState label="Before" value={event.before_state} /><AuditState label="After" value={event.after_state} /><p className="mt-2 text-xs text-slate-500">Evidence reference {shortReference(event.evidence_reference)}.</p></div><time className="text-xs text-slate-500 md:text-right">{date(event.created_at)}</time></article>)}</div>}</section>; }
+function HealthDetails({ item }: { item: Health }) { const details = safeHealthDetails(item.metadata); return details.length === 0 ? null : <dl className="mt-3 grid gap-1 text-xs text-slate-600">{details.map(([name, value]) => <div key={name} className="flex gap-2"><dt className="font-semibold">{name}:</dt><dd>{value}</dd></div>)}</dl>; }
+function AuditState({ label: title, value }: { label: string; value: Record<string, unknown> | null }) { const entries = Object.entries(value ?? {}); return entries.length === 0 ? null : <p className="mt-2 text-xs text-slate-600"><span className="font-semibold">{title}:</span> {entries.map(([key, entry]) => `${label(key)} ${formatValue(entry)}`).join("; ")}</p>; }
+function safeHealthDetails(metadata: Record<string, unknown> | null) { if (!metadata) return [] as Array<[string, string]>; const labels: Record<string, string> = { monitoring: "Monitoring", mode: "Mode", schedule: "Schedule", domain: "Domain", failed_jobs: "Failed jobs", overdue_jobs: "Overdue jobs", listings_needing_review: "Listings needing review", pending_claims: "Pending claims", pending_profile_changes: "Pending profile edits" }; return Object.entries(labels).flatMap(([key, name]) => { const value = metadata[key]; return value === undefined ? [] : [[name, formatValue(value)] as [string, string]]; }); }
 function date(value: string) { return formatOpsDateTime(value); }
 function label(value: string) { return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()); }
+function text(value: unknown) { return typeof value === "string" && value.trim() ? value : null; }
+function number(value: unknown) { return typeof value === "number" && Number.isFinite(value) ? value : null; }
+function formatValue(value: unknown): string { return Array.isArray(value) ? value.map(formatValue).join(", ") : typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? String(value) : "recorded"; }
+function shortReference(value: string) { return value.slice(0, 8); }
