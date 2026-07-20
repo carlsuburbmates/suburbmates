@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { Building, MapPin, Tag, CheckCircle2, AlertCircle, Mail } from "lucide-react";
 
@@ -83,8 +84,9 @@ export default function ClaimClient() {
           <Mail className="mx-auto mb-4 text-slate-400" size={28} />
           <h2 className="text-xl font-bold">No listing is ready for a claim request</h2>
           <p className="mt-2 text-sm text-slate-600">
-            This email does not match an unclaimed listing contact. The business can remain publicly listed while its contact details are updated.
+            This email does not match an unclaimed listing contact. You can ask for private claim help; an operator will review the evidence and the listing will not change automatically.
           </p>
+          <Link href="/contact?topic=claim_help" className="btn btn-outline mt-5">Ask for claim help</Link>
         </div>
       )}
 

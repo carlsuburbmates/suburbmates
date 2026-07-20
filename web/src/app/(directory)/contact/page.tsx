@@ -19,7 +19,7 @@ export default async function ContactPage({
 }) {
   const message = await searchParams;
   const siteKey = runtimeEnv("TURNSTILE_SITE_KEY");
-  const initialTopic = message.topic === "listing_correction" ? "listing_correction" : "general";
+  const initialTopic = message.topic === "listing_correction" || message.topic === "claim_help" ? message.topic : "general";
   const initialBusiness = typeof message.business === "string" ? message.business.slice(0, 200) : "";
 
   return (

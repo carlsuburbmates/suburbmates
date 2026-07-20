@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import ProfileEditor from './ProfileEditor'
+import ClaimRequests from './ClaimRequests'
 
 type OwnerVendor = {
   id: string
@@ -19,6 +20,22 @@ type OwnerVendor = {
   description: string | null
 }
 
+type RequestStatus = {
+  request_type: string
+  request_status: string
+  safe_operator_reason: string
+  next_step: string
+  submitted_at: string
+  decided_at: string | null
+}
+
+type ClaimRequest = {
+  claim_request_id: string
+  business_name: string
+  claim_status: string
+  created_at: string
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   
@@ -32,6 +49,10 @@ export default async function DashboardPage() {
   const ownedVendors = ownerVendorRows as OwnerVendor[] | null
 
   const { data: profileChanges } = await supabase.rpc('list_current_owner_profile_changes')
+  const { data: requestStatuses } = await supabase.rpc('list_current_owner_request_statuses')
+  const { data: claimRequests } = await supabase.rpc('list_current_owner_claim_requests')
+  const ownerRequestStatuses = (requestStatuses ?? []) as RequestStatus[]
+  const ownerClaimRequests = (claimRequests ?? []) as ClaimRequest[]
   const latestChangeByVendor = new Map<string, (typeof profileChanges)[number]>()
   for (const change of profileChanges ?? []) {
     if (!latestChangeByVendor.has(change.vendor_id)) latestChangeByVendor.set(change.vendor_id, change)
@@ -47,6 +68,26 @@ export default async function DashboardPage() {
             <button className="text-sm font-medium underline text-slate-600 hover:text-black">Sign Out</button>
           </form>
         </header>
+
+        {ownerRequestStatuses.length > 0 && (
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">Request status</h2>
+              <p className="mt-1 text-sm text-slate-600">Updates appear here even if an email cannot be delivered.</p>
+            </div>
+            <div className="grid gap-4">
+              {ownerRequestStatuses.map((request, index) => (
+                <div key={`${request.request_type}-${request.submitted_at}-${index}`} className="rounded-2xl border bg-white p-5 shadow-sm">
+                  <p className="font-bold">{request.request_type === 'claim' ? 'Ownership request' : 'Profile change'}</p>
+                  <p className="mt-1 text-sm text-slate-600">{request.safe_operator_reason}</p>
+                  <p className="mt-2 text-sm font-medium text-slate-800">Next step: {request.next_step}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <ClaimRequests initialRequests={ownerClaimRequests} />
 
         {/* Owned Businesses */}
         <section className="space-y-6">
