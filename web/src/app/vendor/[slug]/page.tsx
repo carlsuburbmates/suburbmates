@@ -145,7 +145,7 @@ export default async function VendorWebsite({ params }: PageProps) {
               </section>
             </div>
             <div className="space-y-6">
-              <ContactSticky data={vendor} styling={design} />
+              <ContactSticky data={{ ...vendor, suburb_name: vendor.suburbs?.name }} styling={design} />
             </div>
           </div>
         ) : (
@@ -160,7 +160,7 @@ export default async function VendorWebsite({ params }: PageProps) {
                 </div>
               </section>
             </div>
-            <ContactInline data={vendor} styling={design} />
+            <ContactInline data={{ ...vendor, suburb_name: vendor.suburbs?.name }} styling={design} />
           </div>
         )}
       </main>
@@ -185,6 +185,12 @@ export default async function VendorWebsite({ params }: PageProps) {
               SuburbMates
             </Link>
           </div>
+          <Link
+            href={`/contact?topic=listing_correction&business=${encodeURIComponent(vendor.business_name)}`}
+            className="text-xs underline hover:text-white transition-colors"
+          >
+            Report a problem with this listing
+          </Link>
         </div>
       </footer>
     </div>

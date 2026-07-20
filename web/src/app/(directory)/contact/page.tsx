@@ -15,10 +15,12 @@ export const metadata: Metadata = {
 export default async function ContactPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; topic?: string; business?: string }>;
 }) {
   const message = await searchParams;
   const siteKey = runtimeEnv("TURNSTILE_SITE_KEY");
+  const initialTopic = message.topic === "listing_correction" ? "listing_correction" : "general";
+  const initialBusiness = typeof message.business === "string" ? message.business.slice(0, 200) : "";
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -78,7 +80,7 @@ export default async function ContactPage({
 
             <label className="block text-sm font-bold">
               What do you need help with?
-              <select name="topic" required defaultValue="general" className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal">
+              <select name="topic" required defaultValue={initialTopic} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal">
                 <option value="general">General support</option>
                 <option value="listing_correction">Correct a listing</option>
                 <option value="claim_help">Claim help</option>
@@ -91,7 +93,7 @@ export default async function ContactPage({
 
             <label className="block text-sm font-bold">
               Business name <span className="font-normal text-slate-500">(optional)</span>
-              <input name="businessName" maxLength={200} autoComplete="organization" className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" />
+              <input name="businessName" defaultValue={initialBusiness} maxLength={200} autoComplete="organization" className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" />
             </label>
 
             <label className="block text-sm font-bold">

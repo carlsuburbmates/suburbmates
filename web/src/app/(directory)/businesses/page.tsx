@@ -54,7 +54,7 @@ export default async function BusinessesPage({
   // 2. Fetch clamped page data
   let query = supabase
     .from('published_vendors')
-    .select('id, slug, business_name, description, contact_email, phone, website, tier, is_claimed, street_address, suburb_slug, category_slug');
+    .select('id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address, suburb_slug, category_slug');
 
   if (escapedQ) query = query.ilike('business_name', `%${escapedQ}%`);
   if (suburb) query = query.eq('suburb_slug', suburb);
@@ -66,7 +66,11 @@ export default async function BusinessesPage({
   const to = from + pageSize - 1;
   query = query.range(from, to);
 
-  const { data: vendors } = await query;
+  const { data: vendors, error: vendorsError } = await query;
+
+  if (suburbsRes.error || categoriesRes.error || vendorsError) {
+    throw new Error("The directory could not be loaded.");
+  }
 
   return (
     <DirectoryBrowseClient

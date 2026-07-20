@@ -55,7 +55,7 @@ export default async function Page({ params }: PageProps) {
       .single(),
     supabase
       .from("published_vendors")
-      .select("id, slug, business_name, description, contact_email, phone, website, tier, is_claimed, street_address")
+      .select("id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address")
       .eq("suburb_slug", suburbSlug)
       .eq("category_slug", serviceSlug)
       .order("business_name", { ascending: true })
@@ -68,6 +68,9 @@ export default async function Page({ params }: PageProps) {
 
   const suburb = suburbRes.data;
   const category = categoryRes.data;
+  if (vendorsRes.error) {
+    throw new Error("The directory results could not be loaded.");
+  }
   const vendors = vendorsRes.data || [];
 
   return (
@@ -116,34 +119,25 @@ export default async function Page({ params }: PageProps) {
             </div>
             <h3 className="text-2xl font-black tracking-tight mb-3">No Businesses Listed Yet</h3>
             <p className="text-slate-600 mb-8 max-w-sm mx-auto leading-relaxed">
-              We don&apos;t have any local {category.name.toLowerCase()} registered in {suburb.name} at this time.
+              We don&apos;t have any local {category.name.toLowerCase()} listings in {suburb.name} at this time.
             </p>
             <Link
               href="/join"
               className="btn btn-primary"
               aria-label={`List your ${category.name.toLowerCase()} business in ${suburb.name}`}
             >
-              List your business
+              Suggest a business
             </Link>
           </div>
         ) : (
           /* List of Providers */
           <div className="grid gap-6">
             {vendors.map((vendor) => {
-              const isPremium = vendor.tier === "premium";
               return (
                 <article
                   key={vendor.id}
-                  className={`card relative overflow-hidden transition-all duration-300 ${
-                    isPremium ? 'border-black ring-1 ring-black/10' : 'border-slate-200'
-                  }`}
+                  className="card relative overflow-hidden transition-all duration-300 border-slate-200"
                 >
-                  {/* Premium Badge */}
-                  {isPremium && (
-                    <div className="absolute top-0 right-0 bg-black text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl">
-                      Featured
-                    </div>
-                  )}
 
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                     <div className="flex-1">
