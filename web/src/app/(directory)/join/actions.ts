@@ -19,6 +19,7 @@ export async function submitBusinessAction(formData: FormData) {
   const phone = String(formData.get("phone") ?? "").trim();
   const website = String(formData.get("website") ?? "").trim();
   const streetAddress = String(formData.get("streetAddress") ?? "").trim();
+  const abn = String(formData.get("abn") ?? "").replace(/\s/g, "");
   const token = String(formData.get("cf-turnstile-response") ?? "");
   const consent = formData.get("consent") === "on";
 
@@ -27,9 +28,10 @@ export async function submitBusinessAction(formData: FormData) {
     businessName.length < 2 || businessName.length > 200 ||
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(categorySlug) ||
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(suburbSlug) ||
-    contactEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail) ||
+    (contactEmail && (contactEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail))) ||
     phone.length > 40 || website.length > 500 || streetAddress.length > 500 ||
-    (website && !/^https:\/\/[^\s]+$/i.test(website)) || !consent
+    (website && !/^https:\/\/[^\s]+$/i.test(website)) || (abn && !/^\d{11}$/.test(abn)) ||
+    (!contactEmail && !phone && !website) || !consent
   ) {
     fail("invalid");
   }
@@ -53,6 +55,7 @@ export async function submitBusinessAction(formData: FormData) {
       p_phone: phone || null,
       p_website: website || null,
       p_street_address: streetAddress || null,
+      p_abn: abn || null,
       p_turnstile_hostname: verification.hostname,
       p_turnstile_action: verification.action,
     });
