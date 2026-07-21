@@ -68,9 +68,11 @@ export default async function JoinPage({ searchParams }: {
             <Field label="Business name" name="businessName" required maxLength={200} autoComplete="organization" />
             <Select label="Category" name="categorySlug" options={categoriesResult.data ?? []} />
             <Select label="Location" name="suburbSlug" options={suburbsResult.data ?? []} />
-            <Field label="Business contact email" name="contactEmail" type="email" required maxLength={254} autoComplete="email" />
+            <Field label="Business email (optional)" name="contactEmail" type="email" maxLength={254} autoComplete="email" />
             <Field label="Phone (optional)" name="phone" type="tel" maxLength={40} autoComplete="tel" />
             <Field label="Website (optional, HTTPS)" name="website" type="url" maxLength={500} placeholder="https://" />
+            <p className="text-sm text-slate-600 sm:col-span-2">Provide at least one way customers can contact this business: email, phone, or website.</p>
+            <Field label="ABN (optional)" name="abn" maxLength={14} placeholder="11 digits" />
             <Field label="Street address (optional)" name="streetAddress" maxLength={500} autoComplete="street-address" />
             <label className="flex items-start gap-3 text-sm leading-6 text-slate-700 sm:col-span-2"><input name="consent" type="checkbox" required className="mt-1 h-4 w-4" /><span>I confirm these are genuine business details and agree that SuburbMates may review them for directory publication as described in the <Link href="/privacy" className="font-bold underline">privacy notice</Link>.</span></label>
             <div className="sm:col-span-2"><div className="cf-turnstile" data-sitekey={siteKey} data-action="business_submission" data-theme="light" /></div>
