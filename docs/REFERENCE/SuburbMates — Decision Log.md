@@ -33,7 +33,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Date:** 19 July 2026
 - **Decision:** A business that deterministically qualifies from an approved source is intended to appear in the directory by default as an unclaimed listing. A business does not need to register, claim, provide an ABN or pay before it appears.
 - **Guardrail:** "Found" means an approved, in-scope, identifiable, deduplicated candidate without known material safety or legitimacy concerns. Provenance and the qualifying evidence must be retained. Exceptions remain visible to an operator and audit-recorded.
-- **Current state:** The application requires an explicit operator publication decision. The public launch gate is enabled by the owner's 23 July 2026 release decision; this does not enable automated production publication.
+- **Current state:** The token-protected OpenStreetMap handoff automatically creates a new unclaimed listing only after deterministic qualification and retained evidence. The existing 1,600-listing cohort completed a private requalification pass on 23 July 2026: 584 qualified and 1,016 exceptions, with no lifecycle or public-visibility change. The public launch gate remains enabled by the owner's release decision.
 - **Required alignment:** Complete and prove the qualification, evidence, duplicate, exception and lifecycle controls before enabling deterministic production publication.
 - **Evidence to close:** Policy implementation, tests, controlled data-path verification, operator exception evidence and authorised public release verification.
 

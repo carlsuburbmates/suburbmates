@@ -26,19 +26,31 @@ The approved qualification policy applies to every directory listing: permitted 
 
 The duplicate signal counts can overlap. They are review signals, not evidence that every paired listing is an erroneous duplicate.
 
-## Result
+## Completed private evidence pass
 
-The existing 1,600 listings are **not yet requalified** under the approved policy. In particular, 810 do not presently meet the stored-data version of the required reachable-contact rule. Provenance and scope are strong for most of the cohort, but this audit cannot prove a current website is safe, a business is still active, or that every duplicate signal is a duplicate without retained or fresh evidence.
+The idempotent `existing-catalogue-v1` run completed on 23 July 2026:
 
-The public release remains an explicit owner-authorised release. This report does not retrospectively treat the existing cohort as qualified and does not authorise bulk unpublication.
+| Result | Count |
+| --- | ---: |
+| Listings classified | 1,600 |
+| Qualified from stored evidence | 584 |
+| Exceptions retained for Ops | 1,016 |
+| Missing reachable contact | 810 |
+| Unsupported category | 354 |
+| Possible duplicate | 107 |
+| Strong duplicate | 16 |
+| Incomplete provenance | 2 |
 
-## Safe next implementation
+Reason counts overlap because one listing can need more than one follow-up. Re-running the same evidence pass returned the completed run rather than creating another run, record set or audit event.
 
-1. Create a private, idempotent requalification run and one evidence record per existing listing.
-2. Classify each row as `qualified` or `exception` using the same deterministic policy as new candidates, while preserving the listing's current publication state.
-3. Send missing-contact, duplicate, provenance and safety exceptions to a protected Ops queue with a plain-language reason.
-4. Require a separately authorised lifecycle decision before any exception is unpublished, corrected or otherwise changes public visibility.
-5. Verify the resulting evidence, queue counts, audit trail and public sitemap before describing the cohort as fully requalified.
+The classification did not change a listing's lifecycle, ownership, commercial state or public visibility: the live published count remained 1,600 and the sitemap remained 1,684 URLs. The protected `/ops/catalogue-review` page exposes the exceptions in plain language to the authorised operator.
+
+## Next operational work
+
+1. Review the exception queue, starting with missing contact details, strong duplicates and incomplete provenance.
+2. Preserve the evidence result until a separately authorised lifecycle decision is made for any individual exception.
+3. Re-run only when source or listing data materially changes; the policy fingerprint makes an unchanged rerun idempotent.
+4. Use the public route and sitemap smoke checks after any future listing decision.
 
 ## Evidence used
 
