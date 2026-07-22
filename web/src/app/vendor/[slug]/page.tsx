@@ -69,6 +69,8 @@ export default async function VendorWebsite({ params }: PageProps) {
   if (error || !vendor) {
     notFound();
   }
+  const { data: mediaRows } = await supabase.rpc("list_public_vendor_media", { p_vendor_id: vendor.id });
+  const media = (mediaRows ?? []) as { media_id: string; media_kind: string; alt_text: string }[];
 
   // Compute design parameters out of existing data deterministically
   const design = getVendorDesign(vendor.id, vendor.created_at);
@@ -135,6 +137,7 @@ export default async function VendorWebsite({ params }: PageProps) {
         {design.contact === 'Sidebar' ? (
           <div className="grid md:grid-cols-3 gap-12">
             <div className="md:col-span-2 space-y-12">
+              {media.length > 0 && <section><h2 className="text-3xl font-black tracking-tight mb-6">Photos</h2><div className="grid gap-4 sm:grid-cols-2">{media.map((item) => <img key={item.media_id} src={`/api/media/${item.media_id}`} alt={item.alt_text} className="h-64 w-full rounded-2xl object-cover" />)}</div></section>}
               <section>
                 <h2 className="text-3xl font-black tracking-tight mb-6">About Us</h2>
                 <div className="prose prose-lg max-w-none">
@@ -151,6 +154,7 @@ export default async function VendorWebsite({ params }: PageProps) {
         ) : (
           <div className="space-y-16">
             <div className="max-w-3xl">
+              {media.length > 0 && <section className="mb-12"><h2 className="text-3xl font-black tracking-tight mb-6">Photos</h2><div className="grid gap-4 sm:grid-cols-2">{media.map((item) => <img key={item.media_id} src={`/api/media/${item.media_id}`} alt={item.alt_text} className="h-64 w-full rounded-2xl object-cover" />)}</div></section>}
               <section>
                 <h2 className="text-3xl font-black tracking-tight mb-6">About Us</h2>
                 <div className="prose prose-lg max-w-none">

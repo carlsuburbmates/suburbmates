@@ -8,6 +8,21 @@ import { checkAbn, normalizeAbn } from "@/lib/automation/abn-lookup";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decisions = new Set(["publish", "approve_changes", "reject", "unpublish", "restore"]);
 const submissionOutcomes = new Set(["needs_information", "approved", "declined"]);
+const mediaActions = new Set(["approve", "reject", "remove"]);
+
+export async function decideMediaProposalAction(formData: FormData) {
+  const vendorId = String(formData.get("vendorId") ?? "");
+  const proposalId = String(formData.get("proposalId") ?? "");
+  const action = String(formData.get("action") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  const detailPath = `/ops/listings/${vendorId}`;
+  const { supabase } = await verifyOpsAdmin(detailPath);
+  if (!uuidPattern.test(vendorId) || !uuidPattern.test(proposalId) || !mediaActions.has(action) || reason.length < 1 || reason.length > 2000) redirect(`${detailPath}?error=media`);
+  const { error } = await supabase.rpc("ops_decide_media_proposal", { p_proposal_id: proposalId, p_action: action, p_reason: reason });
+  if (error) redirect(`${detailPath}?error=media`);
+  revalidatePath("/ops"); revalidatePath("/ops/listings"); revalidatePath(detailPath); revalidatePath("/dashboard");
+  redirect(`${detailPath}?success=media_${action}`);
+}
 
 export async function runAbnCheckAction(formData: FormData) {
   const vendorId = String(formData.get("vendorId") ?? "");
