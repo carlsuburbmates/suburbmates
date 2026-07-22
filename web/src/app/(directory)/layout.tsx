@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+const publicLaunchEnabled = process.env.NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED === "true";
+
 export default function DirectoryLayout({
   children,
 }: Readonly<{
@@ -27,7 +29,7 @@ export default function DirectoryLayout({
           </Link>
 
           <p className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: "var(--sm-text-tertiary)" }}>
-            Preparing for launch
+            {publicLaunchEnabled ? "Discover local businesses" : "Preparing for launch"}
           </p>
         </div>
       </header>
@@ -58,7 +60,7 @@ export default function DirectoryLayout({
           </Link>
 
           <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--sm-text-on-inverse-secondary)" }}>
-            Launching soon
+            {publicLaunchEnabled ? "Melbourne's local business directory" : "Launching soon"}
           </p>
 
           {/* Copyright — gray-300 on black = 10.7:1 ✅ */}
