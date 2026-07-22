@@ -11,7 +11,8 @@ const csvPath = process.argv[2];
 // budget during a large discovery run.
 const BATCH_SIZE = 5;
 const MAX_CONCURRENT_BATCHES = 2;
-const MAX_ATTEMPTS = 5;
+// The cumulative backoff exceeds the one-minute server recovery window.
+const MAX_ATTEMPTS = 9;
 const RETRY_DELAY_MS = 2_000;
 if (!endpoint || !token || !csvPath) throw new Error("CANDIDATE_HANDOFF_URL, AUTOMATION_INGEST_TOKEN and a CSV path are required.");
 
