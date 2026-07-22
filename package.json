@@ -28,6 +28,7 @@
     "claim-evidence-handoff:test": "tsx scripts/test-claim-evidence-handoff-boundary.ts",
     "cross-device-email-code:test": "tsx scripts/test-cross-device-email-code-boundary.ts",
     "private-business-submission-status:test": "tsx scripts/test-private-business-submission-status-boundary.ts",
+    "submitter-owner-identity:test": "tsx scripts/test-submitter-owner-identity-boundary.ts",
     "ops-system:test": "tsx scripts/test-ops-system-boundary.ts",
     "verify:db": "tsx --env-file=.env.local scripts/verify-db.ts"
   },
