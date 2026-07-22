@@ -23,7 +23,7 @@ Database health updates and contact retention are narrow, audited **Ops** proces
 - GitHub has four active workflows on `main`: Verify, Catalogue candidate discovery, Website safety evidence, and Production smoke.
 - Catalogue discovery and Production smoke fixes were merged in pull requests #4 and #5. Controlled manual runs then succeeded on `main`. Website safety completed evidence collection and raised one operator review issue.
 - Stripe billing, bulk ABR/ABN checks, AI publication, media/logo processing, and the legacy inactivity pruner are disabled.
-- Candidate-to-Ops handoff is implemented for approved OpenStreetMap batches. A controlled live proof created one private exception and zero listings; the first qualified live creation and the first full scheduled batch still require operator review evidence.
+- Candidate-to-Ops handoff is implemented for approved OpenStreetMap batches. A full manual run on 22 July 2026 covered 1,545 source rows: 1,544 private exceptions and one deterministically qualified, unclaimed listing with retained provenance, contact and audit evidence. The protected exception queue remains normal ongoing Ops work.
 - The existing 1,600-listing catalogue has completed a private deterministic evidence pass: 584 qualified and 1,016 exceptions. It did not change listing visibility; exceptions are available in protected Ops for follow-up.
 - The database health monitor does not ingest GitHub workflow runs or artefacts. Its green automation-queue status means only that the local job table has no failed or overdue rows; it is not evidence that GitHub checks ran.
 
