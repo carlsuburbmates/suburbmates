@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
-import { decideListingAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
+import { decideListingAction, runAbnCheckAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
 
 type Listing = {
   vendor_id: string;
@@ -59,7 +59,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const evidence = (evidenceResult.data ?? []) as ListingEvidence[];
   const publicSlug = routeResult.data?.[0]?.current_slug as string | undefined;
   const submission = submissionResult.data?.[0] as SubmissionStatus | undefined;
-  const successfulAction = ["draft", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(message.success ?? "");
+  const successfulAction = ["draft", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(message.success ?? "") || (message.success ?? "").startsWith("abn_");
 
   return (
     <div className="space-y-7">
@@ -73,8 +73,8 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
         {listing.is_published && publicSlug && <Link href={`/vendor/${publicSlug}`} className="btn btn-outline">View public profile</Link>}
       </div>
 
-      {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
-      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{message.success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : "Decision recorded with an audit event."}</p>}
+      {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : message.error === "abn" ? "The ABN check could not be recorded. Enter 11 digits and try again." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{message.success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : (message.success ?? "").startsWith("abn_") ? "ABN check recorded. It has not changed publication, ownership, ranking or tier." : "Decision recorded with an audit event."}</p>}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Source evidence</h3>
@@ -82,6 +82,17 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
         {evidence.length === 0 ? <p className="mt-5 rounded-xl bg-slate-100 p-4 text-sm text-slate-600">No structured evidence record exists for this legacy listing.</p> : (
           <div className="mt-5 space-y-4">{evidence.map((item) => <EvidenceCard key={item.evidence_id} evidence={item} />)}</div>
         )}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-xl font-bold">ABN check</h3>
+        <p className="mt-2 text-sm text-slate-600">Use this only for a supplied ABN. The result is private evidence. It never publishes a listing, confirms ownership, changes ranking or changes a plan.</p>
+        <form action={runAbnCheckAction} className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <input type="hidden" name="vendorId" value={vendorId} />
+          <label className="block flex-1 text-sm font-bold">ABN<input name="abn" inputMode="numeric" pattern="[0-9 ]{11,20}" maxLength={20} required placeholder="11 digits" className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label>
+          <button className="btn btn-outline">Check ABN</button>
+        </form>
+        <p className="mt-3 text-xs text-slate-500">Only a latest active result less than 90 days old may show “ABN checked” publicly. The ABN number itself stays private.</p>
       </section>
 
       {submission && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 className="text-xl font-bold">Private submitter status</h3><p className="mt-2 text-sm text-slate-600">This is a private, signed-in status only. It does not send email or change publication.</p><p className="mt-4 font-semibold">Current status: {statusLabel(submission.submission_status)}</p>{submission.operator_message && <p className="mt-2 text-sm">Current message: {submission.operator_message}</p>}{!['approved','declined'].includes(submission.submission_status) && <form action={setBusinessSubmissionStatusAction} className="mt-5 space-y-4"><input type="hidden" name="vendorId" value={vendorId} /><label className="block text-sm font-bold">Outcome<select name="outcome" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal"><option value="">Choose one</option><option value="needs_information">Needs information</option><option value="approved">Approved</option><option value="declined">Declined</option></select></label><label className="block text-sm font-bold">Plain-language message<textarea name="message" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label><button className="btn btn-outline">Save private status</button></form>}</section>}

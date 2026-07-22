@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run audit:test && npm run acquire:osm:test && npm run catalogue:merge:test && npm run seed:test && npm run candidate-qualification:test && npm run candidate-handoff:test && npm run candidate-automation-ingest:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run resident-journey:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test && npm run ops-system:test",
+    "check": "npm run audit:test && npm run acquire:osm:test && npm run catalogue:merge:test && npm run seed:test && npm run candidate-qualification:test && npm run candidate-handoff:test && npm run candidate-automation-ingest:test && npm run abn-check:test && npm run abn-evidence:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run resident-journey:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test && npm run ops-system:test",
     "dev": "npm --prefix web run dev",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "seed:test": "tsx --env-file-if-exists=.env.local scripts/test-seed-policy.ts",
@@ -12,6 +12,8 @@
     "candidate-handoff:test": "tsx scripts/test-candidate-handoff-boundary.ts",
     "candidate:handoff": "tsx --env-file-if-exists=.env.local scripts/submit-candidate-handoff.ts",
     "candidate-automation-ingest:test": "tsx scripts/test-candidate-automation-ingest-boundary.ts",
+    "abn-check:test": "tsx scripts/test-abn-lookup.ts",
+    "abn-evidence:test": "tsx scripts/test-abn-evidence-boundary.ts",
     "claim:test": "tsx --env-file=.env.local scripts/test-claims.ts",
     "audit": "tsx --env-file-if-exists=.env.local scripts/audit-vendor-candidates.ts",
     "audit:test": "tsx --env-file-if-exists=.env.local scripts/test-audit.ts",

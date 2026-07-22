@@ -105,7 +105,7 @@ export default async function VendorWebsite({ params }: PageProps) {
             </div>
             <div>
               <div className="font-black text-xl tracking-tight leading-none">{vendor.business_name}</div>
-              <div className={`text-sm font-medium ${design.palette.bodyText}`}>{vendor.categories?.name}</div>
+              <div className={`mt-1 flex flex-wrap items-center gap-2 text-sm font-medium ${design.palette.bodyText}`}><span>{vendor.categories?.name}</span>{vendor.abn_checked && <span className="rounded-full border border-current/30 px-2 py-0.5 text-xs font-bold">ABN checked</span>}</div>
             </div>
           </div>
           

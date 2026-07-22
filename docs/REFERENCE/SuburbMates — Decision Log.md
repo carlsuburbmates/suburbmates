@@ -95,6 +95,14 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Identity rule:** The same email may be used by a submitter and later by a business owner. Authentication never makes it an owner; only an approved claim creates the ownership link.
 - **Owner-submitted candidate rule:** A person who owns, manages, or represents a missing business signs in first, submits the private candidate and a relationship explanation, and receives a pending claim request. That combined intake never publishes the candidate or grants ownership automatically.
 
+### D-010 — Operator-run ABN evidence
+
+- **Date:** 22 July 2026
+- **Decision:** An operator may check one supplied ABN at a time using ABN Lookup. The full ABN and returned supporting details are private evidence. The public product may show only `ABN checked` when the latest result is active and less than 90 days old.
+- **Guardrail:** An ABN check cannot publish or unpublish a listing, grant or remove ownership, affect ranking, change a commercial state, or create a general `verified` badge. Missing, invalid, inactive, not-found and unavailable results are plain-language Ops outcomes, not a negative public label.
+- **Operational rule:** There is no bulk job or automatic recheck. When the 90-day evidence window expires, the public signal disappears until an operator deliberately checks again.
+- **Evidence to close:** Authorisation, active/inactive/invalid/provider-failure tests; persisted private evidence and audit record; live operator check; and a public projection showing the signal without exposing the ABN.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |
