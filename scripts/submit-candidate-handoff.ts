@@ -7,6 +7,7 @@ const endpoint = process.env.CANDIDATE_HANDOFF_URL;
 const token = process.env.AUTOMATION_INGEST_TOKEN;
 const csvPath = process.argv[2];
 const BATCH_SIZE = 10;
+const MAX_CONCURRENT_BATCHES = 4;
 if (!endpoint || !token || !csvPath) throw new Error("CANDIDATE_HANDOFF_URL, AUTOMATION_INGEST_TOKEN and a CSV path are required.");
 
 const rows = parse(fs.readFileSync(path.resolve(csvPath), "utf8"), { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
@@ -14,18 +15,32 @@ const artifactUrl = process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITO
   ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
   : undefined;
 
-for (let index = 0; index < rows.length; index += BATCH_SIZE) {
-  const candidates = rows.slice(index, index + BATCH_SIZE).map((row) => ({
+const batches = Array.from({ length: Math.ceil(rows.length / BATCH_SIZE) }, (_, batchIndex) => ({
+  batchIndex,
+  candidates: rows.slice(batchIndex * BATCH_SIZE, (batchIndex + 1) * BATCH_SIZE).map((row) => ({
     source: "openstreetmap", businessName: row.business_name, categorySlug: row.category_slug, suburbSlug: row.suburb_slug,
     streetAddress: row.address || undefined, contactEmail: row.contact_email || undefined, phone: row.phone || undefined,
     website: row.website || undefined, sourceUrl: row.source_url, sourceCheckedOn: row.source_checked_on || undefined, notes: row.notes || undefined,
-  }));
+  })),
+}));
+
+await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, candidates }) => {
   const artifactSha256 = createHash("sha256").update(JSON.stringify(candidates)).digest("hex");
   const response = await fetch(endpoint, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ source: "openstreetmap", artifactSha256, artifactUrl, candidates }) });
   if (!response.ok) {
     const detail = (await response.text()).slice(0, 1000);
-    throw new Error(`Candidate handoff batch ${index / BATCH_SIZE + 1} failed with ${response.status}: ${detail || "No response body"}.`);
+    throw new Error(`Candidate handoff batch ${batchIndex + 1} failed with ${response.status}: ${detail || "No response body"}.`);
   }
   const result = await response.json() as { qualifiedCount?: number; exceptionCount?: number; idempotent?: boolean };
-  console.log(`Candidate handoff batch ${index / BATCH_SIZE + 1}: ${result.idempotent ? "already received" : `${result.qualifiedCount ?? 0} qualified, ${result.exceptionCount ?? 0} exceptions`}.`);
+  console.log(`Candidate handoff batch ${batchIndex + 1}: ${result.idempotent ? "already received" : `${result.qualifiedCount ?? 0} qualified, ${result.exceptionCount ?? 0} exceptions`}.`);
+});
+
+async function runWithConcurrency<T>(items: readonly T[], concurrency: number, worker: (item: T) => Promise<void>) {
+  let nextIndex = 0;
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const item = items[nextIndex++];
+      await worker(item);
+    }
+  }));
 }
