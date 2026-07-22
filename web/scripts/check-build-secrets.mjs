@@ -12,6 +12,7 @@ const sensitiveNames = new Set([
   "SUPABASE_SERVICE_ROLE_KEY",
   "TURNSTILE_SECRET_KEY",
   "REVALIDATION_TOKEN",
+  "AUTOMATION_INGEST_TOKEN",
 ]);
 
 if (!fs.existsSync(buildRoot)) {

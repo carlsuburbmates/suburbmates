@@ -40,5 +40,11 @@ jobs:
             data/vendor-candidates-osm.csv
             data/vendor-candidates-merged.csv
 
+      - name: Send approved-source candidates to the private qualification handoff
+        run: npm run candidate:handoff -- data/vendor-candidates-osm.csv
+        env:
+          CANDIDATE_HANDOFF_URL: https://suburbmates.com.au/api/automation/candidates
+          AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
+
       - name: Confirm publication boundary
-        run: echo "Candidates were acquired and audited only. No database seed or publication command ran."
+        run: echo "Candidates entered the authenticated qualification handoff. Only a deterministic qualifying result can create an unclaimed listing; exceptions remain private in Ops."
