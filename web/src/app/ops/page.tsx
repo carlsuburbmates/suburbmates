@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 
 type ClaimOverview = {
   pending_count: number;
@@ -37,7 +37,7 @@ type ContactOverview = {
 };
 
 export default async function OpsOverviewPage() {
-  const { supabase } = await verifyOpsAdmin("/ops");
+  const supabase = await createOpsDataClient();
   const [listingResult, claimResult, profileResult, contactResult, systemResult] = await Promise.all([
     supabase.rpc("ops_listing_overview"),
     supabase.rpc("ops_claim_overview"),

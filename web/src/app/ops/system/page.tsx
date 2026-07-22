@@ -1,4 +1,4 @@
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
 
 type Health = {
@@ -16,7 +16,7 @@ type Audit = { event_id: string; actor_type: string; action: string; entity_type
 type AttentionItem = { title: string; explanation: string; reference: string };
 
 export default async function OpsSystemPage() {
-  const { supabase } = await verifyOpsAdmin("/ops/system");
+  const supabase = await createOpsDataClient();
   const [healthResult, jobsResult, auditResult] = await Promise.all([
     supabase.rpc("ops_list_integration_health"),
     supabase.rpc("ops_list_automation_jobs", { p_limit: 200 }),

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { QueuePagination } from "@/components/ops/QueuePagination";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDate } from "@/lib/ops/date";
 
 const statuses = ["pending", "approved", "rejected"] as const;
@@ -21,7 +21,7 @@ export default async function OpsProfileEditsPage({ searchParams }: { searchPara
   const params = await searchParams;
   const status = statuses.includes(params.status as Status) ? (params.status as Status) : "pending";
   const page = pageNumber(params.page);
-  const { supabase } = await verifyOpsAdmin(`/ops/profile-edits?status=${status}`);
+  const supabase = await createOpsDataClient();
   const { data, error } = await supabase.rpc("ops_list_profile_changes", {
     p_status: status,
     p_change_request_id: null,

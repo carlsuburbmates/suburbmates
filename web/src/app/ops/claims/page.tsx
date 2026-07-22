@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { QueuePagination } from "@/components/ops/QueuePagination";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDate } from "@/lib/ops/date";
 
 const statuses = ["pending", "needs_information", "approved", "rejected", "revoked"] as const;
@@ -25,7 +25,7 @@ export default async function OpsClaimsPage({
   const params = await searchParams;
   const status = statuses.includes(params.status as ClaimStatus) ? (params.status as ClaimStatus) : "pending";
   const page = pageNumber(params.page);
-  const { supabase } = await verifyOpsAdmin(`/ops/claims?status=${status}`);
+  const supabase = await createOpsDataClient();
   const { data, error } = await supabase.rpc("ops_list_claim_requests", {
     p_status: status,
     p_claim_request_id: null,

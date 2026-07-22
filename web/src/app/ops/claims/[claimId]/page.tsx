@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
 import { reviewClaimAction } from "../actions";
 
@@ -32,7 +32,7 @@ export default async function OpsClaimDetailPage({
 }) {
   const { claimId } = await params;
   const message = await searchParams;
-  const { supabase } = await verifyOpsAdmin(`/ops/claims/${claimId}`);
+  const supabase = await createOpsDataClient();
   const { data, error } = await supabase.rpc("ops_list_claim_requests", {
     p_status: null,
     p_claim_request_id: claimId,

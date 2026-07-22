@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 import { reviewProfileChangeAction } from "../actions";
 
 const fieldLabels: Record<string, string> = {
@@ -37,7 +37,7 @@ export default async function OpsProfileEditDetailPage({
 }) {
   const { requestId } = await params;
   const message = await searchParams;
-  const { supabase } = await verifyOpsAdmin(`/ops/profile-edits/${requestId}`);
+  const supabase = await createOpsDataClient();
   const { data, error } = await supabase.rpc("ops_list_profile_changes", {
     p_status: null,
     p_change_request_id: requestId,

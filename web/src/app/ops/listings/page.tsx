@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { QueuePagination } from "@/components/ops/QueuePagination";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 
 const statuses = ["review", "unclassified", "draft", "pending_review", "published", "rejected", "unpublished"] as const;
 type Status = (typeof statuses)[number];
@@ -23,7 +23,7 @@ export default async function OpsListingsPage({ searchParams }: { searchParams: 
   const status = statuses.includes(params.status as Status) ? (params.status as Status) : "review";
   const q = typeof params.q === "string" ? params.q.slice(0, 200) : "";
   const page = pageNumber(params.page);
-  const { supabase } = await verifyOpsAdmin(`/ops/listings?status=${status}`);
+  const supabase = await createOpsDataClient();
   const { data, error } = await supabase.rpc("ops_list_listings", {
     p_status: status,
     p_query: q || null,

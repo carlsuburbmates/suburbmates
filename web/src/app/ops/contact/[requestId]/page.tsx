@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
 import { reviewContactAction } from "../actions";
 
@@ -33,7 +33,7 @@ export default async function OpsContactDetailPage({
 }) {
   const { requestId } = await params;
   const message = await searchParams;
-  const { supabase } = await verifyOpsAdmin(`/ops/contact/${requestId}`);
+  const supabase = await createOpsDataClient();
   const { data, error } = await supabase.rpc("ops_list_contact_requests", {
     p_status: null,
     p_contact_request_id: requestId,

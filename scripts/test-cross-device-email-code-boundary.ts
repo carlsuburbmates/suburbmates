@@ -6,6 +6,8 @@ const communications = fs.readFileSync("docs/REFERENCE/SuburbMates — Communica
 
 assert.match(login, /supabase\.auth\.signInWithOtp\(\{\s*email,/);
 assert.match(login, /supabase\.auth\.verifyOtp\(\{ email, token, type: "email" \}\)/);
+assert.match(login, /data\.session/);
+assert.match(login, /requestAnimationFrame/);
 assert.match(login, /autoComplete="one-time-code"/);
 assert.match(login, /safeNext\(/);
 assert.match(login, /startsWith\("\/"\) && !value\.startsWith\("\/\/"\)/);
