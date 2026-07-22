@@ -20,8 +20,12 @@ assert.match(route, /Could not recover the partially completed qualified listing
 assert.doesNotMatch(route, /stripe/i);
 assert.match(workflow, /candidate:handoff/);
 assert.match(workflow, /AUTOMATION_INGEST_TOKEN/);
-assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /const BATCH_SIZE = 10/);
-assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /const MAX_CONCURRENT_BATCHES = 4/);
+const handoff = fs.readFileSync("scripts/submit-candidate-handoff.ts", "utf8");
+assert.match(handoff, /const BATCH_SIZE = 5/);
+assert.match(handoff, /const MAX_CONCURRENT_BATCHES = 2/);
+assert.match(handoff, /const MAX_ATTEMPTS = 5/);
+assert.match(handoff, /\[429, 500, 502, 503, 504\]/);
+assert.match(handoff, /response\.status === 202/);
 assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /await response\.text\(\)/);
 
 console.log("Candidate automation ingestion boundary checks passed.");
