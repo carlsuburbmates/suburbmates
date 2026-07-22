@@ -21,6 +21,7 @@ assert.doesNotMatch(route, /stripe/i);
 assert.match(workflow, /candidate:handoff/);
 assert.match(workflow, /AUTOMATION_INGEST_TOKEN/);
 assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /const BATCH_SIZE = 10/);
+assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /const MAX_CONCURRENT_BATCHES = 4/);
 assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /await response\.text\(\)/);
 
 console.log("Candidate automation ingestion boundary checks passed.");
