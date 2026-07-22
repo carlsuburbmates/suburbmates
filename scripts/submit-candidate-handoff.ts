@@ -6,8 +6,13 @@ import { parse } from "csv-parse/sync";
 const endpoint = process.env.CANDIDATE_HANDOFF_URL;
 const token = process.env.AUTOMATION_INGEST_TOKEN;
 const csvPath = process.argv[2];
-const BATCH_SIZE = 10;
-const MAX_CONCURRENT_BATCHES = 4;
+// Each request performs qualification, evidence retention and audit writes. Keep
+// the workload deliberately small so the Worker remains within its resource
+// budget during a large discovery run.
+const BATCH_SIZE = 5;
+const MAX_CONCURRENT_BATCHES = 2;
+const MAX_ATTEMPTS = 5;
+const RETRY_DELAY_MS = 2_000;
 if (!endpoint || !token || !csvPath) throw new Error("CANDIDATE_HANDOFF_URL, AUTOMATION_INGEST_TOKEN and a CSV path are required.");
 
 const rows = parse(fs.readFileSync(path.resolve(csvPath), "utf8"), { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
@@ -26,14 +31,29 @@ const batches = Array.from({ length: Math.ceil(rows.length / BATCH_SIZE) }, (_, 
 
 await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, candidates }) => {
   const artifactSha256 = createHash("sha256").update(JSON.stringify(candidates)).digest("hex");
-  const response = await fetch(endpoint, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ source: "openstreetmap", artifactSha256, artifactUrl, candidates }) });
-  if (!response.ok) {
-    const detail = (await response.text()).slice(0, 1000);
-    throw new Error(`Candidate handoff batch ${batchIndex + 1} failed with ${response.status}: ${detail || "No response body"}.`);
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const response = await fetch(endpoint, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ source: "openstreetmap", artifactSha256, artifactUrl, candidates }) });
+    const result = await readResponse(response);
+    if (response.ok && response.status !== 202) {
+      console.log(`Candidate handoff batch ${batchIndex + 1}: ${result.idempotent ? "already received" : `${result.qualifiedCount ?? 0} qualified, ${result.exceptionCount ?? 0} exceptions`}.`);
+      return;
+    }
+    const retryable = response.status === 202 || [429, 500, 502, 503, 504].includes(response.status);
+    if (!retryable || attempt === MAX_ATTEMPTS) {
+      throw new Error(`Candidate handoff batch ${batchIndex + 1} failed with ${response.status}: ${result.detail || "No response body"}.`);
+    }
+    console.warn(`Candidate handoff batch ${batchIndex + 1}: ${response.status === 202 ? "still processing" : `temporary ${response.status} response`}; retrying (${attempt}/${MAX_ATTEMPTS}).`);
+    await delay(RETRY_DELAY_MS * attempt);
   }
-  const result = await response.json() as { qualifiedCount?: number; exceptionCount?: number; idempotent?: boolean };
-  console.log(`Candidate handoff batch ${batchIndex + 1}: ${result.idempotent ? "already received" : `${result.qualifiedCount ?? 0} qualified, ${result.exceptionCount ?? 0} exceptions`}.`);
 });
+
+async function readResponse(response: Response): Promise<{ qualifiedCount?: number; exceptionCount?: number; idempotent?: boolean; detail?: string }> {
+  const text = await response.text();
+  try { return JSON.parse(text) as { qualifiedCount?: number; exceptionCount?: number; idempotent?: boolean; detail?: string }; }
+  catch { return { detail: text.slice(0, 1000) }; }
+}
+
+function delay(milliseconds: number) { return new Promise((resolve) => setTimeout(resolve, milliseconds)); }
 
 async function runWithConcurrency<T>(items: readonly T[], concurrency: number, worker: (item: T) => Promise<void>) {
   let nextIndex = 0;
