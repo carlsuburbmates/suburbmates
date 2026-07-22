@@ -80,6 +80,21 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **First launch:** The initial public launch is complete when the minimum end-to-end journeys above are proven. Stripe, broad email, bulk ABN checks, AI publication and optional polish are not launch prerequisites.
 - **Evidence to close:** Update authority/issue descriptions; build the ready foundation work; then verify each public journey and release gate.
 
+### D-008 — Cross-device passwordless access
+
+- **Date:** 22 July 2026
+- **Decision:** The approved `auth@suburbmates.com.au` passwordless email uses an eight-digit, one-time code entered in the browser where the person wants to sign in. It replaces the browser-bound magic-link interaction.
+- **Guardrail:** This changes neither the approved sender nor any other communications capability. Codes expire through Supabase Auth, are single-use, and do not decide a claim, publication, ownership or any other product state.
+- **Evidence to close:** A live owner-device test of code delivery, expiry, supersession and successful session handoff, followed by removal of the temporary review callback.
+
+### D-009 — Private missing-business status
+
+- **Date:** 22 July 2026
+- **Decision:** A missing-business submission records a separate submitter email for private, signed-in status access. The business contact details remain governed by the at-least-one-contact rule.
+- **Guardrail:** Status is plain language only and separate from the operator listing queue. It cannot publish a listing, assign ownership, or send a general notification.
+- **Identity rule:** The same email may be used by a submitter and later by a business owner. Authentication never makes it an owner; only an approved claim creates the ownership link.
+- **Owner-submitted candidate rule:** A person who owns, manages, or represents a missing business signs in first, submits the private candidate and a relationship explanation, and receives a pending claim request. That combined intake never publishes the candidate or grants ownership automatically.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |

@@ -134,7 +134,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
 | Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716128000` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
-| Resend | Supabase Auth SMTP only at launch | Domain verified; one controlled magic-link sign-in into `/ops` is complete |
+| Resend | Supabase Auth SMTP only at launch | Domain verified; passwordless email-code sign-in into `/ops` is the approved path |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
 | ABN Lookup | Optional supporting evidence | Credential works; no workflow enabled; never gate listing, claim, or publication on ABN alone |
 

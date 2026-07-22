@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
-import { decideListingAction, saveListingDraftAction } from "../actions";
+import { decideListingAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
 
 type Listing = {
   vendor_id: string;
@@ -34,6 +34,7 @@ type ListingEvidence = {
   checked_at: string | null;
   created_at: string;
 };
+type SubmissionStatus = { submission_status: string; operator_message: string | null; updated_at: string };
 
 export default async function OpsListingDetailPage({ params, searchParams }: {
   params: Promise<{ vendorId: string }>;
@@ -42,12 +43,13 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const { vendorId } = await params;
   const message = await searchParams;
   const { supabase } = await verifyOpsAdmin(`/ops/listings/${vendorId}`);
-  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult] = await Promise.all([
+  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult, submissionResult] = await Promise.all([
     supabase.rpc("ops_list_listings", { p_status: "all", p_query: null, p_vendor_id: vendorId, p_limit: 1, p_offset: 0 }),
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase.rpc("ops_list_listing_evidence", { p_vendor_id: vendorId }),
     supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId }),
+    supabase.rpc("ops_get_business_submission_status", { p_vendor_id: vendorId }),
   ]);
   if (error || categoriesResult.error || suburbsResult.error || evidenceResult.error) throw new Error("The listing could not be loaded.");
   const listing = data?.[0] as Listing | undefined;
@@ -56,6 +58,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const status = listing.listing_status;
   const evidence = (evidenceResult.data ?? []) as ListingEvidence[];
   const publicSlug = routeResult.data?.[0]?.current_slug as string | undefined;
+  const submission = submissionResult.data?.[0] as SubmissionStatus | undefined;
   const successfulAction = ["draft", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(message.success ?? "");
 
   return (
@@ -80,6 +83,8 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
           <div className="mt-5 space-y-4">{evidence.map((item) => <EvidenceCard key={item.evidence_id} evidence={item} />)}</div>
         )}
       </section>
+
+      {submission && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 className="text-xl font-bold">Private submitter status</h3><p className="mt-2 text-sm text-slate-600">This is a private, signed-in status only. It does not send email or change publication.</p><p className="mt-4 font-semibold">Current status: {statusLabel(submission.submission_status)}</p>{submission.operator_message && <p className="mt-2 text-sm">Current message: {submission.operator_message}</p>}{!['approved','declined'].includes(submission.submission_status) && <form action={setBusinessSubmissionStatusAction} className="mt-5 space-y-4"><input type="hidden" name="vendorId" value={vendorId} /><label className="block text-sm font-bold">Outcome<select name="outcome" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal"><option value="">Choose one</option><option value="needs_information">Needs information</option><option value="approved">Approved</option><option value="declined">Declined</option></select></label><label className="block text-sm font-bold">Plain-language message<textarea name="message" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label><button className="btn btn-outline">Save private status</button></form>}</section>}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Approved public fields and operator draft</h3>

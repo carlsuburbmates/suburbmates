@@ -39,7 +39,7 @@ mindmap
             Track request or claim outcome
               Manage profile changes
       Communications and account access
-        Magic-link sign in and recovery
+        Email-code sign in and recovery
         Approved status messages only
         Contact help and privacy intake
     Business not listed
@@ -150,7 +150,7 @@ This is a first-class service journey, not a background detail of claims or form
 
 ### Current holding posture
 
-The only approved outbound email is the passwordless sign-in link from `auth@suburbmates.com.au`. It supports the authorised operator's sign-in and recovery path. There is no public support inbox, contact dispatcher, marketing mail, bulk notification system or automatic retry loop.
+The only approved outbound email is the passwordless sign-in code from `auth@suburbmates.com.au`. It supports the authorised operator's sign-in and recovery path, including when the email is read on another device. There is no public support inbox, contact dispatcher, marketing mail, bulk notification system or automatic retry loop.
 
 ### Finished public posture
 
@@ -158,7 +158,7 @@ Before any new message is enabled, `SUB-15` must approve a message catalogue. Ea
 
 The possible public intents are:
 
-1. **Account access:** request a magic link, use it in the same browser, recover safely from an expired or superseded link, and reach only the authorised private area.
+1. **Account access:** request an email code, enter it in the browser being used, recover safely from an expired or superseded code, and reach only the authorised private area.
 2. **Claim or profile request status:** see the status in the authenticated product; any email is an approved supplement, never the only record.
 3. **Contact, help and privacy request:** select a plain-language request type, submit a private request, receive an honest on-screen outcome and, only where approved and permitted, a transactional reply.
 4. **Submission or report outcome:** receive a status through the approved channel only when a contact basis exists and the message catalogue permits it.
@@ -172,17 +172,20 @@ The possible public intents are:
 
 ## 5. New-business journey: add a business that is not yet listed
 
-1. A person selects **Add a business** from Home or a directory empty state.
-2. They provide the minimum useful details and a way to support the business's existence and local relevance.
-3. Validation and abuse controls reject obvious spam, malformed input and duplicates before anything becomes public.
-4. The system creates a **private candidate**, explains that the information will be reviewed, and gives the person a reference or authenticated status path when appropriate.
-5. Background and operator checks compare it with approved sources, scope, duplicate records and safety concerns.
-6. A qualifying candidate follows the approved directory-first lifecycle; an uncertain one becomes an Ops exception rather than a silent public listing.
-7. The journey is complete when the submitter can understand the outcome where contact is appropriate, and the candidate has an auditable decision.
+1. A person selects **Add a business** from Home or a directory empty state, then searches first for an existing listing.
+2. If it is missing, they choose one clear route: **I own or represent it** or **I am suggesting it**.
+3. An owner or authorised representative signs in, supplies the minimum useful business facts and explains their connection. The system creates a **private candidate** and a **pending claim** together; neither publishes the business nor grants ownership.
+4. A community suggester provides the minimum useful facts and a private status email. Their submission creates only a private candidate and no ownership request.
+5. Validation and abuse controls reject obvious spam, malformed input and duplicates before anything becomes public.
+6. Background and operator checks compare the candidate with approved sources, scope, duplicate records and safety concerns. The operator separately reviews any pending ownership evidence.
+7. A qualifying candidate follows the approved directory-first lifecycle; an uncertain one becomes an Ops exception rather than a silent public listing.
+8. The journey is complete when the submitter or owner can understand the private outcome, and the candidate and any claim have auditable decisions.
 
 ### Behind the page
 
 - A submission is not a self-service profile creator and cannot overwrite an existing listing.
+- An authenticated account can be both a community submitter and a business owner. Sign-in identifies the request account; only an approved claim creates the ownership link.
+- An owner-submitted candidate is intentional evidence for a manual claim review, not an automatic claim or a substitute for the exact-email claim route for existing listings.
 - Source, contact permission, evidence, anti-abuse signals and duplicate matches stay private.
 - Automation may assist evidence gathering and matching, but cannot invent public facts or make discretionary publication/ownership decisions.
 

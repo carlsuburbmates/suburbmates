@@ -15,24 +15,21 @@ export default function LoginPage() {
 function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+
+  const next = safeNext(searchParams.get("next"));
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
     
-    const next = searchParams.get("next");
-    const redirectTo = new URL(`${window.location.origin}/auth/callback`);
-    if (next) redirectTo.searchParams.set("next", next);
-    
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: redirectTo.toString(),
-      },
     });
 
     if (error) {
@@ -41,7 +38,27 @@ function LoginForm() {
         : "We could not send a sign-in link. Check the email address and try again.";
       setMessage({ kind: "error", text });
     } else {
-      setMessage({ kind: "success", text: "Check your email for the sign-in link. Open the newest link in this same browser." });
+      setCodeSent(true);
+      setMessage({ kind: "success", text: "Check your email for the eight-digit sign-in code. Enter it here; the email can be opened on another device." });
+    }
+    setLoading(false);
+  };
+
+  const handleCodeVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = code.replace(/\s/g, "");
+    if (!/^\d{8}$/.test(token)) {
+      setMessage({ kind: "error", text: "Enter the eight-digit code from your newest email." });
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+    if (error) {
+      setMessage({ kind: "error", text: "That code could not be used. Check you entered the newest code, or request another after the rate limit clears." });
+    } else {
+      window.location.assign(next);
     }
     setLoading(false);
   };
@@ -55,7 +72,7 @@ function LoginForm() {
         </div>
         {searchParams.get("error") === "magic-link" && (
           <p role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900">
-            This sign-in link could not be completed. Open the newest link in the same browser that requested it. Do not request another link until the email rate limit has cleared.
+            That older sign-in link could not be completed. Request a new email code below and enter it in this browser. Do not request another code until the email rate limit has cleared.
           </p>
         )}
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
@@ -78,7 +95,7 @@ function LoginForm() {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#121212] hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#121212] disabled:opacity-50"
             >
-              {loading ? "Sending magic link..." : "Send Magic Link"}
+              {loading ? "Sending code..." : codeSent ? "Send a new code" : "Send sign-in code"}
             </button>
           </div>
           {message && (
@@ -90,7 +107,20 @@ function LoginForm() {
             </p>
           )}
         </form>
+        {codeSent && (
+          <form className="space-y-4 border-t border-gray-200 pt-6" onSubmit={handleCodeVerification}>
+            <div>
+              <label htmlFor="code" className="text-sm font-medium text-gray-700">Sign-in code</label>
+              <input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" maxLength={8} required className="mt-2 block w-full rounded-md border border-gray-300 px-3 py-2 tracking-[0.35em] text-[#121212] focus:outline-none focus:ring-2 focus:ring-[#121212]" placeholder="12345678" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))} />
+            </div>
+            <button type="submit" disabled={loading} className="group relative flex w-full justify-center rounded-md border border-transparent bg-[#121212] px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#121212] focus:ring-offset-2 disabled:opacity-50">{loading ? "Verifying code..." : "Verify and sign in"}</button>
+          </form>
+        )}
       </div>
     </div>
   );
+}
+
+function safeNext(value: string | null) {
+  return value?.startsWith("/") && !value.startsWith("//") ? value : "/ops";
 }
