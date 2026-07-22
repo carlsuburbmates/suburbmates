@@ -24,9 +24,9 @@ The finished public directory helps residents find useful local businesses. Busi
 
 ## Current release posture
 
-The public site remains intentionally contained behind a no-index holding page until the owner authorises public release. Unfinished public routes redirect home and the public sitemap remains empty during this posture.
+On 23 July 2026, the owner explicitly authorised the first public release. The production public-launch gate is enabled: the directory, public profiles and eligible taxonomy routes are available; the sitemap is populated; and released pages are indexable. `www` redirects to the canonical apex domain.
 
-This containment is temporary. It must not be treated as the final directory product or as a reason to postpone the operational model below.
+This release changes neither the listing lifecycle nor the operating safeguards. Only published listings appear publicly; `/ops` remains protected; candidates, claims, profile proposals, ABN evidence and owner media remain moderated workflows. The remaining authenticated walkthrough evidence is recorded as post-release acceptance work, not as permission to weaken those controls.
 
 ## Directory publication policy
 
