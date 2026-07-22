@@ -37,6 +37,7 @@
     "owner-request-withdrawal:test": "tsx scripts/test-owner-request-withdrawal-boundary.ts",
     "claim-evidence-handoff:test": "tsx scripts/test-claim-evidence-handoff-boundary.ts",
     "cross-device-email-code:test": "tsx scripts/test-cross-device-email-code-boundary.ts",
+    "password-login:test": "tsx scripts/test-password-login-boundary.ts",
     "private-business-submission-status:test": "tsx scripts/test-private-business-submission-status-boundary.ts",
     "submitter-owner-identity:test": "tsx scripts/test-submitter-owner-identity-boundary.ts",
     "owner-submitted-business-candidate:test": "tsx scripts/test-owner-submitted-business-candidate-boundary.ts",

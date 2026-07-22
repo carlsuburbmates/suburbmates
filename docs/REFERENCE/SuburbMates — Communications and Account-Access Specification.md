@@ -12,8 +12,9 @@ The product status screen is the source of a person's request outcome. A message
 
 | Capability | Status |
 | --- | --- |
-| Passwordless sign-in from `auth@suburbmates.com.au` | Active for authorised access. |
-| Cross-device passwordless access | Active through an eight-digit email code entered in the browser being used. |
+| Email-and-password sign-in | Active for existing authorised accounts; no public account-registration screen is provided. |
+| Password reset from `auth@suburbmates.com.au` | Active. It returns only to the real SuburbMates callback, where the person sets a new password. |
+| Email-code sign-in | Available as a fallback through an eight-digit code entered in the browser being used. |
 | Public contact/help/privacy form | Publicly reachable; it creates a private, moderated request and does not promise an email. |
 | Approved status messages | Enabled only for the approved claim, profile-change, submission and request-outcome paths. The first real successful delivery and deliberate failure evidence are still required. |
 | Contact dispatcher / general notification sender | Dormant; not enabled. |
@@ -25,7 +26,8 @@ No row below becomes enabled until its associated user journey and Ops workflow 
 
 | Stage | Message | Trigger | Recipient | In-product fallback | Ops evidence |
 | --- | --- | --- | --- | --- | --- |
-| Active | Email-code sign-in | Person requests authorised sign-in. | Requesting email. | Login page/retry guidance. | Auth provider result; no application message ledger required. |
+| Active | Password reset | An existing authorised account requests a reset. | Requesting email. | Reset page and login retry guidance. | Auth provider result; no application message ledger required. |
+| Active | Email-code sign-in | Person deliberately chooses the fallback code path. | Requesting email. | Login page/retry guidance. | Auth provider result; no application message ledger required. |
 | 1 | Claim status | Claim needs information, is approved, rejected or revoked. | Authenticated claimant's approved address. | Owner request-status feed. | Claim ID, status, template/version, delivery result. |
 | 1 | Profile-change status | Proposed change is approved or rejected. | Authenticated owner. | Owner request-status feed. | Change-request ID, status, template/version, delivery result. |
 | 2 | Missing-business outcome | Candidate is accepted, needs information or declined. | Submitter only when they supplied a valid contact basis. | Submitted reference/status path where offered. | Candidate ID, outcome, consent/contact basis, delivery result. |
@@ -49,7 +51,8 @@ The public form must classify the request before it reaches Ops: correction, cla
 
 ## Evidence required before review
 
-- authenticated email-code, expiry and recovery check;
+- authenticated password sign-in and password-reset recovery check;
+- fallback email-code, expiry and recovery check;
 - contact input validation/abuse-control and private-queue boundary check;
 - review of delivery-ledger access, audit and retention boundaries;
 - explicit confirmation that no dormant dispatcher became active; and
