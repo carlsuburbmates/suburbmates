@@ -5,6 +5,7 @@ import { createAdminClient } from "@/utils/supabase/admin";
 
 const MAX_CANDIDATES = 100;
 const allowedSource = "openstreetmap";
+const STALE_PROCESSING_MS = 5 * 60 * 1000;
 
 type IncomingCandidate = CandidateInput & {
   sourceUrl: string;
@@ -39,16 +40,26 @@ export async function POST(request: NextRequest) {
       .single();
     if (runError?.code === "23505") {
       const { data: existingRun, error: existingRunError } = await admin.from("candidate_handoff_runs")
-        .select("id, correlation_id, status, qualified_count, exception_count")
+        .select("id, correlation_id, status, qualified_count, exception_count, received_at")
         .eq("source", source).eq("artifact_sha256", artifactSha256).maybeSingle();
       if (existingRunError || !existingRun) throw new Error("Could not read the existing candidate handoff run.");
       if (existingRun.status === "completed") return NextResponse.json({ received: true, idempotent: true, run: existingRun }, { status: 200 });
-      if (existingRun.status === "processing") return NextResponse.json({ received: true, processing: true, run: existingRun }, { status: 202 });
-      if (existingRun.status === "failed") {
+      const staleProcessing = existingRun.status === "processing"
+        && Date.now() - new Date(existingRun.received_at).getTime() >= STALE_PROCESSING_MS;
+      if (existingRun.status === "processing" && !staleProcessing) {
+        return NextResponse.json({ received: true, processing: true, run: existingRun }, { status: 202 });
+      }
+      if (existingRun.status === "failed" || staleProcessing) {
+        if (staleProcessing) {
+          const staleJobs = await admin.from("automation_jobs")
+            .update({ status: "failed", error_message: "Candidate handoff exceeded the processing window and was safely resumed.", completed_at: new Date().toISOString() })
+            .eq("correlation_id", existingRun.correlation_id).eq("status", "running");
+          if (staleJobs.error) throw new Error("Could not close the stale candidate handoff job.");
+        }
         const resumed = await admin.from("candidate_handoff_runs")
-          .update({ status: "processing", input_count: candidates.length, qualified_count: 0, exception_count: 0, error_message: null, completed_at: null })
+          .update({ status: "processing", input_count: candidates.length, qualified_count: 0, exception_count: 0, error_message: null, completed_at: null, received_at: new Date().toISOString() })
           .eq("id", existingRun.id).select("id, correlation_id").single();
-        if (resumed.error || !resumed.data) throw new Error("Could not resume the failed candidate handoff run.");
+        if (resumed.error || !resumed.data) throw new Error("Could not resume the failed or stale candidate handoff run.");
         run = resumed.data;
         runError = null;
       } else {
