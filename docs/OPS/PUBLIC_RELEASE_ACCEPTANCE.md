@@ -1,13 +1,13 @@
-# Public release acceptance
+# Public release acceptance and ongoing verification
 
-Do not turn on public launch until every applicable item below has a recorded result. A failed item means leave the holding page on.
+The owner authorised the first public release on 23 July 2026. This register preserves the evidence still required after release and the rollback rule: a material public safety, privacy, integrity or route failure means deliberately disable the public-launch gate and record why.
 
 ## 1. Operator review
 
 - Sign in to `/ops`.
 - Review one candidate in **Candidates**. Acknowledge or dismiss it; confirm this does not publish a listing.
 - Open one listing and record an ABN check. Confirm the result is evidence only.
-- As a claimed owner, submit one real authorised image; in Ops, approve or reject it with a reason. Confirm the image is not public while holding remains on.
+- As a claimed owner, submit one real authorised image; in Ops, approve or reject it with a reason. Confirm the image remains private until approved.
 
 ## 2. Owner and submitter journeys
 
@@ -18,12 +18,11 @@ Do not turn on public launch until every applicable item below has a recorded re
 
 ## 3. Communications
 
-- Confirm the email feature gate remains off unless an explicit release decision enables it.
-- If enabled later, test one permitted status message and one deliberate delivery failure. Confirm the in-product status remains usable and Ops can see the delivery result. Never enable retries, bulk sends, marketing, or a general inbox.
+- Test one permitted status message and one deliberate delivery failure. Confirm the in-product status remains usable and Ops can see the delivery result. Never enable retries, bulk sends, marketing, or a general inbox.
 
 ## 4. Public release candidate
 
-Only after the above passes, enable the release candidate in a controlled environment and verify:
+Maintain the following release checks and record any failure:
 
 - Browse, category and suburb routes show only eligible listings.
 - A vendor profile has correct contact details, canonical URL, redirect behaviour, and no unintended private data.
@@ -31,9 +30,9 @@ Only after the above passes, enable the release candidate in a controlled enviro
 - Metadata and robots directives are appropriate for released routes.
 - Stripe remains disabled.
 
-## 5. Release and rollback
+## 5. Release evidence and rollback
 
-- Record the release decision in Linear and the Ops audit trail.
-- Enable the public launch gate.
-- Immediately verify home, browse, one taxonomy page, one vendor profile, and the sitemap.
+- The release decision is recorded in D-011 and Linear `SUB-14`.
+- The public launch gate is enabled.
+- Home, browse, one taxonomy page, one vendor profile and the sitemap were verified at first release; repeat this check after material public-route changes.
 - If any acceptance item fails, disable the public launch gate and record why. Do not work around a failure by publishing more listings.

@@ -8,17 +8,18 @@ This is the approved design contract for account access and staged transactional
 
 The product status screen is the source of a person's request outcome. A message is an approved supplement, never the only evidence of a claim, submission, report or privacy decision.
 
-## Current holding posture
+## Current release posture
 
 | Capability | Status |
 | --- | --- |
 | Passwordless sign-in from `auth@suburbmates.com.au` | Active for authorised access. |
 | Cross-device passwordless access | Active through an eight-digit email code entered in the browser being used. |
-| Public contact/support form | Implemented but not publicly reachable while holding is active. |
+| Public contact/help/privacy form | Publicly reachable; it creates a private, moderated request and does not promise an email. |
+| Approved status messages | Enabled only for the approved claim, profile-change, submission and request-outcome paths. The first real successful delivery and deliberate failure evidence are still required. |
 | Contact dispatcher / general notification sender | Dormant; not enabled. |
 | Marketing, newsletters, public support inbox, bulk messages, automatic retries | Prohibited. |
 
-## Staged post-release message catalogue
+## Staged message catalogue
 
 No row below becomes enabled until its associated user journey and Ops workflow are accepted. `auth@suburbmates.com.au` remains the only active sender. A separate sender for a future catalogue row must be explicitly approved in that implementation issue; none is approved by this contract. Each enabled message contains no private evidence beyond the necessary status and has an in-product fallback.
 

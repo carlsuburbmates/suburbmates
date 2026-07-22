@@ -34,7 +34,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Decision:** A business that deterministically qualifies from an approved source is intended to appear in the directory by default as an unclaimed listing. A business does not need to register, claim, provide an ABN or pay before it appears.
 - **Guardrail:** "Found" means an approved, in-scope, identifiable, deduplicated candidate without known material safety or legitimacy concerns. Provenance and the qualifying evidence must be retained. Exceptions remain visible to an operator and audit-recorded.
 - **Current state:** The token-protected OpenStreetMap handoff automatically creates a new unclaimed listing only after deterministic qualification and retained evidence. The existing 1,600-listing cohort completed a private requalification pass on 23 July 2026: 584 qualified and 1,016 exceptions, with no lifecycle or public-visibility change. The public launch gate remains enabled by the owner's release decision.
-- **Required alignment:** Complete and prove the qualification, evidence, duplicate, exception and lifecycle controls before enabling deterministic production publication.
+- **Required alignment:** Maintain and prove the qualification, evidence, duplicate, exception and lifecycle controls for every new approved-source candidate.
 - **Evidence to close:** Policy implementation, tests, controlled data-path verification, operator exception evidence and authorised public release verification.
 
 ### D-003 — Owner participation and public input
@@ -64,7 +64,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 ### D-006 — Communications and account access
 
 - **Date:** 19 July 2026
-- **Decision:** Communications is a first-class user journey. During the holding posture, passwordless sign-in from `auth@suburbmates.com.au` is the only approved outbound email. A public contact dispatcher, support inbox, marketing mail, bulk notification system and uncontrolled retries remain disabled.
+- **Decision:** Communications is a first-class user journey. Passwordless sign-in from `auth@suburbmates.com.au` is active, and only the approved staged status messages may use that sender. A public support inbox, marketing mail, bulk notification system and uncontrolled retries remain disabled.
 - **Decision required before expansion:** `SUB-15` must approve the exact post-release message catalogue: trigger, recipient, sender, content boundary, contact/consent basis, retained evidence, failure state, retention and Ops action.
 - **Guardrail:** A user must retain an in-product status/recovery path if a message cannot be delivered. A message never changes publication, ownership, trust, commercial or claim state.
 - **Evidence to close:** Approved journey/map, message catalogue, authorised implementation and end-to-end delivery/failure evidence for each enabled message.
@@ -75,7 +75,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Claim policy:** An exact match to the listing's recorded contact email is the normal claim path. Conflicts, sensitive changes, challenges, recovery, revocation and non-matching evidence enter a protected, auditable exception path. Claims change ownership only.
 - **Missing-business policy:** A submission is private first. Deterministically qualified, approved-source, in-scope, identifiable and deduplicated candidates may become unclaimed listings; uncertain or risky candidates enter Ops exception review. Direct self-service public profile creation is not allowed.
 - **Communications policy:** Keep the current sign-in email. After public release, introduce only explicitly approved transactional status messages in stages, with an in-product status/recovery path and no marketing, general support inbox, bulk notifications or uncontrolled retries. `SUB-15` defines the exact catalogue before `SUB-13` implements any message.
-- **Release policy:** Lift holding only after thin end-to-end acceptance proves the resident, owner, submission/report, Ops, automation and public-route journeys. Records existing in the database are not sufficient.
+- **Release policy:** The first public release is authorised. Continue to record thin end-to-end acceptance evidence for resident, owner, submission/report, Ops, automation and public-route journeys; records existing in the database are not sufficient evidence by themselves.
 - **Correction/privacy policy:** Use a private tracked request with operator decision reason and audit history. Never silently delete a listing or audit history, and never automatically remove public information solely from an unreviewed request.
 - **First launch:** The initial public launch is complete when the minimum end-to-end journeys above are proven. Stripe, broad email, bulk ABN checks, AI publication and optional polish are not launch prerequisites.
 - **Evidence to close:** Update authority/issue descriptions; build the ready foundation work; then verify each public journey and release gate.
@@ -115,7 +115,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 
 | Deviation | Current truth | Required resolution |
 | --- | --- | --- |
-| Publication policy | Manual publication in implementation; default qualified unclaimed publication is the target direction. | Authority reconciliation, deterministic qualification controls and controlled release work. |
+| Publication policy | New approved-source candidates that pass deterministic qualification become unclaimed public listings with retained evidence. The existing catalogue's 1,016 exceptions remain a private remediation queue; no retrospective visibility decision has been recorded. | Keep new-candidate controls operational and record a separate decision before changing visibility of existing listings. |
 | Public product | Public directory release is live with a populated sitemap and indexable released routes. | Maintain production route checks and correct any observed public-data or SEO defect. |
 | Owner and public input | Claim, status, profile correction and missing-business submission paths are implemented, but the real authenticated walkthrough set is not yet recorded. | Complete and record both user and Ops walkthroughs. |
 | Monetisation | Stripe is disabled. | Leave disabled until separately approved commercial scope exists. |

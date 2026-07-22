@@ -15,7 +15,9 @@ concurrency:
 jobs:
   discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Small, retried handoff batches prioritise a reliable private record over
+    # fast bulk processing. Leave enough time for the full approved-source run.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
 
