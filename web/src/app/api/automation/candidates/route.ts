@@ -5,9 +5,9 @@ import { createAdminClient } from "@/utils/supabase/admin";
 
 const MAX_CANDIDATES = 100;
 const allowedSource = "openstreetmap";
-// A Worker request is bounded well below this window. Treat a processing record
-// older than one minute as interrupted, close its job and resume idempotently.
-const STALE_PROCESSING_MS = 60 * 1000;
+// The Worker request cannot legitimately outlive this window. Treat a longer
+// processing record as interrupted, close its job and resume idempotently.
+const STALE_PROCESSING_MS = 30 * 1000;
 
 type IncomingCandidate = CandidateInput & {
   sourceUrl: string;

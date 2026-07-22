@@ -14,7 +14,7 @@ assert.match(route, /ownership_status: "unclaimed"/);
 assert.match(route, /candidate_handoff_exception_created/);
 assert.match(route, /existingRun\.status === "failed"/);
 assert.match(route, /STALE_PROCESSING_MS/);
-assert.match(route, /STALE_PROCESSING_MS = 60 \* 1000/);
+assert.match(route, /STALE_PROCESSING_MS = 30 \* 1000/);
 assert.match(route, /staleProcessing/);
 assert.match(route, /Could not resume the failed or stale candidate handoff run/);
 assert.match(route, /Could not recover the partially completed qualified listing/);
