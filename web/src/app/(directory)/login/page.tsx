@@ -34,8 +34,8 @@ function LoginForm() {
 
     if (error) {
       const text = error.message.toLowerCase().includes("rate")
-        ? "Too many sign-in links were requested. Wait a little while, then try again."
-        : "We could not send a sign-in link. Check the email address and try again.";
+        ? "Too many sign-in codes were requested. Wait a little while, then try again."
+        : "We could not send a sign-in code. Check the email address and try again.";
       setMessage({ kind: "error", text });
     } else {
       setCodeSent(true);
@@ -54,10 +54,13 @@ function LoginForm() {
     setLoading(true);
     setMessage(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
-    if (error) {
+    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+    if (error || !data.session) {
       setMessage({ kind: "error", text: "That code could not be used. Check you entered the newest code, or request another after the rate limit clears." });
     } else {
+      // Let the browser persist the new session before the protected page is
+      // rendered on the server.
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       window.location.assign(next);
     }
     setLoading(false);
@@ -68,7 +71,7 @@ function LoginForm() {
       <div className="w-full max-w-md space-y-8 bg-white text-[#121212] p-8 rounded-lg shadow-xl">
         <div className="text-center">
           <h1 className="text-3xl font-extrabold tracking-tight">Sign in to SuburbMates</h1>
-          <p className="mt-2 text-sm text-gray-600">Enter your email to receive a one-time sign-in link for your authorised area.</p>
+          <p className="mt-2 text-sm text-gray-600">Enter your email to receive a one-time sign-in code for your authorised area.</p>
         </div>
         {searchParams.get("error") === "magic-link" && (
           <p role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900">

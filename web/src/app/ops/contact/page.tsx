@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { QueuePagination } from "@/components/ops/QueuePagination";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDate } from "@/lib/ops/date";
 
 const statuses = ["new", "in_progress", "resolved", "spam"] as const;
@@ -25,7 +25,7 @@ export default async function OpsContactPage({
   const params = await searchParams;
   const status = statuses.includes(params.status as ContactStatus) ? (params.status as ContactStatus) : "new";
   const page = pageNumber(params.page);
-  const { supabase } = await verifyOpsAdmin(`/ops/contact?status=${status}`);
+  const supabase = await createOpsDataClient();
   const { data, error } = await supabase.rpc("ops_list_contact_requests", {
     p_status: status,
     p_contact_request_id: null,

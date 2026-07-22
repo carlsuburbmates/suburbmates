@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
 import { decideListingAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
 
@@ -42,7 +42,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
 }) {
   const { vendorId } = await params;
   const message = await searchParams;
-  const { supabase } = await verifyOpsAdmin(`/ops/listings/${vendorId}`);
+  const supabase = await createOpsDataClient();
   const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult, submissionResult] = await Promise.all([
     supabase.rpc("ops_list_listings", { p_status: "all", p_query: null, p_vendor_id: vendorId, p_limit: 1, p_offset: 0 }),
     supabase.from("categories").select("name, slug").order("name"),
