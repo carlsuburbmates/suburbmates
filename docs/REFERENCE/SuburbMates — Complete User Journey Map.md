@@ -4,7 +4,7 @@
 
 This is the owner-readable map of the finished SuburbMates experience. It starts with a person arriving at the home page and follows each person or system until its intent is complete. It covers the visible journey, the private work behind it, the background processes and the evidence Ops needs to safely operate the service.
 
-It is the product-flow companion to the Target State and Operating Authority. It does not replace the detailed Operations Specification or the [Automation workflow map](../AUTOMATION/WORKFLOWS.md). Where this map describes a target flow that is not yet live, it is a build commitment, not a claim that the current holding site already provides it.
+It is the product-flow companion to the Target State and Operating Authority. It does not replace the detailed Operations Specification or the [Automation workflow map](../AUTOMATION/WORKFLOWS.md). The public directory was authorised and released on 23 July 2026; where this map describes a flow that has not yet been proved through a real authenticated walkthrough, it remains a completion requirement rather than a claim of acceptance.
 
 ## The people and systems served
 
@@ -79,7 +79,7 @@ The home page makes the product promise clear: find local Darebin businesses. It
 - **Add a business** — starts a protected missing-business submission, not an instant public listing.
 - **Report incorrect information / contact SuburbMates** — starts a safe concern or help path.
 
-While the holding posture is active, these actions may correctly lead to a clear holding explanation rather than an unfinished journey. Once public release is authorised, every primary action must complete one of the journeys below.
+The public release is live. Every primary action must complete one of the journeys below or provide an honest, safe unavailable state.
 
 ### Shared information retained
 
@@ -148,11 +148,11 @@ An owner may eventually propose a logo or other listing media through the modera
 
 This is a first-class service journey, not a background detail of claims or forms. It has two intentionally separate states.
 
-### Current holding posture
+### Current release posture
 
-The only approved outbound email is the passwordless sign-in code from `auth@suburbmates.com.au`. It supports the authorised operator's sign-in and recovery path, including when the email is read on another device. There is no public support inbox, contact dispatcher, marketing mail, bulk notification system or automatic retry loop.
+Passwordless sign-in uses an eight-digit code from `auth@suburbmates.com.au`, entered in the browser being used. Approved status messages are limited to the defined claim, profile-change, submission and request-outcome paths; their real delivery and failure walkthroughs remain outstanding. There is no public support inbox, marketing mail, bulk notification system or automatic retry loop.
 
-### Finished public posture
+### Communications controls after release
 
 Before any new message is enabled, `SUB-15` must approve a message catalogue. Each message must name its trigger, recipient, sender, content boundary, contact/consent basis, data retained, delivery failure state, retention rule and Ops action. A person must still be able to see their request status if a message cannot be delivered.
 
@@ -269,7 +269,7 @@ A reporter, business owner or affected person must be able to understand the saf
 
 ### Behind the page and for Ops
 
-- The holding posture remains no-index with an empty sitemap until release.
+- Released public routes are indexable and the sitemap contains only eligible public routes. A future emergency hold must be a deliberate recorded rollback, not a silent configuration change.
 - Indexability is independent of whether a record exists, is claimed or has an ABN.
 - Ops needs route/sitemap checks, canonical/redirect evidence, release timestamp and any search visibility warnings without claiming control over search-engine indexing.
 
@@ -280,16 +280,16 @@ A reporter, business owner or affected person must be able to understand the saf
 - Public facts are evidence-backed; private submissions and internal evidence never leak into public pages.
 - Every meaningful decision is attributable, timestamped and reviewable.
 - Automation failures become visible work, not silent data loss or automatic state changes.
-- Holding posture, disabled features and release gates are stated honestly until they change through an authorised, verified release.
+- Disabled features and release safeguards are stated honestly. Any material change needs an authorised, verified release or rollback record.
 
 ## Build sequencing implied by this map
 
 1. Approve this map and reconcile it with the Target State, Operations Specification and current implementation.
-2. Build the public directory discovery and profile journey with safe holding/release controls.
-3. Approve the Communications and account-access journey in `SUB-15`; do not activate expanded delivery before this gate.
-4. Build claims, owner status and moderated profile changes.
-5. Build protected missing-business and concern-report journeys with Ops queues.
-6. Build the audited candidate-to-Ops qualification handoff currently parked in Linear as `SUB-6`.
-7. Verify each journey end-to-end: browser behaviour, database records, authorisation, background evidence and Ops observability.
+2. Maintain the released public directory discovery and profile journey with route, data and SEO checks.
+3. Complete recorded real-world account-access and approved-message delivery/failure evidence.
+4. Complete recorded owner, submitter and moderated profile-change walkthroughs.
+5. Complete recorded protected missing-business, concern-report and Ops walkthroughs.
+6. Prove the audited candidate-to-Ops qualification handoff under a full approved-source run in `SUB-6`.
+7. Maintain end-to-end evidence: browser behaviour, database records, authorisation, background evidence and Ops observability.
 
 Monetisation is intentionally absent from this sequence until a separate paid offer is approved.

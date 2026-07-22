@@ -12,7 +12,7 @@ The complete non-technical experience is defined in [SuburbMates — Complete Us
 
 All execution follows [SuburbMates — Execution Governance and Readiness Protocol](./SuburbMates%20%E2%80%94%20Execution%20Governance%20and%20Readiness%20Protocol.md).
 
-The unresolved owner choices that gate implementation are collected in [SUB-7 — Owner Decision Sheet](./SuburbMates%20%E2%80%94%20SUB-7%20Owner%20Decision%20Sheet.md).
+The owner decisions that govern implementation are recorded in the [Decision Log](./SuburbMates%20%E2%80%94%20Decision%20Log.md), including D-007 and the authorised first public release.
 
 The implementation contracts for the ready foundation work are [Listing Lifecycle and Release-State Contract](./SuburbMates%20%E2%80%94%20Listing%20Lifecycle%20and%20Release-State%20Contract.md) and [Communications and Account-Access Specification](./SuburbMates%20%E2%80%94%20Communications%20and%20Account-Access%20Specification.md).
 
