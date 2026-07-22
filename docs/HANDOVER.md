@@ -21,16 +21,20 @@ The launch model is deliberately review-first:
 
 ## Current hosted state
 
-Reverified on 18 July 2026 (Australia/Melbourne):
+Reverified on 23 July 2026 (Australia/Melbourne):
 
 - 1,621 vendor rows total;
 - 1,600 published rows;
 - 20 exact unpublished legacy duplicates rejected with audited links to their published peers;
 - 1 original seeded listing is an explicit unpublished draft awaiting evidence review;
 - exactly 1 active operator: `admin@suburbmates.com.au`;
-- 0 open claims, profile changes, or genuine contact requests at the verification checkpoint;
+- 0 claim requests, profile-change requests, missing-business submissions, contact requests, media proposals and queued communications at the verification checkpoint;
+- 1 private candidate-handoff run and 1 private candidate-handoff record; the real operator walkthrough is still outstanding;
 - three failed claim-test identities were removed; their three truthfully labelled audit events remain immutable;
-- production is intentionally contained behind the noindex holding page: unfinished public routes redirect home and the public sitemap is empty.
+- the owner explicitly authorised public release; the public directory is live and indexable;
+- `/`, `/businesses`, a representative published profile, and a populated category route return successfully; `/sitemap.xml` contains 1,684 public URLs;
+- `www.suburbmates.com.au` permanently redirects to the apex domain and unauthenticated `/ops` remains protected behind sign-in;
+- the full repository safety suite, web lint and production build passed on the release baseline. Lint has three existing non-blocking `img` performance warnings.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
@@ -132,7 +136,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260716128000` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260722031500` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth SMTP only at launch | Domain verified; passwordless email-code sign-in into `/ops` is the approved path |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |

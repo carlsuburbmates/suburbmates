@@ -24,7 +24,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 
 - **Date:** 19 July 2026
 - **Decision:** The Target State and Operating Authority is the concise owner-approved operating direction. Where it conflicts with older planning language, the intended direction is authoritative, but implementation must be aligned through explicit work rather than silently changed.
-- **Current state:** Older documents and the live application still contain manual-publication and holding-posture assumptions.
+- **Current state:** Older documents still contain manual-publication and holding-posture assumptions. Production was deliberately released on 23 July 2026; the manual safeguards remain in force while the deterministic qualification direction is completed.
 - **Required alignment:** Reconcile the Master Architecture, Operations Specification, handover and lane documents; then implement and verify the target state through reviewed issues.
 - **Evidence to close:** Updated authority documents, linked issue evidence and a release decision.
 
@@ -33,8 +33,8 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Date:** 19 July 2026
 - **Decision:** A business that deterministically qualifies from an approved source is intended to appear in the directory by default as an unclaimed listing. A business does not need to register, claim, provide an ABN or pay before it appears.
 - **Guardrail:** "Found" means an approved, in-scope, identifiable, deduplicated candidate without known material safety or legitimacy concerns. Provenance and the qualifying evidence must be retained. Exceptions remain visible to an operator and audit-recorded.
-- **Current state:** The application requires an explicit operator publication decision and public release remains contained behind the holding posture.
-- **Required alignment:** Build and prove the qualification, evidence, duplicate, exception and lifecycle controls. Do not enable automated production publication or lift the holding posture until that work and public-route acceptance are complete.
+- **Current state:** The application requires an explicit operator publication decision. The public launch gate is enabled by the owner's 23 July 2026 release decision; this does not enable automated production publication.
+- **Required alignment:** Complete and prove the qualification, evidence, duplicate, exception and lifecycle controls before enabling deterministic production publication.
 - **Evidence to close:** Policy implementation, tests, controlled data-path verification, operator exception evidence and authorised public release verification.
 
 ### D-003 — Owner participation and public input
@@ -103,12 +103,20 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Operational rule:** There is no bulk job or automatic recheck. When the 90-day evidence window expires, the public signal disappears until an operator deliberately checks again.
 - **Evidence to close:** Authorisation, active/inactive/invalid/provider-failure tests; persisted private evidence and audit record; live operator check; and a public projection showing the signal without exposing the ABN.
 
+### D-011 — First public release authorisation
+
+- **Date:** 23 July 2026
+- **Decision:** The owner explicitly authorised the first public directory release. The `NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED` gate is enabled in the production deployment.
+- **Verified result:** Home, browse, a populated category route, a representative published profile and the sitemap return successfully. The sitemap contains 1,684 eligible public URLs; canonical and `www` redirect behaviour are correct; released pages no longer carry the holding-page `noindex` directive; `/ops` still redirects unauthenticated visitors to sign-in.
+- **Guardrail:** This authorisation does not enable Stripe, general outbound email, bulk ABN checks, AI publication, raw-candidate publication or automated ownership decisions.
+- **Outstanding evidence:** Complete real authenticated owner/submitter and operator walkthroughs, including the candidate-to-Ops, ABN evidence and owner-media paths. Any failure must be recorded and corrected; it is not a reason to publish additional listings.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |
 | --- | --- | --- |
 | Publication policy | Manual publication in implementation; default qualified unclaimed publication is the target direction. | Authority reconciliation, deterministic qualification controls and controlled release work. |
-| Public product | Holding page, redirects and empty sitemap remain live. | Complete public-product workflows and deliberate public-route acceptance. |
-| Owner and public input | Claim, status, profile correction and missing-business submission journeys are incomplete or not accepted as a finished set. | Build, harden and verify both user and Ops paths. |
+| Public product | Public directory release is live with a populated sitemap and indexable released routes. | Maintain production route checks and correct any observed public-data or SEO defect. |
+| Owner and public input | Claim, status, profile correction and missing-business submission paths are implemented, but the real authenticated walkthrough set is not yet recorded. | Complete and record both user and Ops walkthroughs. |
 | Monetisation | Stripe is disabled. | Leave disabled until separately approved commercial scope exists. |
 | Automation record | Automation safety controls exist but documentation and issue records need current-state reconciliation. | Maintain evidence, exception handling and current documentation as workflows are hardened. |
