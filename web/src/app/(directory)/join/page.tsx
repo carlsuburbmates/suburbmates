@@ -71,7 +71,7 @@ export default async function JoinPage({ searchParams }: {
         <Link href={choiceHref("suggest")} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">I am suggesting it</p>
           <h2 className="mt-2 text-xl font-black">Suggest a local business</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Share accurate, reachable business details. The candidate stays private while an operator reviews it; this does not create ownership.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">No sign-in is needed. Share accurate, reachable business details and the candidate stays private while an operator reviews it; this does not create ownership.</p>
           <span className="mt-4 inline-block font-bold text-indigo-700 group-hover:underline">Continue as a community suggester →</span>
         </Link>
       </section>}
@@ -80,14 +80,14 @@ export default async function JoinPage({ searchParams }: {
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Suggest a local business</p>
         <h2 className="mt-2 text-2xl font-black">Submit a missing business</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Submission does not publish a listing or assign ownership. An operator reviews the original facts before any public change.</p>
-        {message.submitted === "1" && <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800" role="status">Submission received for review. It is not public yet. <Link href="/login?next=/dashboard" className="underline">Sign in with the email you provided</Link> to check its private status later.</p>}
+        {message.submitted === "1" && <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800" role="status">Submission received for review. It is not public yet. You do not need an account to submit. If you want to check its private status later, you can optionally <Link href="/login?next=/dashboard" className="underline">sign in with the email you provided</Link>.</p>}
         {message.error && <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{submissionError(message.error)}</p>}
 
         {!siteKey ? <p className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">Secure business submission is temporarily unavailable. You can still search and claim an existing listing.</p> : (
           <form action={submitBusinessAction} className="mt-6 grid gap-5 sm:grid-cols-2">
             <div className="hidden" aria-hidden="true"><label>Leave empty<input name="companyWebsite" tabIndex={-1} autoComplete="off" /></label></div>
             <Field label="Your name" name="submitterName" required maxLength={120} autoComplete="name" />
-            <Field label="Your email for private status" name="submitterEmail" type="email" required maxLength={254} autoComplete="email" />
+            <div><Field label="Your email" name="submitterEmail" type="email" required maxLength={254} autoComplete="email" /><p className="mt-2 text-xs font-normal leading-5 text-slate-600">No account is created. This is only used if you later choose to check the private submission status.</p></div>
             <Field label="Business name" name="businessName" required maxLength={200} autoComplete="organization" />
             <Select label="Category" name="categorySlug" options={categoriesResult.data ?? []} />
             <Select label="Location" name="suburbSlug" options={suburbsResult.data ?? []} />
