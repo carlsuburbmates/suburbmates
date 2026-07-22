@@ -2,12 +2,16 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AxeCore } from "@/components/AxeCore";
 
+const publicLaunchEnabled = process.env.NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED === "true";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://suburbmates.com.au"),
-  title: "SuburbMates — Preparing for launch",
-  description: "SuburbMates is preparing a better way to discover local businesses.",
+  title: publicLaunchEnabled ? "SuburbMates — Discover local businesses" : "SuburbMates — Preparing for launch",
+  description: publicLaunchEnabled
+    ? "Discover local businesses across Melbourne's suburbs."
+    : "SuburbMates is preparing a better way to discover local businesses.",
   alternates: { canonical: "/" },
-  robots: { index: false, follow: false },
+  robots: publicLaunchEnabled ? undefined : { index: false, follow: false },
 };
 
 export default function RootLayout({
