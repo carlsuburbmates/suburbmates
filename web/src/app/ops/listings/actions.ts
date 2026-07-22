@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
 import { checkAbn, normalizeAbn } from "@/lib/automation/abn-lookup";
+import { sendStage2Outcome } from "@/lib/communications/stage1-status";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decisions = new Set(["publish", "approve_changes", "reject", "unpublish", "restore"]);
@@ -57,6 +58,7 @@ export async function setBusinessSubmissionStatusAction(formData: FormData) {
   if (!uuidPattern.test(vendorId) || !submissionOutcomes.has(outcome) || message.length < 1 || message.length > 2000) redirect(`${detailPath}?error=submission_status`);
   const { error } = await supabase.rpc("ops_set_business_submission_status", { p_vendor_id: vendorId, p_status: outcome, p_message: message });
   if (error) redirect(`${detailPath}?error=submission_status`);
+  await sendStage2Outcome("business_submission", vendorId);
   revalidatePath("/dashboard"); revalidatePath(detailPath);
   redirect(`${detailPath}?success=submission_status`);
 }
