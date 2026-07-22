@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import ProfileEditor from './ProfileEditor'
 import ClaimRequests from './ClaimRequests'
+import MediaProposalForm from './MediaProposalForm'
 
 type OwnerVendor = {
   id: string
@@ -44,6 +45,16 @@ type BusinessSubmissionStatus = {
   submitted_at: string
 }
 
+type MediaProposal = {
+  proposal_id: string
+  vendor_id: string
+  media_kind: string
+  proposal_status: string
+  alt_text: string
+  operator_reason: string | null
+  created_at: string
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   
@@ -60,9 +71,11 @@ export default async function DashboardPage() {
   const { data: requestStatuses } = await supabase.rpc('list_current_owner_request_statuses')
   const { data: claimRequests } = await supabase.rpc('list_current_owner_claim_requests')
   const { data: businessSubmissionStatuses } = await supabase.rpc('list_current_business_submission_statuses')
+  const { data: mediaProposalRows } = await supabase.rpc('list_current_owner_media_proposals')
   const ownerRequestStatuses = (requestStatuses ?? []) as RequestStatus[]
   const ownerClaimRequests = (claimRequests ?? []) as ClaimRequest[]
   const privateSubmissionStatuses = (businessSubmissionStatuses ?? []) as BusinessSubmissionStatus[]
+  const mediaProposals = (mediaProposalRows ?? []) as MediaProposal[]
   const latestChangeByVendor = new Map<string, (typeof profileChanges)[number]>()
   for (const change of profileChanges ?? []) {
     if (!latestChangeByVendor.has(change.vendor_id)) latestChangeByVendor.set(change.vendor_id, change)
@@ -149,6 +162,8 @@ export default async function DashboardPage() {
                   </div>
                   
                   <ProfileEditor vendor={vendor} latestChange={latestChangeByVendor.get(vendor.id) ?? null} />
+                  <MediaProposalForm vendorId={vendor.id} />
+                  {mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).length > 0 && <div className="border-t border-slate-100 pt-5"><h4 className="font-bold">Image review status</h4><div className="mt-3 space-y-2">{mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).map((proposal) => <div key={proposal.proposal_id} className="rounded-lg bg-slate-50 p-3 text-sm"><span className="font-semibold">{proposal.media_kind === 'logo' ? 'Logo' : 'Listing image'}:</span> {proposal.proposal_status.replaceAll('_', ' ')}{proposal.operator_reason && <p className="mt-1 text-slate-600">{proposal.operator_reason}</p>}</div>)}</div></div>}
                 </div>
               ))}
             </div>

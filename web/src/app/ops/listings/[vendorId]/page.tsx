@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
-import { decideListingAction, runAbnCheckAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
+import { decideListingAction, decideMediaProposalAction, runAbnCheckAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 type Listing = {
   vendor_id: string;
@@ -35,6 +36,7 @@ type ListingEvidence = {
   created_at: string;
 };
 type SubmissionStatus = { submission_status: string; operator_message: string | null; updated_at: string };
+type MediaProposal = { proposal_id: string; media_kind: string; storage_path: string; content_type: string; byte_size: number; alt_text: string; source_basis: string; proposal_status: string; operator_reason: string | null; created_at: string; decided_at: string | null };
 
 export default async function OpsListingDetailPage({ params, searchParams }: {
   params: Promise<{ vendorId: string }>;
@@ -43,13 +45,14 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const { vendorId } = await params;
   const message = await searchParams;
   const supabase = await createOpsDataClient();
-  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult, submissionResult] = await Promise.all([
+  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult, submissionResult, mediaResult] = await Promise.all([
     supabase.rpc("ops_list_listings", { p_status: "all", p_query: null, p_vendor_id: vendorId, p_limit: 1, p_offset: 0 }),
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase.rpc("ops_list_listing_evidence", { p_vendor_id: vendorId }),
     supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId }),
     supabase.rpc("ops_get_business_submission_status", { p_vendor_id: vendorId }),
+    supabase.rpc("ops_list_media_proposals", { p_status: null, p_vendor_id: vendorId }),
   ]);
   if (error || categoriesResult.error || suburbsResult.error || evidenceResult.error) throw new Error("The listing could not be loaded.");
   const listing = data?.[0] as Listing | undefined;
@@ -59,6 +62,13 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const evidence = (evidenceResult.data ?? []) as ListingEvidence[];
   const publicSlug = routeResult.data?.[0]?.current_slug as string | undefined;
   const submission = submissionResult.data?.[0] as SubmissionStatus | undefined;
+  const media = (mediaResult.data ?? []) as MediaProposal[];
+  const admin = createAdminClient();
+  const mediaPreviews = new Map<string, string>();
+  await Promise.all(media.map(async (proposal) => {
+    const { data: signed } = await admin.storage.from("owner-media-proposals").createSignedUrl(proposal.storage_path, 60);
+    if (signed?.signedUrl) mediaPreviews.set(proposal.proposal_id, signed.signedUrl);
+  }));
   const success = message.success ?? "";
   const abnStatus = success.startsWith("abn_") ? success.slice(4) : null;
   const successfulAction = ["draft", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(success);
@@ -85,6 +95,12 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
         {evidence.length === 0 ? <p className="mt-5 rounded-xl bg-slate-100 p-4 text-sm text-slate-600">No structured evidence record exists for this legacy listing.</p> : (
           <div className="mt-5 space-y-4">{evidence.map((item) => <EvidenceCard key={item.evidence_id} evidence={item} />)}</div>
         )}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-xl font-bold">Owner media proposals</h3>
+        <p className="mt-2 text-sm text-slate-600">These files remain private unless you approve them. Approval does not publish the listing or change ownership.</p>
+        {media.length === 0 ? <p className="mt-4 rounded-xl bg-slate-100 p-4 text-sm text-slate-600">No owner media has been proposed.</p> : <div className="mt-5 space-y-5">{media.map((proposal) => <article key={proposal.proposal_id} className="rounded-xl border border-slate-200 p-4"><div className="grid gap-4 sm:grid-cols-[11rem_1fr]"><div>{mediaPreviews.get(proposal.proposal_id) ? <img src={mediaPreviews.get(proposal.proposal_id)} alt={proposal.alt_text} className="h-40 w-full rounded-lg object-contain bg-slate-100" /> : <div className="flex h-40 items-center justify-center rounded-lg bg-slate-100 text-sm text-slate-500">Preview unavailable</div>}</div><div><p className="font-bold">{proposal.media_kind === "logo" ? "Logo" : "Listing image"} · {statusLabel(proposal.proposal_status)}</p><p className="mt-2 text-sm">Image description: {proposal.alt_text}</p><p className="mt-2 text-sm text-slate-600">Permission: {proposal.source_basis}</p><p className="mt-2 text-xs text-slate-500">Submitted {formatOpsDateTime(proposal.created_at)} · {Math.ceil(proposal.byte_size / 1024)} KB</p>{proposal.operator_reason && <p className="mt-2 text-sm"><span className="font-semibold">Decision note:</span> {proposal.operator_reason}</p>}</div></div>{proposal.proposal_status === "pending" && <MediaDecisionForm vendorId={vendorId} proposalId={proposal.proposal_id} />}{proposal.proposal_status === "approved" && <MediaDecisionForm vendorId={vendorId} proposalId={proposal.proposal_id} action="remove" />}</article>)}</div>}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -176,6 +192,11 @@ function AbnResult({ status }: { status: string }) {
   }[status] ?? "ABN check recorded. It has not changed publication, ownership, ranking or plan.";
   const caution = status !== "active";
   return <p role={caution ? "status" : undefined} className={`rounded-xl border p-4 font-semibold ${caution ? "border-amber-300 bg-amber-50 text-amber-900" : "border-green-300 bg-green-50 text-green-800"}`}>{message}</p>;
+}
+
+function MediaDecisionForm({ vendorId, proposalId, action }: { vendorId: string; proposalId: string; action?: "remove" }) {
+  const actions = action ? ["remove"] : ["approve", "reject"];
+  return <form action={decideMediaProposalAction} className="mt-4 space-y-3 border-t border-slate-200 pt-4"><input type="hidden" name="vendorId" value={vendorId} /><input type="hidden" name="proposalId" value={proposalId} /><label className="block text-sm font-bold">Decision note<textarea name="reason" required maxLength={2000} rows={2} className="mt-2 w-full rounded-lg border border-slate-300 p-3 font-normal" placeholder="Record why you are making this decision." /></label><div className="flex flex-wrap gap-3">{actions.map((choice) => <button key={choice} name="action" value={choice} className="btn btn-outline">{choice.replace(/^./, (letter) => letter.toUpperCase())} media</button>)}</div></form>;
 }
 
 function EvidenceCard({ evidence }: { evidence: ListingEvidence }) {
