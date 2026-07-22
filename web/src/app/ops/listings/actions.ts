@@ -3,10 +3,35 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { checkAbn, normalizeAbn } from "@/lib/automation/abn-lookup";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decisions = new Set(["publish", "approve_changes", "reject", "unpublish", "restore"]);
 const submissionOutcomes = new Set(["needs_information", "approved", "declined"]);
+
+export async function runAbnCheckAction(formData: FormData) {
+  const vendorId = String(formData.get("vendorId") ?? "");
+  const abn = normalizeAbn(String(formData.get("abn") ?? ""));
+  const detailPath = `/ops/listings/${vendorId}`;
+  const { supabase } = await verifyOpsAdmin(detailPath);
+  if (!uuidPattern.test(vendorId) || !/^\d{11}$/.test(abn)) redirect(`${detailPath}?error=abn`);
+
+  const result = await checkAbn(abn);
+  const { error } = await supabase.rpc("ops_record_abn_check", {
+    p_vendor_id: vendorId,
+    p_submitted_abn: abn,
+    p_abn_status: result.abnStatus,
+    p_entity_status: result.entityStatus,
+    p_official_names: result.officialNames,
+    p_checked_at: result.checkedAt,
+    p_error_message: result.errorMessage,
+  });
+  if (error) redirect(`${detailPath}?error=abn`);
+  revalidatePath("/ops");
+  revalidatePath("/ops/listings");
+  revalidatePath(detailPath);
+  redirect(`${detailPath}?success=abn_${result.abnStatus}`);
+}
 
 export async function setBusinessSubmissionStatusAction(formData: FormData) {
   const vendorId = String(formData.get("vendorId") ?? "");
