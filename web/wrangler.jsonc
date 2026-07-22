@@ -3,7 +3,9 @@
   "name": "suburbmates",
   "main": ".open-next/worker.js",
   "vars": {
-    "TURNSTILE_SITE_KEY": "0x4AAAAAAD2mX1Brs-CzSjzW"
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAD2mX1Brs-CzSjzW",
+    "TRANSACTIONAL_STATUS_EMAILS_ENABLED": "true",
+    "TRANSACTIONAL_STATUS_FROM": "auth@suburbmates.com.au"
   },
   "compatibility_date": "2026-07-15",
   "compatibility_flags": [
