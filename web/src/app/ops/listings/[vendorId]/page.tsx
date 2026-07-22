@@ -59,7 +59,9 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const evidence = (evidenceResult.data ?? []) as ListingEvidence[];
   const publicSlug = routeResult.data?.[0]?.current_slug as string | undefined;
   const submission = submissionResult.data?.[0] as SubmissionStatus | undefined;
-  const successfulAction = ["draft", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(message.success ?? "") || (message.success ?? "").startsWith("abn_");
+  const success = message.success ?? "";
+  const abnStatus = success.startsWith("abn_") ? success.slice(4) : null;
+  const successfulAction = ["draft", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(success);
 
   return (
     <div className="space-y-7">
@@ -74,7 +76,8 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
       </div>
 
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : message.error === "abn" ? "The ABN check could not be recorded. Enter 11 digits and try again." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
-      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{message.success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : (message.success ?? "").startsWith("abn_") ? "ABN check recorded. It has not changed publication, ownership, ranking or tier." : "Decision recorded with an audit event."}</p>}
+      {abnStatus && <AbnResult status={abnStatus} />}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : "Decision recorded with an audit event."}</p>}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Source evidence</h3>
@@ -161,6 +164,18 @@ function value(source: Listing | Record<string, string | null>, key: string) {
 function statusLabel(status: string) {
   if (status === "unclassified") return "Needs classification";
   return status.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function AbnResult({ status }: { status: string }) {
+  const message = {
+    active: "ABN is active. The result has been saved as private evidence. It has not changed publication, ownership, ranking or plan.",
+    inactive: "ABN is not active. The result has been saved as private evidence. Review it alongside the rest of the listing evidence.",
+    invalid: "This number did not pass ABN validation. No external lookup was made; the result has been recorded privately.",
+    not_found: "ABN Lookup did not find this number. The result has been saved as private evidence for review.",
+    provider_failure: "ABN Lookup could not complete the check. Nothing else changed; try again later.",
+  }[status] ?? "ABN check recorded. It has not changed publication, ownership, ranking or plan.";
+  const caution = status !== "active";
+  return <p role={caution ? "status" : undefined} className={`rounded-xl border p-4 font-semibold ${caution ? "border-amber-300 bg-amber-50 text-amber-900" : "border-green-300 bg-green-50 text-green-800"}`}>{message}</p>;
 }
 
 function EvidenceCard({ evidence }: { evidence: ListingEvidence }) {
