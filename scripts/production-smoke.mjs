@@ -230,11 +230,9 @@ async function main() {
     `${BASE_URL}/login?next=${encodeURIComponent("/ops")}`,
   )));
 
-  if (/Preparing for launch/i.test(home)) {
-    assert(
-      /<meta[^>]+(?:name="robots"[^>]+content="noindex, nofollow"|content="noindex, nofollow"[^>]+name="robots")/i.test(home),
-      "Holding homepage is missing noindex, nofollow robots metadata.",
-    );
+  const holdingRobots = /<meta[^>]+(?:name="robots"[^>]+content="noindex, nofollow"|content="noindex, nofollow"[^>]+name="robots")/i;
+  if (holdingRobots.test(home)) {
+    assert(/Preparing for launch/i.test(home), "Holding homepage is missing its launch message.");
     assert(!/href="\/(?:businesses|categories|locations|contact|claim|dashboard)"/i.test(home), "Holding homepage exposes an unfinished public journey.");
     console.log("Production holding smoke passed: launch page is noindex and Ops remains protected.");
     return;
@@ -244,7 +242,7 @@ async function main() {
     expectResponse("/businesses", 200, "text/html", /business/i),
     expectResponse("/categories", 200, "text/html", /categor/i),
     expectResponse("/locations", 200, "text/html", /location|suburb/i),
-    expectResponse("/how-it-works", 200, "text/html", /how it works/i),
+    expectResponse("/how-it-works", 200, "text/html", /How SuburbMates works/i),
     expectResponse("/contact", 200, "text/html", /contact/i),
     expectResponse("/privacy", 200, "text/html", /privacy/i),
     expectResponse("/sitemap.xml", 200, "xml"),
