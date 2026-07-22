@@ -95,11 +95,22 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Identity rule:** The same email may be used by a submitter and later by a business owner. Authentication never makes it an owner; only an approved claim creates the ownership link.
 - **Owner-submitted candidate rule:** A person who owns, manages, or represents a missing business signs in first, submits the private candidate and a relationship explanation, and receives a pending claim request. That combined intake never publishes the candidate or grants ownership automatically.
 
+### D-010 — Automation, communications and launch implementation choices
+
+- **Date:** 22 July 2026
+- **Approved discovery sources:** Begin with OpenStreetMap, operator-entered records and community submissions. Add any government or other source only after storage/display licence review. Do not scrape Google or closed directories.
+- **Deterministic qualification:** A default-unclaimed candidate must have a permitted source, Darebin/category scope, a business name, at least one reachable customer contact method, no strong duplicate and no known material safety or legitimacy concern. A strong duplicate is a matching website, phone, or normalised business name plus street address; uncertain matches enter Ops.
+- **Exception and release rule:** Unsafe, deceptive or materially broken website evidence holds the candidate for Ops. After controlled proof, qualifying candidates publish as unclaimed listings; exceptions never do. Existing database records must be requalified before public release rather than exposed merely because they are already marked published.
+- **Communications:** `auth@suburbmates.com.au` may send the approved staged status messages only: claim and profile-change decisions, then submission/report/privacy outcomes where a valid contact basis exists. No automatic receipt, new sender, marketing, general inbox or retry loop is approved.
+- **Trust and media:** An operator may run an ABR check for one supplied ABN at a time and display only a supported `ABN checked` signal. Owners or authorised representatives may propose a logo or other media for private Ops moderation; no third-party logo harvesting is approved.
+- **Account access:** Activate the merged eight-digit code template and prove its user journey with the owner. An iPhone code-entry check is acceptable now; a two-device check remains required before the cross-device acceptance criterion is closed.
+- **Guardrail:** None of these decisions lifts the holding posture, authorises automatic publication from raw data, or changes claim/ownership review requirements.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |
 | --- | --- | --- |
-| Publication policy | Manual publication in implementation; default qualified unclaimed publication is the target direction. | Authority reconciliation, deterministic qualification controls and controlled release work. |
+| Publication policy | Manual publication in implementation; default qualified unclaimed publication is the target direction. | Implement the approved qualification, duplicate, exception and controlled-release rules. |
 | Public product | Holding page, redirects and empty sitemap remain live. | Complete public-product workflows and deliberate public-route acceptance. |
 | Owner and public input | Claim, status, profile correction and missing-business submission journeys are incomplete or not accepted as a finished set. | Build, harden and verify both user and Ops paths. |
 | Monetisation | Stripe is disabled. | Leave disabled until separately approved commercial scope exists. |

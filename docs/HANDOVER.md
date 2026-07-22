@@ -10,13 +10,13 @@
 
 SuburbMates is a public local-business directory for the City of Darebin. Residents browse published listings and contact businesses directly. It is not a quote marketplace, lead seller, or payment gate.
 
-The launch model is deliberately review-first:
+The current implementation remains review-first while the approved target model is being built:
 
-- new discoveries and submissions remain unpublished until an operator approves them;
+- raw discoveries and community submissions remain unpublished until qualification or operator review; once the approved deterministic qualification policy is implemented and proven, qualifying permitted-source discoveries publish as unclaimed listings by default;
 - ownership, publication, payment, ABN evidence, tier, and SEO eligibility are independent states;
 - an email match supports a claim but never grants ownership automatically;
 - owner changes are proposals and never alter the public listing before review;
-- automated checks and external integrations provide evidence, not publication authority;
+- automation provides evidence and may publish only under that approved deterministic policy; it never resolves discretionary exceptions, claims or ownership;
 - no workflow may invent business facts, silently delete records, or weaken audit history.
 
 ## Current hosted state

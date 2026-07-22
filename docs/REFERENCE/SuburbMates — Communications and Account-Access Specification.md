@@ -13,7 +13,7 @@ The product status screen is the source of a person's request outcome. A message
 | Capability | Status |
 | --- | --- |
 | Passwordless sign-in from `auth@suburbmates.com.au` | Active for authorised access. |
-| Cross-device passwordless access | Active through an eight-digit email code entered in the browser being used. |
+| Cross-device passwordless access | Merged implementation; activation of the eight-digit template and live owner-device proof remain pending. |
 | Public contact/support form | Implemented but not publicly reachable while holding is active. |
 | Contact dispatcher / general notification sender | Dormant; not enabled. |
 | Marketing, newsletters, public support inbox, bulk messages, automatic retries | Prohibited. |
