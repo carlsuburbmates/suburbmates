@@ -6,12 +6,14 @@ export const metadata = {
   title: "Claim Your Business | SuburbMates",
 };
 
-export default async function ClaimPage() {
+export default async function ClaimPage({ searchParams }: { searchParams: Promise<{ listing?: string }> }) {
+  const { listing } = await searchParams;
+  const selectedListingId = typeof listing === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(listing) ? listing : null;
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
 
   if (error || !user) {
-    redirect("/login?next=/claim");
+    redirect(`/login?next=${encodeURIComponent(selectedListingId ? `/claim?listing=${selectedListingId}` : "/claim")}`);
   }
 
   return (
@@ -24,7 +26,7 @@ export default async function ClaimPage() {
           </p>
         </div>
         
-        <ClaimClient />
+        <ClaimClient selectedListingId={selectedListingId} />
       </div>
     </div>
   );

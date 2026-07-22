@@ -16,7 +16,7 @@ type OpsClaim = {
   claimant_user_id: string;
   claimant_email: string;
   claim_status: string;
-  evidence: { email_match?: boolean; matched_at?: string } | null;
+  evidence: { email_match?: boolean; matched_at?: string; relationship_explanation?: string; abn?: string | null; abn_status?: string } | null;
   claimant_note: string | null;
   operator_note: string | null;
   decided_at: string | null;
@@ -88,6 +88,8 @@ export default async function OpsClaimDetailPage({
 
       <InfoCard title="Evidence">
         <p className="font-semibold">{claim.evidence?.email_match ? "The signed-in email matched the listing contact email." : "No automated email match is recorded."}</p>
+        {claim.evidence?.relationship_explanation && <InfoRow label="Connection" value={claim.evidence.relationship_explanation} />}
+        {claim.evidence?.abn ? <InfoRow label="ABN" value={`${claim.evidence.abn} — provided by claimant, not automatically verified`} /> : <InfoRow label="ABN" value="Not provided" />}
         <p className="mt-2 text-sm text-amber-800">An email match supports review but does not by itself prove authority to control the business.</p>
       </InfoCard>
 

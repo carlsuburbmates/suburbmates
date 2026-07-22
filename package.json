@@ -25,6 +25,7 @@
     "website-safety:test": "node scripts/test-website-safety.mjs",
     "owner-status:test": "tsx scripts/test-owner-status-boundary.ts && npm run owner-request-withdrawal:test",
     "owner-request-withdrawal:test": "tsx scripts/test-owner-request-withdrawal-boundary.ts",
+    "claim-evidence-handoff:test": "tsx scripts/test-claim-evidence-handoff-boundary.ts",
     "ops-system:test": "tsx scripts/test-ops-system-boundary.ts",
     "verify:db": "tsx --env-file=.env.local scripts/verify-db.ts"
   },
