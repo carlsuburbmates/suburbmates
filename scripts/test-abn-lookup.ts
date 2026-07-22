@@ -10,6 +10,7 @@ const checkedAt = "2026-07-22T00:00:00.000Z";
 assert.deepEqual(parseAbnResponse("<root><entityStatusCode>Active</entityStatusCode><organisationName>Example &amp; Co</organisationName></root>", checkedAt), {
   abnStatus: "active", entityStatus: "Active", officialNames: ["Example & Co"], checkedAt, errorMessage: null,
 });
+assert.deepEqual(parseAbnResponse("<root><entityStatusCode>Active</entityStatusCode><mainName>Example Holdings</mainName><businessName>Example Services</businessName></root>", checkedAt).officialNames, ["Example Holdings", "Example Services"]);
 assert.equal(parseAbnResponse("<root><entityStatusCode>Cancelled</entityStatusCode></root>", checkedAt).abnStatus, "inactive");
 assert.equal(parseAbnResponse("<root><exceptionCode>SEARCH</exceptionCode><exceptionDescription>No records found</exceptionDescription></root>", checkedAt).abnStatus, "not_found");
 assert.equal(providerFailure(checkedAt).abnStatus, "provider_failure");

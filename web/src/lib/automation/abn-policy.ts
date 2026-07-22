@@ -42,7 +42,11 @@ function text(xml: string, tag: string) {
 }
 
 function names(xml: string) {
-  const values = ["organisationName", "givenName", "familyName", "businessName"]
+  // ABN Lookup may return different name types depending on whether the
+  // entity is an individual, non-individual, or has suppressed details.
+  // Preserve the available official names as private evidence; no name is
+  // used to make an ownership or publication decision.
+  const values = ["organisationName", "mainName", "legalName", "givenName", "familyName", "businessName", "mainTradingName", "otherTradingName"]
     .flatMap((tag) => [...xml.matchAll(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, "gi"))].map((match) => decode(match[1].trim())))
     .filter(Boolean);
   return [...new Set(values)].slice(0, 10);
