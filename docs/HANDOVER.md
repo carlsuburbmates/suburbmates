@@ -10,29 +10,29 @@
 
 SuburbMates is a public local-business directory for the City of Darebin. Residents browse published listings and contact businesses directly. It is not a quote marketplace, lead seller, or payment gate.
 
-The launch model is deliberately review-first:
+The launch model is directory-first with deterministic safeguards:
 
-- new discoveries and submissions remain unpublished until an operator approves them;
+- an approved-source discovery that passes scope, contact, duplicate and safety rules may become an unclaimed listing; raw submissions and uncertain candidates remain private for Ops;
 - ownership, publication, payment, ABN evidence, tier, and SEO eligibility are independent states;
 - an email match supports a claim but never grants ownership automatically;
 - owner changes are proposals and never alter the public listing before review;
-- automated checks and external integrations provide evidence, not publication authority;
+- automated checks and external integrations provide evidence; only the narrow deterministic approved-source policy may create an unclaimed listing;
 - no workflow may invent business facts, silently delete records, or weaken audit history.
 
 ## Current hosted state
 
 Reverified on 23 July 2026 (Australia/Melbourne):
 
-- 1,621 vendor rows total;
-- 1,600 published rows;
+- 1,622 vendor rows total;
+- 1,601 published rows;
 - 20 exact unpublished legacy duplicates rejected with audited links to their published peers;
 - 1 original seeded listing is an explicit unpublished draft awaiting evidence review;
 - exactly 1 active operator: `admin@suburbmates.com.au`;
 - 0 claim requests, profile-change requests, missing-business submissions, contact requests, media proposals and queued communications at the verification checkpoint;
-- 1 private candidate-handoff run and 1 private candidate-handoff record; the real operator walkthrough is still outstanding;
+- 1,545 distinct OpenStreetMap source records have private candidate-handoff evidence: 1,544 exceptions and one qualified unclaimed listing. The real operator queue walkthrough is still outstanding;
 - three failed claim-test identities were removed; their three truthfully labelled audit events remain immutable;
 - the owner explicitly authorised public release; the public directory is live and indexable;
-- `/`, `/businesses`, a representative published profile, and a populated category route return successfully; `/sitemap.xml` contains 1,684 public URLs;
+- `/`, `/businesses`, a representative published profile, and a populated category route return successfully; `/sitemap.xml` contains 1,685 public URLs;
 - `www.suburbmates.com.au` permanently redirects to the apex domain and unauthenticated `/ops` remains protected behind sign-in;
 - the private existing-catalogue evidence pass classified all 1,600 published listings: 584 qualified and 1,016 retained as Ops exceptions. It made no listing-state change; see `docs/AUTOMATION/EXISTING_CATALOGUE_REQUALIFICATION_AUDIT.md`;
 - the full repository safety suite, web lint and production build passed on the release baseline. Lint has three existing non-blocking `img` performance warnings.
@@ -118,7 +118,7 @@ The safe automated discovery path is:
 
 `scripts/seed.ts` preserves publication for existing rows and explicitly sets new rows to unpublished pending review. It must never auto-publish. Empty import fields must not erase existing stored values, and same-name businesses at different addresses must remain distinct.
 
-The weekly GitHub `Catalogue Discovery` workflow runs acquisition/audit/merge checks without secrets, uploads the candidate artifact, and never writes to the hosted database. Moving approved candidates automatically into the private review queue is still pending; automatic public publication remains prohibited.
+The weekly GitHub `Catalogue Discovery` workflow acquires/audits/merges candidate evidence, uploads its artifact, and sends approved OpenStreetMap candidates to the authenticated qualification handoff. The handoff retains private evidence for every candidate; only a candidate that passes the deterministic policy may become an unclaimed public listing. It never publishes raw, uncertain or user-submitted data.
 
 Current allowed sources and rules are documented in `docs/vendor-acquisition-strategy.md` and `docs/openstreetmap-acquisition.md`. Do not persist data from closed directories without a licence permitting storage and display.
 
@@ -127,7 +127,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 - `audit_events` is append-only for every application role, including service paths.
 - `actor_user_id` is an immutable historical UUID, intentionally not a live-auth foreign key; deleting an account must not rewrite history.
 - hosted mutation tests are prohibited by default because labelled audit evidence cannot be deleted.
-- destructive legacy inactivity pruning, legacy AI publication, and legacy media processing are disabled; both local Edge Function tombstones are CI-checked for absence of service-role capability, and the linked hosted project has zero deployed Edge Functions and zero storage buckets.
+- destructive legacy inactivity pruning, legacy AI publication, and automated media processing are disabled; owner-proposed media remains a separate moderated workflow. Both local Edge Function tombstones are CI-checked for absence of service-role capability, and the linked hosted project has zero deployed Edge Functions and zero storage buckets.
 - resolved contact content is deleted after 12 months and spam content after 30 days by a private daily retention job; audit history retains no deleted message content.
 - listing imports, claim decisions, profile edits, contact intake, and listing lifecycle actions preserve unrelated business state.
 - generated or test build output is ignored and must not be committed.
@@ -141,7 +141,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth SMTP only at launch | Domain verified; passwordless email-code sign-in into `/ops` is the approved path |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
-| ABN Lookup | Optional supporting evidence | Credential works; no workflow enabled; never gate listing, claim, or publication on ABN alone |
+| ABN Lookup | Optional operator-run supporting evidence | One-listing-at-a-time evidence path is implemented; never gate listing, claim, or publication on ABN alone |
 
 No paid service is required for launch. Keep Stripe and bulk ABR work disabled until a real product need exists. Custom notification email is optional and must not gate database persistence.
 
@@ -178,7 +178,7 @@ After deployment, verify the served production response—not only browser cache
 1. Exercise every authenticated `/ops` queue in the browser, confirming each routine decision is clear to the non-technical operator and leaves the required audit evidence.
 2. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
 3. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
-4. Review weekly outbound-website evidence reports. The automated checker follows HTTPS redirects only after public-DNS validation, records evidence, and opens one review issue when needed; it never changes a listing automatically. A constrained media/logo pipeline remains deferred until the core launch gates pass.
+4. Review weekly outbound-website evidence reports. The automated checker follows HTTPS redirects only after public-DNS validation, records evidence, and opens one review issue when needed; it never changes a listing automatically. Complete the real ABN and owner-media walkthroughs before treating their workflows as accepted.
 
 ## Cleanup boundary
 
