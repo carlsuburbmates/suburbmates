@@ -9,7 +9,7 @@ const csvPath = process.argv[2];
 // Each request performs qualification, evidence retention and audit writes. Keep
 // the workload deliberately small so the Worker remains within its resource
 // budget during a large discovery run.
-const BATCH_SIZE = 5;
+const BATCH_SIZE = 1;
 const MAX_CONCURRENT_BATCHES = 2;
 // The cumulative backoff exceeds the one-minute server recovery window.
 const MAX_ATTEMPTS = 9;
