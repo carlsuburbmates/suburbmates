@@ -87,6 +87,12 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Guardrail:** This changes neither the approved sender nor any other communications capability. Codes expire through Supabase Auth, are single-use, and do not decide a claim, publication, ownership or any other product state.
 - **Evidence to close:** A live owner-device test of code delivery, expiry, supersession and successful session handoff, followed by removal of the temporary review callback.
 
+### D-009 — Private missing-business status
+
+- **Date:** 22 July 2026
+- **Decision:** A missing-business submission records a separate submitter email for private, signed-in status access. The business contact details remain governed by the at-least-one-contact rule.
+- **Guardrail:** Status is plain language only and separate from the operator listing queue. It cannot publish a listing, assign ownership, or send a general notification.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |

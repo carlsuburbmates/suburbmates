@@ -12,6 +12,7 @@ export async function submitBusinessAction(formData: FormData) {
   if (String(formData.get("companyWebsite") ?? "").trim()) redirect("/join?submitted=1");
 
   const submitterName = String(formData.get("submitterName") ?? "").trim();
+  const submitterEmail = String(formData.get("submitterEmail") ?? "").trim().toLowerCase();
   const businessName = String(formData.get("businessName") ?? "").trim();
   const categorySlug = String(formData.get("categorySlug") ?? "").trim();
   const suburbSlug = String(formData.get("suburbSlug") ?? "").trim();
@@ -25,6 +26,7 @@ export async function submitBusinessAction(formData: FormData) {
 
   if (
     submitterName.length < 2 || submitterName.length > 120 ||
+    submitterEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submitterEmail) ||
     businessName.length < 2 || businessName.length > 200 ||
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(categorySlug) ||
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(suburbSlug) ||
@@ -46,8 +48,9 @@ export async function submitBusinessAction(formData: FormData) {
 
   try {
     const supabase = createAdminClient();
-    const { error } = await supabase.rpc("submit_business_listing", {
+    const { error } = await supabase.rpc("submit_business_listing_with_status", {
       p_submitter_name: submitterName,
+      p_submitter_email: submitterEmail,
       p_business_name: businessName,
       p_category_slug: categorySlug,
       p_suburb_slug: suburbSlug,

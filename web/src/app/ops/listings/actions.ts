@@ -6,6 +6,20 @@ import { verifyOpsAdmin } from "@/lib/ops/auth";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decisions = new Set(["publish", "approve_changes", "reject", "unpublish", "restore"]);
+const submissionOutcomes = new Set(["needs_information", "approved", "declined"]);
+
+export async function setBusinessSubmissionStatusAction(formData: FormData) {
+  const vendorId = String(formData.get("vendorId") ?? "");
+  const outcome = String(formData.get("outcome") ?? "");
+  const message = String(formData.get("message") ?? "").trim();
+  const detailPath = `/ops/listings/${vendorId}`;
+  const { supabase } = await verifyOpsAdmin(detailPath);
+  if (!uuidPattern.test(vendorId) || !submissionOutcomes.has(outcome) || message.length < 1 || message.length > 2000) redirect(`${detailPath}?error=submission_status`);
+  const { error } = await supabase.rpc("ops_set_business_submission_status", { p_vendor_id: vendorId, p_status: outcome, p_message: message });
+  if (error) redirect(`${detailPath}?error=submission_status`);
+  revalidatePath("/dashboard"); revalidatePath(detailPath);
+  redirect(`${detailPath}?success=submission_status`);
+}
 
 export async function saveListingDraftAction(formData: FormData) {
   const vendorId = String(formData.get("vendorId") ?? "");

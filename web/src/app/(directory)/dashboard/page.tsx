@@ -36,6 +36,14 @@ type ClaimRequest = {
   created_at: string
 }
 
+type BusinessSubmissionStatus = {
+  business_name: string
+  submission_status: string
+  status_message: string
+  next_step: string
+  submitted_at: string
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   
@@ -51,8 +59,10 @@ export default async function DashboardPage() {
   const { data: profileChanges } = await supabase.rpc('list_current_owner_profile_changes')
   const { data: requestStatuses } = await supabase.rpc('list_current_owner_request_statuses')
   const { data: claimRequests } = await supabase.rpc('list_current_owner_claim_requests')
+  const { data: businessSubmissionStatuses } = await supabase.rpc('list_current_business_submission_statuses')
   const ownerRequestStatuses = (requestStatuses ?? []) as RequestStatus[]
   const ownerClaimRequests = (claimRequests ?? []) as ClaimRequest[]
+  const privateSubmissionStatuses = (businessSubmissionStatuses ?? []) as BusinessSubmissionStatus[]
   const latestChangeByVendor = new Map<string, (typeof profileChanges)[number]>()
   for (const change of profileChanges ?? []) {
     if (!latestChangeByVendor.has(change.vendor_id)) latestChangeByVendor.set(change.vendor_id, change)
@@ -84,6 +94,13 @@ export default async function DashboardPage() {
                 </div>
               ))}
             </div>
+          </section>
+        )}
+
+        {privateSubmissionStatuses.length > 0 && (
+          <section className="space-y-4">
+            <div><h2 className="text-2xl font-bold">Your business submissions</h2><p className="mt-1 text-sm text-slate-600">These are private review updates. They do not publish a listing or assign ownership.</p></div>
+            <div className="grid gap-4">{privateSubmissionStatuses.map((request) => <div key={`${request.business_name}-${request.submitted_at}`} className="rounded-2xl border bg-white p-5 shadow-sm"><p className="font-bold">{request.business_name}</p><p className="mt-2 text-sm text-slate-600">{request.status_message}</p><p className="mt-2 text-sm font-medium text-slate-800">Next step: {request.next_step}</p></div>)}</div>
           </section>
         )}
 

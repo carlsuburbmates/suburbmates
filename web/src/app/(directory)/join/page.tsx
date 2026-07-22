@@ -58,13 +58,14 @@ export default async function JoinPage({ searchParams }: {
       {showAddForm && <section id="missing-business" className="mt-8 scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <h2 className="text-2xl font-black">Submit a missing business</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Submission does not publish a listing or assign ownership. An operator reviews the original facts before any public change.</p>
-        {message.submitted === "1" && <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800" role="status">Submission received for review. It is not public yet.</p>}
+        {message.submitted === "1" && <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800" role="status">Submission received for review. It is not public yet. <Link href="/login?next=/dashboard" className="underline">Sign in with the email you provided</Link> to check its private status later.</p>}
         {message.error && <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{submissionError(message.error)}</p>}
 
         {!siteKey ? <p className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">Secure business submission is temporarily unavailable. You can still search and claim an existing listing.</p> : (
           <form action={submitBusinessAction} className="mt-6 grid gap-5 sm:grid-cols-2">
             <div className="hidden" aria-hidden="true"><label>Leave empty<input name="companyWebsite" tabIndex={-1} autoComplete="off" /></label></div>
             <Field label="Your name" name="submitterName" required maxLength={120} autoComplete="name" />
+            <Field label="Your email for private status" name="submitterEmail" type="email" required maxLength={254} autoComplete="email" />
             <Field label="Business name" name="businessName" required maxLength={200} autoComplete="organization" />
             <Select label="Category" name="categorySlug" options={categoriesResult.data ?? []} />
             <Select label="Location" name="suburbSlug" options={suburbsResult.data ?? []} />
