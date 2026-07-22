@@ -107,6 +107,14 @@ No branch, pull request, automation run or lane handover changes product policy 
 
 - **Date:** 23 July 2026
 - **Decision:** The owner explicitly authorised the first public directory release. The `NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED` gate is enabled in the production deployment.
+
+### D-012 — Password sign-in for existing authorised accounts
+
+- **Date:** 23 July 2026
+- **Decision:** Existing authorised accounts may use email and password as the primary sign-in path. Password reset is sent only from `auth@suburbmates.com.au` and returns only to the real SuburbMates callback. The eight-digit email code remains a fallback.
+- **Boundary:** This does not add a public account-registration screen, a new sender, marketing email, a general inbox, or application-managed authentication messages.
+- **Security rule:** Passwords must be at least 12 characters. The hosted plan does not include Supabase's optional breached-password check; the operator should use a unique password and may enable that provider feature only if the plan changes.
+- **Evidence required:** A real reset from the controlled email account, password sign-in in a separate browser/device, and confirmation that the fallback email-code path remains intact.
 - **Verified result:** Home, browse, a populated category route, a representative published profile and the sitemap return successfully. The sitemap contains 1,684 eligible public URLs; canonical and `www` redirect behaviour are correct; released pages no longer carry the holding-page `noindex` directive; `/ops` still redirects unauthenticated visitors to sign-in.
 - **Guardrail:** This authorisation does not enable Stripe, general outbound email, bulk ABN checks, AI publication, raw-candidate publication or automated ownership decisions.
 - **Outstanding evidence:** Complete real authenticated owner/submitter and operator walkthroughs, including the candidate-to-Ops, ABN evidence and owner-media paths. Any failure must be recorded and corrected; it is not a reason to publish additional listings.
