@@ -9,7 +9,7 @@ The map does not imply that a configured workflow has run successfully, or that 
 ## End-to-end map
 
 ```text
-GitHub catalogue discovery and qualification handoff (active on main; controlled private proof succeeded)
+GitHub catalogue discovery and qualification handoff (active on main; full verification succeeded)
   -> OpenStreetMap / Overpass public data
   -> candidate CSV
   -> data-hygiene audit
@@ -45,7 +45,7 @@ Supabase internal health monitor (active Ops process; outside Automation lane)
 | Workflow | Trigger | Verified steps | Services / infrastructure | Output | Current status | State-changing boundary |
 | --- | --- | --- | --- | --- | --- | --- |
 | Repository verification | GitHub pull request; push to `main` or `codex/**` | Check out code; install Node 22 dependencies; run root checks; lint, build, and Cloudflare build for `web/` | GitHub Actions, Node.js, npm, Next.js, OpenNext/Cloudflare build tooling | Pass/fail GitHub check | **Active** | No hosted data write or deployment command |
-| Catalogue candidate discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; retain CSVs; send OSM candidates in authenticated batches to the qualification handoff | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, Cloudflare, Supabase, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days; private run and exception records in Ops | **Active on `main`; controlled private proof completed.** The first full scheduled discovery batch remains a separate release decision. | Only an approved-source candidate that passes deterministic source, scope, contact, duplicate and safety checks may create an unclaimed listing. Exceptions stay private in Ops. |
+| Catalogue candidate discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; retain CSVs; send OSM candidates in authenticated handoffs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, Cloudflare, Supabase, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days; private run and exception records in Ops | **Active on `main`; full manual verification succeeded on 22 July 2026.** | Only an approved-source candidate that passes deterministic source, scope, contact, duplicate and safety checks may create an unclaimed listing. Exceptions stay private in Ops. |
 | Website-safety evidence | Monday schedule at `08:41` UTC; manual dispatch | Read `published_vendors`; validate public DNS; make DNS-pinned HTTPS `HEAD` requests; follow at most three HTTPS redirects; write JSON report; fail when review is required; open/update one GitHub issue on failure | GitHub Actions, Supabase public projection, DNS, HTTPS, GitHub artifacts/issues | JSON report retained 30 days; one review issue if flagged | **Active on `main`; evidence run completed** — 588 checked, 86 flagged for review | No listing write; no automatic contact or publication decision |
 | Production smoke | Daily schedule at `19:23` Australia/Melbourne; manual dispatch | Check public routes; require unauthenticated Ops redirects; verify canonical redirects and invalid vendor 404; paginate safe Supabase projections; reconstruct and compare sitemap; sample a public vendor page; open/update one GitHub issue on failure | GitHub Actions, production Cloudflare site, Supabase public projections, GitHub issues | Pass/fail run; one failure issue if needed | **Active on `main`; public-release route verification is recorded** | No Supabase write; no deployment; no listing change |
 | Internal operations health | Supabase `pg_cron`, hourly at minute 5 | Count failed and overdue automation jobs; count listings needing review, pending claims, and pending profile changes; update integration-health rows; expose them through authenticated Ops RPCs | Supabase PostgreSQL, `pg_cron`, `automation_jobs`, operator workflow tables, `/ops/system` | `integration_health` status and queue counts | **Active Ops process; outside Automation lane** | Writes health records only; never changes listings, ownership, claims, payments, publication, billing, or tier |
@@ -76,10 +76,10 @@ Verified sequence:
 6. Audit `data/vendor-candidates-merged.csv`.
 7. Print coverage information in the workflow log.
 8. Upload the OSM and merged CSVs as 30-day GitHub artifacts.
-9. Send the OSM candidate rows in batches to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare.
+9. Send the OSM candidate rows to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare. Single-candidate retry is used to recover safely from an interrupted request.
 10. Persist an idempotent handoff run, the candidate facts, normalised facts, qualification outcome, reasons, correlation and immutable audit evidence. Qualifying candidates may become unclaimed listings; exceptions remain private in `/ops/candidates`.
 
-The endpoint accepts only OpenStreetMap records, bounded batches and a valid private token. It does not accept Google or closed-directory data, does not make ownership or claim decisions, and does not lift holding mode. A live controlled proof submitted one real OSM record with no contact method: it created one private exception and zero listings. The first full discovery batch remains deliberately unrun until its operator review is accepted.
+The endpoint accepts only OpenStreetMap records, bounded payloads and a valid private token. It does not accept Google or closed-directory data, does not make ownership or claim decisions, and cannot change the global public-release setting. A full manual run succeeded on 22 July 2026: all 1,545 source rows received private qualification evidence; 1,544 became exceptions and one candidate became an unclaimed listing only after passing every deterministic rule. Interrupted single-candidate retries reuse conclusive evidence already retained for that source record rather than duplicating it.
 
 ### 3. Website-safety evidence
 
@@ -109,8 +109,8 @@ This is intentionally narrower than general data pruning. It deletes only privat
 
 | Area | Actual implementation state | Consequence |
 | --- | --- | --- |
-| Candidate artifact to Ops review queue | Implemented; controlled private proof accepted | Approved-source rows have private receipt, qualification and exception records. The first full scheduled batch remains pending operator acceptance. |
-| Job execution and retry | Candidate handoff produces a persisted run and job record; retries use an idempotent batch digest | A duplicate handoff batch returns the existing run rather than creating duplicate records. Manual re-dispatch remains the recovery action. |
+| Candidate artifact to Ops review queue | Implemented; full manual verification accepted | Every approved-source row has private receipt/qualification evidence. Exceptions remain available for normal protected Ops review. |
+| Job execution and retry | Candidate handoff produces a persisted run and job record; recovery retries a single candidate and reuses conclusive source evidence | An interrupted request cannot falsely report success or duplicate a conclusive exception/qualification record. |
 | Stripe billing | Webhook returns `501` | No payment or subscription automation exists |
 | Bulk ABR/ABN lookup | Disabled | No ABN automation exists |
 | AI publication | Disabled | AI cannot create public facts or publish listings |
@@ -130,4 +130,4 @@ This is intentionally narrower than general data pruning. It deletes only privat
 
 ## Candidate handoff acceptance boundary
 
-The handoff is intentionally narrower than general automation. It must retain source provenance and exceptions, never ingest an unapproved source, and never make ownership or claim decisions. Public release remains independent: a qualified record can be public only while the global launch gate is enabled. Before the first full scheduled batch is treated as accepted, an operator must review the private exception queue and confirm that the source, scope and duplicate outcomes are understandable.
+The handoff is intentionally narrower than general automation. It retains source provenance and exceptions, never ingests an unapproved source, and never makes ownership or claim decisions. Public release remains independent: a qualified record can be public only while the global launch gate is enabled. Technical handoff acceptance was verified by the successful 22 July full run. An operator must still review private exceptions as ordinary directory operations; that review is not an automation authority to publish raw or uncertain candidates.
