@@ -172,17 +172,20 @@ The possible public intents are:
 
 ## 5. New-business journey: add a business that is not yet listed
 
-1. A person selects **Add a business** from Home or a directory empty state.
-2. They provide the minimum useful details and a way to support the business's existence and local relevance.
-3. Validation and abuse controls reject obvious spam, malformed input and duplicates before anything becomes public.
-4. The system creates a **private candidate**, explains that the information will be reviewed, and gives the person a reference or authenticated status path when appropriate.
-5. Background and operator checks compare it with approved sources, scope, duplicate records and safety concerns.
-6. A qualifying candidate follows the approved directory-first lifecycle; an uncertain one becomes an Ops exception rather than a silent public listing.
-7. The journey is complete when the submitter can understand the outcome where contact is appropriate, and the candidate has an auditable decision.
+1. A person selects **Add a business** from Home or a directory empty state, then searches first for an existing listing.
+2. If it is missing, they choose one clear route: **I own or represent it** or **I am suggesting it**.
+3. An owner or authorised representative signs in, supplies the minimum useful business facts and explains their connection. The system creates a **private candidate** and a **pending claim** together; neither publishes the business nor grants ownership.
+4. A community suggester provides the minimum useful facts and a private status email. Their submission creates only a private candidate and no ownership request.
+5. Validation and abuse controls reject obvious spam, malformed input and duplicates before anything becomes public.
+6. Background and operator checks compare the candidate with approved sources, scope, duplicate records and safety concerns. The operator separately reviews any pending ownership evidence.
+7. A qualifying candidate follows the approved directory-first lifecycle; an uncertain one becomes an Ops exception rather than a silent public listing.
+8. The journey is complete when the submitter or owner can understand the private outcome, and the candidate and any claim have auditable decisions.
 
 ### Behind the page
 
 - A submission is not a self-service profile creator and cannot overwrite an existing listing.
+- An authenticated account can be both a community submitter and a business owner. Sign-in identifies the request account; only an approved claim creates the ownership link.
+- An owner-submitted candidate is intentional evidence for a manual claim review, not an automatic claim or a substitute for the exact-email claim route for existing listings.
 - Source, contact permission, evidence, anti-abuse signals and duplicate matches stay private.
 - Automation may assist evidence gathering and matching, but cannot invent public facts or make discretionary publication/ownership decisions.
 

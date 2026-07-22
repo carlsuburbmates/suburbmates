@@ -3,7 +3,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { runtimeEnv } from "@/lib/runtime-env";
 import { createClient } from "@/utils/supabase/server";
-import { submitBusinessAction } from "./actions";
+import { submitBusinessAction, submitOwnedBusinessAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +14,15 @@ export const metadata: Metadata = {
 };
 
 export default async function JoinPage({ searchParams }: {
-  searchParams: Promise<{ submitted?: string; error?: string; q?: string; suburb?: string; add?: string }>;
+  searchParams: Promise<{ submitted?: string; error?: string; q?: string; suburb?: string; add?: string; choose?: string; path?: string }>;
 }) {
   const message = await searchParams;
   const siteKey = runtimeEnv("TURNSTILE_SITE_KEY");
   const supabase = await createClient();
-  const [categoriesResult, suburbsResult] = await Promise.all([
+  const [categoriesResult, suburbsResult, authResult] = await Promise.all([
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
+    supabase.auth.getUser(),
   ]);
   if (categoriesResult.error || suburbsResult.error) throw new Error("Business submission options could not be loaded.");
   const query = typeof message.q === "string" ? message.q.trim().slice(0, 200) : "";
@@ -32,7 +33,12 @@ export default async function JoinPage({ searchParams }: {
       .ilike("business_name", `%${query.replace(/[%_\\]/g, "\\$&")}%`).eq("suburb_slug", suburb).order("business_name").limit(5);
     matches = data ?? [];
   }
-  const showAddForm = message.add === "1" || (query.length >= 2 && suburb && matches.length === 0);
+  const path = message.path === "owner" ? "owner" : message.path === "suggest" || message.add === "1" ? "suggest" : null;
+  const showPathChoice = query.length >= 2 && suburb && (matches.length === 0 || message.choose === "1") && !path;
+  const showSuggestionForm = path === "suggest";
+  const showOwnerForm = path === "owner";
+  const choiceHref = (selectedPath: "owner" | "suggest") => `/join?path=${selectedPath}&q=${encodeURIComponent(query)}&suburb=${encodeURIComponent(suburb)}`;
+  const returnToChoice = `/join?choose=1&q=${encodeURIComponent(query)}&suburb=${encodeURIComponent(suburb)}`;
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
@@ -51,12 +57,28 @@ export default async function JoinPage({ searchParams }: {
 
       {query.length >= 2 && suburb && (
         <section className="mt-6" aria-live="polite">
-          {matches.length > 0 ? <><h2 className="text-xl font-black">Is this your business?</h2><div className="mt-4 grid gap-3">{matches.map((match) => <article key={match.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><p className="font-black">{match.business_name}</p><p className="mt-1 text-sm text-slate-600">{match.category_slug.replaceAll("-", " ")} · {match.suburb_slug.replaceAll("-", " ")}</p><Link href={`/claim?listing=${encodeURIComponent(match.id)}`} className="btn btn-primary mt-4">Claim this profile</Link></article>)}</div><p className="mt-4 text-sm text-slate-600">Not your business? <Link href={`/join?add=1&q=${encodeURIComponent(query)}&suburb=${encodeURIComponent(suburb)}`} className="font-bold underline">Add a missing business instead</Link>.</p></> : <><h2 className="text-xl font-black">No likely match found</h2><p className="mt-2 text-slate-600">Try another spelling or suburb. If it is still missing, you can add it for private review.</p><Link href={`/join?add=1&q=${encodeURIComponent(query)}&suburb=${encodeURIComponent(suburb)}`} className="btn btn-primary mt-4">Add a missing business</Link></>}
+          {matches.length > 0 ? <><h2 className="text-xl font-black">Is this your business?</h2><div className="mt-4 grid gap-3">{matches.map((match) => <article key={match.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><p className="font-black">{match.business_name}</p><p className="mt-1 text-sm text-slate-600">{match.category_slug.replaceAll("-", " ")} · {match.suburb_slug.replaceAll("-", " ")}</p><Link href={`/claim?listing=${encodeURIComponent(match.id)}`} className="btn btn-primary mt-4">Claim this profile</Link></article>)}</div><p className="mt-4 text-sm text-slate-600">Not the business you meant? <Link href={returnToChoice} className="font-bold underline">Add a missing business instead</Link>.</p></> : <><h2 className="text-xl font-black">No likely match found</h2><p className="mt-2 text-slate-600">Try another spelling or suburb. If it is still missing, choose the route that matches why you are adding it.</p></>}
         </section>
       )}
 
-      {showAddForm && <section id="missing-business" className="mt-8 scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <h2 className="text-2xl font-black">Submit a missing business</h2>
+      {showPathChoice && <section className="mt-8 grid gap-4 sm:grid-cols-2" aria-label="Choose your missing business path">
+        <Link href={choiceHref("owner")} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-700">I own or represent it</p>
+          <h2 className="mt-2 text-xl font-black">Add my business and request ownership</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Sign in, submit the missing business, and provide your connection. Both the listing and ownership request stay private for manual review.</p>
+          <span className="mt-4 inline-block font-bold text-indigo-700 group-hover:underline">Continue as owner or representative →</span>
+        </Link>
+        <Link href={choiceHref("suggest")} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">I am suggesting it</p>
+          <h2 className="mt-2 text-xl font-black">Suggest a local business</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Share accurate, reachable business details. The candidate stays private while an operator reviews it; this does not create ownership.</p>
+          <span className="mt-4 inline-block font-bold text-indigo-700 group-hover:underline">Continue as a community suggester →</span>
+        </Link>
+      </section>}
+
+      {showSuggestionForm && <section id="missing-business" className="mt-8 scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Suggest a local business</p>
+        <h2 className="mt-2 text-2xl font-black">Submit a missing business</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Submission does not publish a listing or assign ownership. An operator reviews the original facts before any public change.</p>
         {message.submitted === "1" && <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800" role="status">Submission received for review. It is not public yet. <Link href="/login?next=/dashboard" className="underline">Sign in with the email you provided</Link> to check its private status later.</p>}
         {message.error && <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{submissionError(message.error)}</p>}
@@ -78,6 +100,34 @@ export default async function JoinPage({ searchParams }: {
             <label className="flex items-start gap-3 text-sm leading-6 text-slate-700 sm:col-span-2"><input name="consent" type="checkbox" required className="mt-1 h-4 w-4" /><span>I confirm these are genuine business details and agree that SuburbMates may review them for directory publication as described in the <Link href="/privacy" className="font-bold underline">privacy notice</Link>.</span></label>
             <div className="sm:col-span-2"><div className="cf-turnstile" data-sitekey={siteKey} data-action="business_submission" data-theme="light" /></div>
             <div className="sm:col-span-2"><button className="btn btn-primary">Submit for review</button></div>
+          </form>
+        )}
+      </section>}
+
+      {showOwnerForm && <section id="owner-submission" className="mt-8 scroll-mt-6 rounded-2xl border border-indigo-200 bg-white p-6 shadow-sm sm:p-8">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-700">Owner or authorised representative</p>
+        <h2 className="mt-2 text-2xl font-black">Add this business and request ownership</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">This creates a private candidate and a pending ownership request together. An operator reviews both. It does not publish the business or give you ownership automatically.</p>
+        {message.submitted === "1" && <p className="mt-5 rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800" role="status">Your business candidate and ownership request were received for review. They remain private and pending until an operator decides.</p>}
+        {message.error && <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{submissionError(message.error)}</p>}
+        {!authResult.data.user?.email ? <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5"><h3 className="font-black">Sign in to continue</h3><p className="mt-2 text-sm leading-6 text-slate-600">Your pending ownership request must be attached to your account so you can track it privately. Signing in does not approve ownership.</p><Link href={`/login?next=${encodeURIComponent(`/join?path=owner&q=${encodeURIComponent(query)}&suburb=${encodeURIComponent(suburb)}`)}`} className="btn btn-primary mt-4">Sign in to continue</Link></div> : !siteKey ? <p className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">Secure business submission is temporarily unavailable. Please try again shortly.</p> : (
+          <form action={submitOwnedBusinessAction} className="mt-6 grid gap-5 sm:grid-cols-2">
+            <div className="hidden" aria-hidden="true"><label>Leave empty<input name="companyWebsite" tabIndex={-1} autoComplete="off" /></label></div>
+            <Field label="Your name" name="submitterName" required maxLength={120} autoComplete="name" />
+            <p className="rounded-xl bg-slate-50 p-3 text-sm leading-6 text-slate-600">Signed in as <strong>{authResult.data.user.email}</strong>. This email is used only for your private request status.</p>
+            <Field label="Business name" name="businessName" required maxLength={200} autoComplete="organization" />
+            <Select label="Category" name="categorySlug" options={categoriesResult.data ?? []} />
+            <Select label="Location" name="suburbSlug" options={suburbsResult.data ?? []} />
+            <Field label="Business email (optional)" name="contactEmail" type="email" maxLength={254} autoComplete="email" />
+            <Field label="Phone (optional)" name="phone" type="tel" maxLength={40} autoComplete="tel" />
+            <Field label="Website (optional, HTTPS)" name="website" type="url" maxLength={500} placeholder="https://" />
+            <p className="text-sm text-slate-600 sm:col-span-2">Provide at least one way customers can contact this business: email, phone, or website.</p>
+            <Field label="ABN (optional)" name="abn" maxLength={14} placeholder="11 digits" />
+            <Field label="Street address (optional)" name="streetAddress" maxLength={500} autoComplete="street-address" />
+            <label className="text-sm font-bold sm:col-span-2">Your connection to this business<textarea name="relationshipExplanation" required minLength={10} maxLength={1000} className="mt-2 min-h-28 w-full rounded-xl border border-slate-300 p-3 font-normal" placeholder="For example: I am the owner, manager, or authorised representative…" /></label>
+            <label className="flex items-start gap-3 text-sm leading-6 text-slate-700 sm:col-span-2"><input name="consent" type="checkbox" required className="mt-1 h-4 w-4" /><span>I confirm these are genuine business details and that I am authorised to request ownership review. SuburbMates may review the details and evidence under its <Link href="/privacy" className="font-bold underline">privacy notice</Link>.</span></label>
+            <div className="sm:col-span-2"><div className="cf-turnstile" data-sitekey={siteKey} data-action="business_submission" data-theme="light" /></div>
+            <div className="sm:col-span-2"><button className="btn btn-primary">Submit business and ownership request</button></div>
           </form>
         )}
       </section>}

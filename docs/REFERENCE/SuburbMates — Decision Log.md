@@ -93,6 +93,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Decision:** A missing-business submission records a separate submitter email for private, signed-in status access. The business contact details remain governed by the at-least-one-contact rule.
 - **Guardrail:** Status is plain language only and separate from the operator listing queue. It cannot publish a listing, assign ownership, or send a general notification.
 - **Identity rule:** The same email may be used by a submitter and later by a business owner. Authentication never makes it an owner; only an approved claim creates the ownership link.
+- **Owner-submitted candidate rule:** A person who owns, manages, or represents a missing business signs in first, submits the private candidate and a relationship explanation, and receives a pending claim request. That combined intake never publishes the candidate or grants ownership automatically.
 
 ## Open deviations to track
 
