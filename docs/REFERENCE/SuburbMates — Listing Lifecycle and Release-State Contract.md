@@ -28,8 +28,8 @@ This contract turns the owner-approved directory policy into a buildable model. 
 ## Required corrections and boundaries
 
 1. **Commercial neutrality:** public directory ranking must not order by `tier` or another commercial field. Commercial presentation belongs to its own future approved model.
-2. **Qualified default publication:** the approved target is deterministic publication of qualifying approved-source candidates as unclaimed listings. The current importer keeps new records in `pending_review`; changing that path belongs to `SUB-6` after its auditable candidate handoff is designed and proven.
-3. **Holding remains separate:** a `published` listing stays non-public while the global holding gate is active. Releasing public routes is governed by `SUB-14`, not an import or claim.
+2. **Qualified default publication:** the token-protected OpenStreetMap candidate handoff now creates a published, unclaimed listing only when the deterministic source, scope, contact, duplicate and safety checks pass. It persists the handoff record, provenance, qualification evidence and audit event first. The legacy CSV importer still keeps ordinary new rows in `pending_review`; the pre-existing catalogue has not yet been requalified under the handoff policy.
+3. **Public release remains separate:** a `published` listing becomes publicly browseable only while the global launch gate is enabled. The owner authorised the first public release on 23 July 2026; future release or rollback remains governed by `SUB-14`, not an import or claim.
 4. **Claims remain independent:** the approved normal exact-email path and its future exception/revocation flow never publish a listing or change commercial/SEO state.
 5. **Evidence remains precise:** an ABN or website result is stored as supporting evidence. It is not a universal entry requirement.
 
@@ -39,18 +39,18 @@ This contract turns the owner-approved directory policy into a buildable model. 
 stateDiagram-v2
   [*] --> draft
   draft --> pending_review: candidate or operator prepares record
-  pending_review --> published: approved current control / future qualified policy
+  pending_review --> published: operator decision or deterministic qualified handoff
   pending_review --> rejected: insufficient, duplicate, unsafe or out of scope
   published --> unpublished: reasoned safety, accuracy, privacy or closure decision
   unpublished --> pending_review: restore for review
   rejected --> pending_review: new evidence or correction
 ```
 
-Every transition requires the permitted actor, reason, timestamp and audit evidence. The current operator-only transition path is retained until `SUB-6` delivers an approved deterministic qualification handoff.
+Every transition requires the permitted actor, reason, timestamp and audit evidence. The candidate handoff is the narrow exception: it can create only a new unclaimed published listing after retaining deterministic qualification evidence; it cannot change ownership, resolve a claim, or publish a raw or exceptional candidate.
 
 ## `SUB-8` delivery boundary
 
-`SUB-8` verifies and corrects the shared model: state separation, operator transition protection, public projection and non-commercial ranking. It does not enable automatic candidate publication, lift holding mode, implement claim exceptions, or activate billing.
+`SUB-8` verifies and corrects the shared model: state separation, operator transition protection, public projection and non-commercial ranking. It did not itself enable automatic candidate publication, public release, claim exceptions, or billing; the later `SUB-6` candidate handoff owns the narrow deterministic creation path.
 
 ## Evidence required before review
 

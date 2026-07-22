@@ -27,7 +27,7 @@ GitHub website-safety evidence (active on main)
   -> GitHub issue only when review is needed
   -> no database write; no listing change
 
-GitHub production smoke (active on main; controlled holding-posture run succeeded)
+GitHub production smoke (active on main; public-release route run succeeded)
   -> public site + Supabase safe projections
   -> route, sitemap, access-control, and catalogue consistency checks
   -> GitHub issue only on failure
@@ -47,7 +47,7 @@ Supabase internal health monitor (active Ops process; outside Automation lane)
 | Repository verification | GitHub pull request; push to `main` or `codex/**` | Check out code; install Node 22 dependencies; run root checks; lint, build, and Cloudflare build for `web/` | GitHub Actions, Node.js, npm, Next.js, OpenNext/Cloudflare build tooling | Pass/fail GitHub check | **Active** | No hosted data write or deployment command |
 | Catalogue candidate discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; retain CSVs; send OSM candidates in authenticated batches to the qualification handoff | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, Cloudflare, Supabase, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days; private run and exception records in Ops | **Active on `main`; controlled private proof completed.** The first full scheduled discovery batch remains a separate release decision. | Only an approved-source candidate that passes deterministic source, scope, contact, duplicate and safety checks may create an unclaimed listing. Exceptions stay private in Ops. |
 | Website-safety evidence | Monday schedule at `08:41` UTC; manual dispatch | Read `published_vendors`; validate public DNS; make DNS-pinned HTTPS `HEAD` requests; follow at most three HTTPS redirects; write JSON report; fail when review is required; open/update one GitHub issue on failure | GitHub Actions, Supabase public projection, DNS, HTTPS, GitHub artifacts/issues | JSON report retained 30 days; one review issue if flagged | **Active on `main`; evidence run completed** — 588 checked, 86 flagged for review | No listing write; no automatic contact or publication decision |
-| Production smoke | Daily schedule at `19:23` Australia/Melbourne; manual dispatch | Check public routes; require unauthenticated Ops redirects; verify canonical redirects and invalid vendor 404; paginate safe Supabase projections; reconstruct and compare sitemap; sample a public vendor page; open/update one GitHub issue on failure | GitHub Actions, production Cloudflare site, Supabase public projections, GitHub issues | Pass/fail run; one failure issue if needed | **Active on `main`; controlled holding-posture run succeeded after the route-expectation fix** | No Supabase write; no deployment; no listing change |
+| Production smoke | Daily schedule at `19:23` Australia/Melbourne; manual dispatch | Check public routes; require unauthenticated Ops redirects; verify canonical redirects and invalid vendor 404; paginate safe Supabase projections; reconstruct and compare sitemap; sample a public vendor page; open/update one GitHub issue on failure | GitHub Actions, production Cloudflare site, Supabase public projections, GitHub issues | Pass/fail run; one failure issue if needed | **Active on `main`; public-release route verification is recorded** | No Supabase write; no deployment; no listing change |
 | Internal operations health | Supabase `pg_cron`, hourly at minute 5 | Count failed and overdue automation jobs; count listings needing review, pending claims, and pending profile changes; update integration-health rows; expose them through authenticated Ops RPCs | Supabase PostgreSQL, `pg_cron`, `automation_jobs`, operator workflow tables, `/ops/system` | `integration_health` status and queue counts | **Active Ops process; outside Automation lane** | Writes health records only; never changes listings, ownership, claims, payments, publication, billing, or tier |
 | Contact retention | Supabase `pg_cron`, daily at `03:17` UTC | Delete spam requests unchanged for 30 days and resolved requests unchanged for 12 months; append a retention audit event if content was deleted; update retention health | Supabase PostgreSQL, `pg_cron`, `contact_requests`, `audit_events`, `integration_health` | Retention health, deletion count, immutable audit evidence | **Active Ops process; outside Automation lane** | Deletes only eligible private contact-request content; never touches listings, ownership, claims, payments, or publication |
 | On-demand path revalidation | Authenticated `POST /api/webhook/revalidate` | Require bearer token; require a path/tag; call `revalidatePath`; return response | Next.js, Cloudflare runtime secret `REVALIDATION_TOKEN` | Cache revalidation response | **Available on demand** — no scheduled caller is evidenced | Does not write listing data; changes only rendered-path cache state |
@@ -91,7 +91,7 @@ For every published listing with a website, it retrieves only the safe `publishe
 
 Sources: `.github/workflows/production-smoke.yml` and `scripts/production-smoke.mjs`.
 
-It checks the public site and public database projections together: public routes, unauthenticated Ops redirects, canonical redirects, an invalid vendor route, public catalogue pagination, taxonomy eligibility, exact sitemap membership, category links, and one vendor page. A failure creates or updates one GitHub issue. It never writes to Supabase. Its holding-page expectation is merged and a controlled run succeeded on `main`.
+It checks the public site and public database projections together: public routes, unauthenticated Ops redirects, canonical redirects, an invalid vendor route, public catalogue pagination, taxonomy eligibility, exact sitemap membership, category links, and one vendor page. A failure creates or updates one GitHub issue. It never writes to Supabase. It supports both holding and released route expectations; live public-route verification is recorded in `SUB-14`.
 
 ### 5. Internal health and Ops display
 
@@ -121,7 +121,7 @@ This is intentionally narrower than general data pruning. It deletes only privat
 
 | Service | Automation role | Prohibited role |
 | --- | --- | --- |
-| GitHub Actions | Run checks, collect safe evidence, retain artifacts, and open one exception issue | Write to Supabase or publish a listing |
+| GitHub Actions | Run checks, collect safe evidence, retain artifacts, and call the token-protected approved-source candidate handoff | Bypass deterministic qualification, decide ownership or claims, or publish raw/exception candidates |
 | Supabase | Hold operational health, audit, and approved workflow data; run narrow internal schedules | Let automation bypass operator authorisation |
 | Cloudflare / Next.js | Serve protected event routes and the production site | Store server secrets in source or grant client authority |
 | OpenStreetMap / Overpass | Provide candidate-source data | Establish publication or ownership legitimacy on its own |
@@ -130,4 +130,4 @@ This is intentionally narrower than general data pruning. It deletes only privat
 
 ## Candidate handoff acceptance boundary
 
-The handoff is intentionally narrower than general automation. It must retain source provenance and exceptions, never ingest an unapproved source, and never make ownership or claim decisions. Holding mode remains independent: a qualified record can have a database publication state while the public directory remains intentionally unavailable. Before the first full scheduled batch is treated as accepted, an operator must review the private exception queue and confirm that the source, scope and duplicate outcomes are understandable.
+The handoff is intentionally narrower than general automation. It must retain source provenance and exceptions, never ingest an unapproved source, and never make ownership or claim decisions. Public release remains independent: a qualified record can be public only while the global launch gate is enabled. Before the first full scheduled batch is treated as accepted, an operator must review the private exception queue and confirm that the source, scope and duplicate outcomes are understandable.
