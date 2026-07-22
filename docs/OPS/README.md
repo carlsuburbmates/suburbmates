@@ -15,7 +15,7 @@ Write the reason in the decision note. The system keeps it as permanent audit ev
 
 ## Getting in
 
-Open `/ops` and sign in with `admin@suburbmates.com.au`. Open the email link in the same browser that requested it. If a link fails, wait for the stated email limit and use the newest link; do not repeatedly request more links.
+Open `/ops` and sign in with `admin@suburbmates.com.au`. Request a sign-in code, then enter the newest eight-digit code in the browser you are using. The email can be opened on another device. If a code fails, wait for the stated email limit before requesting another.
 
 ## Daily order
 

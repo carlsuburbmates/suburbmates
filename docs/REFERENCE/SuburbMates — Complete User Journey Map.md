@@ -39,7 +39,7 @@ mindmap
             Track request or claim outcome
               Manage profile changes
       Communications and account access
-        Magic-link sign in and recovery
+        Email-code sign in and recovery
         Approved status messages only
         Contact help and privacy intake
     Business not listed
@@ -150,7 +150,7 @@ This is a first-class service journey, not a background detail of claims or form
 
 ### Current holding posture
 
-The only approved outbound email is the passwordless sign-in link from `auth@suburbmates.com.au`. It supports the authorised operator's sign-in and recovery path. There is no public support inbox, contact dispatcher, marketing mail, bulk notification system or automatic retry loop.
+The only approved outbound email is the passwordless sign-in code from `auth@suburbmates.com.au`. It supports the authorised operator's sign-in and recovery path, including when the email is read on another device. There is no public support inbox, contact dispatcher, marketing mail, bulk notification system or automatic retry loop.
 
 ### Finished public posture
 
@@ -158,7 +158,7 @@ Before any new message is enabled, `SUB-15` must approve a message catalogue. Ea
 
 The possible public intents are:
 
-1. **Account access:** request a magic link, use it in the same browser, recover safely from an expired or superseded link, and reach only the authorised private area.
+1. **Account access:** request an email code, enter it in the browser being used, recover safely from an expired or superseded code, and reach only the authorised private area.
 2. **Claim or profile request status:** see the status in the authenticated product; any email is an approved supplement, never the only record.
 3. **Contact, help and privacy request:** select a plain-language request type, submit a private request, receive an honest on-screen outcome and, only where approved and permitted, a transactional reply.
 4. **Submission or report outcome:** receive a status through the approved channel only when a contact basis exists and the message catalogue permits it.

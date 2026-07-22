@@ -80,6 +80,13 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **First launch:** The initial public launch is complete when the minimum end-to-end journeys above are proven. Stripe, broad email, bulk ABN checks, AI publication and optional polish are not launch prerequisites.
 - **Evidence to close:** Update authority/issue descriptions; build the ready foundation work; then verify each public journey and release gate.
 
+### D-008 — Cross-device passwordless access
+
+- **Date:** 22 July 2026
+- **Decision:** The approved `auth@suburbmates.com.au` passwordless email uses an eight-digit, one-time code entered in the browser where the person wants to sign in. It replaces the browser-bound magic-link interaction.
+- **Guardrail:** This changes neither the approved sender nor any other communications capability. Codes expire through Supabase Auth, are single-use, and do not decide a claim, publication, ownership or any other product state.
+- **Evidence to close:** A live owner-device test of code delivery, expiry, supersession and successful session handoff, followed by removal of the temporary review callback.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |
