@@ -34,6 +34,7 @@ Reverified on 23 July 2026 (Australia/Melbourne):
 - the owner explicitly authorised public release; the public directory is live and indexable;
 - `/`, `/businesses`, a representative published profile, and a populated category route return successfully; `/sitemap.xml` contains 1,684 public URLs;
 - `www.suburbmates.com.au` permanently redirects to the apex domain and unauthenticated `/ops` remains protected behind sign-in;
+- the private existing-catalogue evidence pass classified all 1,600 published listings: 584 qualified and 1,016 retained as Ops exceptions. It made no listing-state change; see `docs/AUTOMATION/EXISTING_CATALOGUE_REQUALIFICATION_AUDIT.md`;
 - the full repository safety suite, web lint and production build passed on the release baseline. Lint has three existing non-blocking `img` performance warnings.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
@@ -136,7 +137,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260722031500` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260722155953` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth SMTP only at launch | Domain verified; passwordless email-code sign-in into `/ops` is the approved path |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
