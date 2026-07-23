@@ -61,6 +61,7 @@ function ExceptionCard({ record }: { record: CatalogueException }) {
       </div>
       <div className="mt-5 rounded-xl bg-amber-50 p-4"><p className="font-bold">Why it needs attention</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">{record.qualification_reasons.map((reason) => <li key={reason}>{reasonLabel(reason)}</li>)}</ul></div>
       {record.duplicate_vendor_id && <p className="mt-4 text-sm"><Link className="font-bold underline" href={`/ops/listings/${record.duplicate_vendor_id}`}>Review the possible matching listing</Link></p>}
+      <p className="mt-4 text-sm"><Link className="font-bold underline" href={`/ops/listings/${record.vendor_id}`}>Open this listing and make a listing decision</Link></p>
       <p className="mt-4 text-xs text-slate-500">Evidence pass completed {formatOpsDateTime(record.run_completed_at)}. This page does not make a listing decision.</p>
     </section>
   );
