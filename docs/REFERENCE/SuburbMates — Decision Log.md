@@ -115,6 +115,13 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Boundary:** This does not add a public account-registration screen, a new sender, marketing email, a general inbox, or application-managed authentication messages.
 - **Security rule:** Passwords must be at least 12 characters. The hosted plan does not include Supabase's optional breached-password check; the operator should use a unique password and may enable that provider feature only if the plan changes.
 - **Evidence required:** A real reset from the controlled email account, password sign-in in a separate browser/device, and confirmation that the fallback email-code path remains intact.
+
+### D-013 — Bulk automation evidence is not a manual Ops backlog
+
+- **Date:** 24 July 2026
+- **Decision:** Routine automated exclusions and repeated discovery events remain private audit evidence, not individual operator tasks. A person reviews only records that require genuine judgment, such as a possible duplicate with no separate automatic exclusion.
+- **Decision:** Existing-catalogue evidence gaps are a future batch data-improvement programme. They do not require the operator to process one listing at a time and do not change a listing's visibility by themselves.
+- **Boundary:** A confirmed duplicate, missing customer contact method, or unsupported category is safely held by automation. Automation does not merge uncertain duplicates, publish a held record, assign ownership, or delete evidence.
 - **Verified result:** Home, browse, a populated category route, a representative published profile and the sitemap return successfully. The sitemap contains 1,684 eligible public URLs; canonical and `www` redirect behaviour are correct; released pages no longer carry the holding-page `noindex` directive; `/ops` still redirects unauthenticated visitors to sign-in.
 - **Guardrail:** This authorisation does not enable Stripe, general outbound email, bulk ABN checks, AI publication, raw-candidate publication or automated ownership decisions.
 - **Outstanding evidence:** Complete real authenticated owner/submitter and operator walkthroughs, including the candidate-to-Ops, ABN evidence and owner-media paths. Any failure must be recorded and corrected; it is not a reason to publish additional listings.

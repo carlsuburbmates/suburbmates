@@ -37,8 +37,11 @@ type ContactOverview = {
 };
 
 type ActionOverview = {
-  candidate_exception_count: number;
-  catalogue_exception_count: number;
+  candidate_manual_review_count: number;
+  catalogue_manual_review_count: number;
+  candidate_background_unique_count: number;
+  candidate_repeated_event_count: number;
+  catalogue_background_count: number;
 };
 
 export default async function OpsOverviewPage() {
@@ -87,22 +90,25 @@ export default async function OpsOverviewPage() {
     spam_count: 0,
   }) as ContactOverview;
   const actionOverview = (actionResult.data?.[0] ?? {
-    candidate_exception_count: 0,
-    catalogue_exception_count: 0,
+    candidate_manual_review_count: 0,
+    catalogue_manual_review_count: 0,
+    candidate_background_unique_count: 0,
+    candidate_repeated_event_count: 0,
+    catalogue_background_count: 0,
   }) as ActionOverview;
 
   const systemExceptions = Number(systemOverview.failed_count) + Number(systemOverview.degraded_count) + Number(systemOverview.stale_count) + Number(systemOverview.failed_job_count);
   const openContactCount = Number(contactOverview.new_count) + Number(contactOverview.in_progress_count);
   const claimCount = Number(overview.pending_count) + Number(overview.needs_information_count);
-  const attentionCount = Number(listingOverview.review_count) + claimCount + Number(profileOverview.pending_count) + openContactCount + systemExceptions + Number(actionOverview.candidate_exception_count) + Number(actionOverview.catalogue_exception_count);
+  const attentionCount = Number(listingOverview.review_count) + claimCount + Number(profileOverview.pending_count) + openContactCount + systemExceptions + Number(actionOverview.candidate_manual_review_count) + Number(actionOverview.catalogue_manual_review_count);
   const actions = [
     Number(overview.pending_count) > 0 && { count: Number(overview.pending_count), title: "Review ownership claims", detail: "Decide whether each person has provided enough evidence to own the listed business.", href: "/ops/claims?status=pending", button: "Review claims" },
     Number(overview.needs_information_count) > 0 && { count: Number(overview.needs_information_count), title: "Check claims awaiting more information", detail: "Review new evidence or keep the ownership request waiting. Nothing changes automatically.", href: "/ops/claims?status=needs_information", button: "Open waiting claims" },
     Number(profileOverview.pending_count) > 0 && { count: Number(profileOverview.pending_count), title: "Review owner profile edits", detail: "Approve or reject proposed public listing changes.", href: "/ops/profile-edits?status=pending", button: "Review profile edits" },
     Number(contactOverview.new_count) > 0 && { count: Number(contactOverview.new_count), title: "Read new contact requests", detail: "Classify the request and record the next step. These requests do not change a listing by themselves.", href: "/ops/contact?status=new", button: "Open new requests" },
     Number(listingOverview.review_count) > 0 && { count: Number(listingOverview.review_count), title: "Review listings", detail: "Check the public facts and make the appropriate listing decision.", href: "/ops/listings?status=review", button: "Open listing review" },
-    Number(actionOverview.candidate_exception_count) > 0 && { count: Number(actionOverview.candidate_exception_count), title: "Triage discovered-business exceptions", detail: "Each candidate failed an automatic safety or data-quality rule. Acknowledge a follow-up or dismiss it as unsuitable.", href: "/ops/candidates?status=open", button: "Triage candidates" },
-    Number(actionOverview.catalogue_exception_count) > 0 && { count: Number(actionOverview.catalogue_exception_count), title: "Review existing catalogue exceptions", detail: "These older listings need evidence or a listing decision before they can be treated as fully qualified.", href: "/ops/catalogue-review?status=open", button: "Review catalogue evidence" },
+    Number(actionOverview.candidate_manual_review_count) > 0 && { count: Number(actionOverview.candidate_manual_review_count), title: "Review possible duplicate discoveries", detail: "These are the only new discoveries without another automatic exclusion. Check whether each is already in the directory.", href: "/ops/candidates?status=open", button: "Review possible duplicates" },
+    Number(actionOverview.catalogue_manual_review_count) > 0 && { count: Number(actionOverview.catalogue_manual_review_count), title: "Review possible duplicate listings", detail: "These older listings may duplicate another listing and need a human merge or keep decision.", href: "/ops/catalogue-review?status=open", button: "Review possible duplicates" },
     systemExceptions > 0 && { count: systemExceptions, title: "Resolve system exceptions", detail: "Check the plain-English status, then follow its recommended next step or ask for technical help.", href: "/ops/system", button: "Open system health" },
   ].filter(Boolean) as Array<{ count: number; title: string; detail: string; href: string; button: string }>;
 
@@ -135,6 +141,17 @@ export default async function OpsOverviewPage() {
           <div><h3 className="text-2xl font-black">Do these next</h3><p className="mt-1 text-sm text-slate-600">Only queues with real work appear here. Each button opens the exact items that need your decision.</p></div>
           <div className="grid gap-4 lg:grid-cols-2">
             {actions.map((action) => <ActionCard key={`${action.href}-${action.title}`} {...action} />)}
+          </div>
+        </section>
+      )}
+
+      {(Number(actionOverview.candidate_background_unique_count) > 0 || Number(actionOverview.catalogue_background_count) > 0) && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-bold">Background automation and evidence</h3>
+          <p className="mt-1 text-sm text-slate-600">These are retained for audit and future batch improvement. They are not a manual to-do list and do not affect publication by themselves.</p>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {Number(actionOverview.candidate_background_unique_count) > 0 && <article className="rounded-xl bg-slate-50 p-4"><p className="font-bold">{Number(actionOverview.candidate_background_unique_count).toLocaleString()} discoveries safely held</p><p className="mt-1 text-sm text-slate-600">They already have an automatic exclusion such as no customer contact method, a confirmed duplicate, or an unsupported category.</p>{Number(actionOverview.candidate_repeated_event_count) > 0 && <p className="mt-2 text-xs text-slate-500">{Number(actionOverview.candidate_repeated_event_count).toLocaleString()} repeat events were collapsed into this summary.</p>}</article>}
+            {Number(actionOverview.catalogue_background_count) > 0 && <article className="rounded-xl bg-slate-50 p-4"><p className="font-bold">{Number(actionOverview.catalogue_background_count).toLocaleString()} older listings need later evidence improvement</p><p className="mt-1 text-sm text-slate-600">Most lack a contact method, have an unsupported category, or need source evidence. This needs a future bulk data-improvement pass, not individual manual review.</p></article>}
           </div>
         </section>
       )}
