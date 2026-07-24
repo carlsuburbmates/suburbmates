@@ -10,6 +10,8 @@ Owner decisions and material implementation deviations are recorded in [SuburbMa
 
 The complete non-technical experience is defined in [SuburbMates — Complete User Journey Map](./SuburbMates%20%E2%80%94%20Complete%20User%20Journey%20Map.md). Its technical automation companion is `docs/AUTOMATION/WORKFLOWS.md`.
 
+The exact split between system follow-through and the solo operator's genuine decisions is defined in the [Operations Responsibility and Follow-through Map](./SuburbMates%20%E2%80%94%20Operations%20Responsibility%20and%20Follow-through%20Map.md).
+
 All execution follows [SuburbMates — Execution Governance and Readiness Protocol](./SuburbMates%20%E2%80%94%20Execution%20Governance%20and%20Readiness%20Protocol.md).
 
 The owner decisions that govern implementation are recorded in the [Decision Log](./SuburbMates%20%E2%80%94%20Decision%20Log.md), including D-007 and the authorised first public release.
