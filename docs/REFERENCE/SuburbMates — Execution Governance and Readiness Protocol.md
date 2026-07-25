@@ -64,7 +64,7 @@ If any item is missing, improve the issue or return it to Backlog. Do not begin 
 ### While implementing
 
 - Change only what the issue authorises.
-- Keep public holding, data and security boundaries active unless the issue explicitly and validly changes them.
+- Keep the current owner-approved release posture, data and security boundaries active unless the issue explicitly and validly changes them.
 - Use the smallest useful verification after each meaningful change.
 - Keep data migrations, user-facing flows, background work and Ops evidence aligned; do not ship only one layer of a journey.
 - Stop and escalate when evidence contradicts the issue, a migration/data effect is uncertain, a security boundary changes, or another lane has changed the same area.
@@ -119,9 +119,9 @@ Each issue belongs to the lane that owns its primary outcome. It may depend on w
 
 ## 8. Current controlled entry point
 
-`SUB-16` establishes this protocol. `SUB-7` is the first product decision gate: it reconciles claim policy, Communications scope, authority conflicts and journey acceptance before feature issues move to Todo.
+`SUB-16` established this protocol. Current issue status, ownership and acceptance evidence belong in Linear; this protocol must not duplicate a dated workboard snapshot.
 
-`SUB-5` remains in review as a bounded automation hardening change. `SUB-6` remains parked. The holding posture, public containment and disabled billing posture remain unchanged.
+The current release posture is defined by D-011 and the Target State and Operating Authority: the public directory is released, while protected data and security boundaries remain active. Billing remains disabled until separately approved.
 
 ## 9. Working cadence
 
