@@ -175,12 +175,13 @@ After deployment, verify the served production response—not only browser cache
 
 `.github/workflows/production-smoke.yml` repeats the public and access-control checks daily at no service cost. `scripts/production-smoke.mjs` paginates the public catalogue, reconstructs the expected sitemap, requires exact bidirectional URL equality, checks every category link, and samples a real vendor page. A failure opens or updates one GitHub issue; the workflow never writes to Supabase.
 
-## Remaining work
+## Operational boundaries and later real-world evidence
 
-1. Preserve the released Work/Businesses/System Ops model through a real-data desktop and narrow-mobile acceptance walkthrough after each material Ops change.
-2. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
-3. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
-4. Review weekly outbound-website evidence reports. The automated checker follows HTTPS redirects only after public-DNS validation, records evidence, and opens one review issue when needed; it never changes a listing automatically. Complete the real ABN and owner-media walkthroughs before treating their workflows as accepted.
+The released Work/Businesses/System Ops model has received real-data desktop and narrow-mobile acceptance. Repeat that acceptance after a material Ops change; it is a release check, not standing operator work.
+
+One original seed remains deliberately private until genuine evidence supports a listing decision. It must not be published by a migration or as a completion exercise. Historical catalogue provenance can be revisited only if a concrete new source requires an immutable evidence model beyond the existing `approved_import` record.
+
+Weekly outbound-website reports are background batch-improvement context. The checker follows HTTPS redirects only after public-DNS validation and never changes a listing or creates an operator task from a raw external failure. ABN evidence and owner-media workflows are protected and covered by automated boundary tests; their next live use occurs when a genuine owner case arises, not through fabricated acceptance records.
 
 ## Cleanup boundary
 
