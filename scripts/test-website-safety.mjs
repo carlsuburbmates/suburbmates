@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { collectWebsitePages, isPublicAddress, parseHttpsUrl } from "./website-safety.mjs";
 
 assert.equal(parseHttpsUrl("https://example.com/path").hostname, "example.com");
@@ -17,4 +18,9 @@ await assert.rejects(
   collectWebsitePages(async (from) => ({ data: from === 0 ? websites.slice(0, 1000) : [], count: websites.length })),
   /ended early/,
 );
+const workflow = fs.readFileSync(".github/workflows/website-safety.yml", "utf8");
+assert.match(workflow, /Record evidence summary/);
+assert.doesNotMatch(workflow, /Fail when review is needed/);
+assert.doesNotMatch(workflow, /website check\(s\) need review/);
+assert.doesNotMatch(workflow, /issues: write/);
 console.log("Website safety policy tests passed.");

@@ -21,7 +21,7 @@ Database health updates and contact retention are narrow, audited **Ops** proces
 
 - The internal Supabase health monitor and contact-retention job are active as Ops processes outside this lane.
 - GitHub has four active workflows on `main`: Verify, Catalogue candidate discovery, Website safety evidence, and Production smoke.
-- Catalogue discovery and Production smoke fixes were merged in pull requests #4 and #5. Controlled manual runs then succeeded on `main`. Website safety completed evidence collection and raised one operator review issue.
+- Catalogue discovery and Production smoke fixes were merged in pull requests #4 and #5. Controlled manual runs then succeeded on `main`. Website safety retains evidence artefacts without turning raw external failures into operator work.
 - Stripe billing, bulk ABR/ABN checks, AI publication, media/logo processing, and the legacy inactivity pruner are disabled.
 - Candidate-to-Ops handoff is implemented for approved OpenStreetMap batches. A full manual run on 22 July 2026 covered 1,545 source rows: 1,544 private exceptions and one deterministically qualified, unclaimed listing with retained provenance, contact and audit evidence. The protected exception queue remains normal ongoing Ops work.
 - The existing catalogue completed the private `existing-catalogue-v2` evidence pass on 26 July 2026: 619 qualified and 982 exceptions across 1,601 listings. It did not change listing visibility. These are background evidence records, not a queue for the operator to process one by one; only a genuine unresolved duplicate would be surfaced in Work.
@@ -29,7 +29,7 @@ Database health updates and contact retention are narrow, audited **Ops** proces
 
 ## Verified current gaps
 
-1. **Review website-safety evidence only when an issue is raised.** The controlled run checked 588 websites and flagged 86. The report is retained for 30 days in GitHub Actions and [issue #3](https://github.com/carlsuburbmates/suburbmates/issues/3) is the single review entry. No listing was changed.
+1. **Keep website-safety evidence as background context.** The checker retains a 30-day report of DNS, certificate, redirect and timeout outcomes. It does not change a listing or create an operator queue; a genuine application workflow failure still fails its GitHub run.
 2. **Keep GitHub evidence distinct from the database health badge.** GitHub workflow-result ingestion is not implemented. The candidate handoff records its own database run and job state, but a health row is still not proof that every GitHub workflow ran.
 3. **Maintain external-acquisition safeguards.** Bounded provider requests, response validation, fallback evidence and date-boundary tests are implemented. Any future change must preserve the same qualification and evidence boundary.
 4. **Cloudflare preview-build guard is enabled.** On 18 July, Cloudflare Workers Builds was verified with production branch `main` and non-production branch builds disabled. This prevents PR branches from producing automatic preview deployments.

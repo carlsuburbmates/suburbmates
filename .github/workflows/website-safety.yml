@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 concurrency:
   group: website-safety-evidence
@@ -35,18 +34,5 @@ jobs:
           retention-days: 30
           if-no-files-found: error
           path: artifacts/website-safety-report.json
-      - name: Fail when review is needed
-        run: node -e 'const report=require("./artifacts/website-safety-report.json"); if (report.flagged) { console.error(`${report.flagged} website check(s) need review.`); process.exit(1); }'
-      - name: Open or update one review issue
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          title='[Website safety] Evidence review needed'
-          body="Website safety evidence needs review: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. No listings were changed automatically."
-          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body "$body"
-          else
-            gh issue create --title "$title" --body "$body"
-          fi
+      - name: Record evidence summary
+        run: node -e 'const report=require("./artifacts/website-safety-report.json"); console.log(`Website evidence retained: ${report.total} checked, ${report.flagged} background exception(s).`);'
