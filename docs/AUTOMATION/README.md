@@ -2,7 +2,7 @@
 
 This folder is the canonical operational map for SuburbMates automation. It explains what the implemented automations do, what triggers them, which services they use, and their current operating status.
 
-It does not override the locked product and Ops authorities in `docs/REFERENCE/` or the current-state record in `docs/HANDOVER.md`. It records implementation evidence as at 23 July 2026. A pending target-state decision must be reconciled with the locked authorities before it changes production behaviour.
+It does not override the locked product and Ops authorities in `docs/REFERENCE/` or the current-state record in `docs/HANDOVER.md`. It records current implementation evidence. A pending target-state decision must be reconciled with the locked authorities before it changes production behaviour.
 
 ## Read first
 
@@ -24,14 +24,14 @@ Database health updates and contact retention are narrow, audited **Ops** proces
 - Catalogue discovery and Production smoke fixes were merged in pull requests #4 and #5. Controlled manual runs then succeeded on `main`. Website safety completed evidence collection and raised one operator review issue.
 - Stripe billing, bulk ABR/ABN checks, AI publication, media/logo processing, and the legacy inactivity pruner are disabled.
 - Candidate-to-Ops handoff is implemented for approved OpenStreetMap batches. A full manual run on 22 July 2026 covered 1,545 source rows: 1,544 private exceptions and one deterministically qualified, unclaimed listing with retained provenance, contact and audit evidence. The protected exception queue remains normal ongoing Ops work.
-- The existing 1,600-listing catalogue has completed a private deterministic evidence pass: 584 qualified and 1,016 exceptions. It did not change listing visibility; exceptions are available in protected Ops for follow-up.
+- The existing catalogue completed the private `existing-catalogue-v2` evidence pass on 26 July 2026: 619 qualified and 982 exceptions across 1,601 listings. It did not change listing visibility. These are background evidence records, not a queue for the operator to process one by one; only a genuine unresolved duplicate would be surfaced in Work.
 - The database health monitor does not ingest GitHub workflow runs or artefacts. Its green automation-queue status means only that the local job table has no failed or overdue rows; it is not evidence that GitHub checks ran.
 
 ## Verified current gaps
 
-1. **Review website-safety evidence.** The controlled run checked 588 websites and flagged 86. The report is retained for 30 days in GitHub Actions and [issue #3](https://github.com/carlsuburbmates/suburbmates/issues/3) is the single review entry. No listing was changed.
+1. **Review website-safety evidence only when an issue is raised.** The controlled run checked 588 websites and flagged 86. The report is retained for 30 days in GitHub Actions and [issue #3](https://github.com/carlsuburbmates/suburbmates/issues/3) is the single review entry. No listing was changed.
 2. **Keep GitHub evidence distinct from the database health badge.** GitHub workflow-result ingestion is not implemented. The candidate handoff records its own database run and job state, but a health row is still not proof that every GitHub workflow ran.
-3. **Harden external acquisition.** The current robustness work adds bounded provider requests, response validation, fallback evidence and date-boundary tests. It remains an unmerged candidate until CI and review evidence are attached.
+3. **Maintain external-acquisition safeguards.** Bounded provider requests, response validation, fallback evidence and date-boundary tests are implemented. Any future change must preserve the same qualification and evidence boundary.
 4. **Cloudflare preview-build guard is enabled.** On 18 July, Cloudflare Workers Builds was verified with production branch `main` and non-production branch builds disabled. This prevents PR branches from producing automatic preview deployments.
 
 ## Documentation rule

@@ -1,5 +1,11 @@
 # SuburbMates — Corrected Master Architecture and Execution Plan
 
+## Current authority and implementation status — 26 July 2026
+
+This document remains the detailed technical reference only where it agrees with the current [Target State and Operating Authority](./SuburbMates%20%E2%80%94%20Target%20State%20and%20Operating%20Authority.md) and [Decision Log](./SuburbMates%20%E2%80%94%20Decision%20Log.md). The public directory is released. The approved-source deterministic candidate handoff is implemented for new candidates; it retains evidence and may create an unclaimed public listing only after the current qualification policy passes.
+
+The historical sections below that describe a holding-only site, manual-only publication, Gemini-assisted public content, Stripe checkout/webhooks, payment-derived tiers, provider dashboards, or a Payments surface are not an active implementation brief. Billing remains disabled until a separately approved commercial model exists. New work must follow the Target State, Journey Map and Operations Responsibility and Follow-through Map rather than re-enabling those historical designs.
+
 ## Document status
 
 This document consolidates and corrects the complete platform blueprint supplied in this conversation.
