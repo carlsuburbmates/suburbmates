@@ -19,7 +19,6 @@ type Listing = {
   listing_source: string | null;
   ownership_status: string;
   is_published: boolean;
-  tier: string;
   moderation_reason: string | null;
   active_draft_id: string | null;
   draft_values: Record<string, string | null> | null;
@@ -80,7 +79,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Listing review</p>
           <h2 className="mt-2 text-4xl font-black tracking-tight">{listing.business_name}</h2>
-          <p className="mt-2 text-slate-600">{statusLabel(status ?? "unclassified")} · {listing.ownership_status} · {listing.tier}</p>
+          <p className="mt-2 text-slate-600">{statusLabel(status ?? "unclassified")} · {listing.ownership_status}</p>
         </div>
         {listing.is_published && publicSlug && <Link href={`/vendor/${publicSlug}`} className="btn btn-outline">View public profile</Link>}
       </div>
@@ -105,7 +104,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">ABN check</h3>
-        <p className="mt-2 text-sm text-slate-600">Use this only for a supplied ABN. The result is private evidence. It never publishes a listing, confirms ownership, changes ranking or changes a plan.</p>
+        <p className="mt-2 text-sm text-slate-600">Use this only for a supplied ABN. The result is private evidence. It never publishes a listing, confirms ownership, changes ranking or changes commercial status.</p>
         <form action={runAbnCheckAction} className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
           <input type="hidden" name="vendorId" value={vendorId} />
           <label className="block flex-1 text-sm font-bold">ABN<input name="abn" inputMode="numeric" pattern="[0-9 ]{11,20}" maxLength={20} required placeholder="11 digits" className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label>
@@ -136,7 +135,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Lifecycle action</h3>
-        <p className="mt-2 text-sm text-slate-600">Publication is your explicit decision. Ownership, ABN, payment and tier remain unchanged. Your decision note becomes a permanent record.</p>
+        <p className="mt-2 text-sm text-slate-600">Publication is your explicit decision. Ownership and ABN evidence remain unchanged. Your decision note becomes a permanent record.</p>
         <form action={decideListingAction} className="mt-5 space-y-4">
           <input type="hidden" name="vendorId" value={vendorId} />
           {(status === "pending_review" || status === "published") && listing.active_draft_id && (
@@ -184,12 +183,12 @@ function statusLabel(status: string) {
 
 function AbnResult({ status }: { status: string }) {
   const message = {
-    active: "ABN is active. The result has been saved as private evidence. It has not changed publication, ownership, ranking or plan.",
+    active: "ABN is active. The result has been saved as private evidence. It has not changed publication, ownership, ranking or commercial status.",
     inactive: "ABN is not active. The result has been saved as private evidence. Review it alongside the rest of the listing evidence.",
     invalid: "This number did not pass ABN validation. No external lookup was made; the result has been recorded privately.",
     not_found: "ABN Lookup did not find this number. The result has been saved as private evidence for review.",
     provider_failure: "ABN Lookup could not complete the check. Nothing else changed; try again later.",
-  }[status] ?? "ABN check recorded. It has not changed publication, ownership, ranking or plan.";
+  }[status] ?? "ABN check recorded. It has not changed publication, ownership, ranking or commercial status.";
   const caution = status !== "active";
   return <p role={caution ? "status" : undefined} className={`rounded-xl border p-4 font-semibold ${caution ? "border-amber-300 bg-amber-50 text-amber-900" : "border-green-300 bg-green-50 text-green-800"}`}>{message}</p>;
 }
@@ -224,5 +223,5 @@ const unpublishReasons = [
   { value: "inaccurate_listing", label: "Inaccurate listing" }, { value: "duplicate_listing", label: "Duplicate listing" },
   { value: "ownership_dispute", label: "Ownership dispute" }, { value: "privacy_or_legal_concern", label: "Privacy or legal concern" },
   { value: "investigation", label: "Investigation" }, { value: "operator_decision", label: "Operator decision" },
-  { value: "payment_presentation_correction", label: "Premium presentation correction only" }, { value: "other", label: "Other" },
+  { value: "other", label: "Other" },
 ] as const;

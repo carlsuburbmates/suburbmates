@@ -33,7 +33,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Date:** 19 July 2026
 - **Decision:** A business that deterministically qualifies from an approved source is intended to appear in the directory by default as an unclaimed listing. A business does not need to register, claim, provide an ABN or pay before it appears.
 - **Guardrail:** "Found" means an approved, in-scope, identifiable, deduplicated candidate without known material safety or legitimacy concerns. Provenance and the qualifying evidence must be retained. Exceptions remain visible to an operator and audit-recorded.
-- **Current state:** The token-protected OpenStreetMap handoff automatically creates a new unclaimed listing only after deterministic qualification and retained evidence. The existing 1,600-listing cohort completed a private requalification pass on 23 July 2026: 584 qualified and 1,016 exceptions, with no lifecycle or public-visibility change. The public launch gate remains enabled by the owner's release decision.
+- **Current state:** The token-protected OpenStreetMap handoff automatically creates a new unclaimed listing only after deterministic qualification and retained evidence. The existing catalogue completed a private requalification pass under `existing-catalogue-v2` on 26 July 2026: 619 qualified and 982 exceptions across 1,601 listings, with no lifecycle or public-visibility change. The public launch gate remains enabled by the owner's release decision.
 - **Required alignment:** Maintain and prove the qualification, evidence, duplicate, exception and lifecycle controls for every new approved-source candidate.
 - **Evidence to close:** Policy implementation, tests, controlled data-path verification, operator exception evidence and authorised public release verification.
 
@@ -122,7 +122,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Decision:** Routine automated exclusions and repeated discovery events remain private audit evidence, not individual operator tasks. A person reviews only records that require genuine judgment, such as a possible duplicate with no separate automatic exclusion.
 - **Decision:** Existing-catalogue evidence gaps are a future batch data-improvement programme. They do not require the operator to process one listing at a time and do not change a listing's visibility by themselves.
 - **Boundary:** A confirmed duplicate, missing customer contact method, or unsupported category is safely held by automation. Automation does not merge uncertain duplicates, publish a held record, assign ownership, or delete evidence.
-- **Verified result:** Home, browse, a populated category route, a representative published profile and the sitemap return successfully. The sitemap contains 1,684 eligible public URLs; canonical and `www` redirect behaviour are correct; released pages no longer carry the holding-page `noindex` directive; `/ops` still redirects unauthenticated visitors to sign-in.
+- **Verified result:** Home, browse, a populated category route, a representative published profile and the sitemap return successfully. The sitemap contains 1,685 eligible public URLs; canonical and `www` redirect behaviour are correct; released pages no longer carry the holding-page `noindex` directive; `/ops` still redirects unauthenticated visitors to sign-in.
 - **Guardrail:** This authorisation does not enable Stripe, general outbound email, bulk ABN checks, AI publication, raw-candidate publication or automated ownership decisions.
 - **Outstanding evidence:** Complete real authenticated owner/submitter and operator walkthroughs, including the candidate-to-Ops, ABN evidence and owner-media paths. Any failure must be recorded and corrected; it is not a reason to publish additional listings.
 
@@ -138,7 +138,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 
 | Deviation | Current truth | Required resolution |
 | --- | --- | --- |
-| Publication policy | New approved-source candidates that pass deterministic qualification become unclaimed public listings with retained evidence. The existing catalogue's 1,016 exceptions remain a private remediation queue; no retrospective visibility decision has been recorded. | Keep new-candidate controls operational and record a separate decision before changing visibility of existing listings. |
+| Publication policy | New approved-source candidates that pass deterministic qualification become unclaimed public listings with retained evidence. The existing catalogue's 982 `existing-catalogue-v2` exceptions remain a private remediation record; no retrospective visibility decision has been recorded. | Keep new-candidate controls operational and record a separate decision before changing visibility of existing listings. |
 | Public product | Public directory release is live with a populated sitemap and indexable released routes. | Maintain production route checks and correct any observed public-data or SEO defect. |
 | Owner and public input | Claim, status, profile correction and missing-business submission paths are implemented, but the real authenticated walkthrough set is not yet recorded. | Complete and record both user and Ops walkthroughs. |
 | Monetisation | Stripe is disabled. | Leave disabled until separately approved commercial scope exists. |

@@ -34,7 +34,7 @@ Reverified on 23 July 2026 (Australia/Melbourne):
 - the owner explicitly authorised public release; the public directory is live and indexable;
 - `/`, `/businesses`, a representative published profile, and a populated category route return successfully; `/sitemap.xml` contains 1,685 public URLs;
 - `www.suburbmates.com.au` permanently redirects to the apex domain and unauthenticated `/ops` remains protected behind sign-in;
-- the private existing-catalogue evidence pass classified all 1,600 published listings: 584 qualified and 1,016 retained as Ops exceptions. It made no listing-state change; see `docs/AUTOMATION/EXISTING_CATALOGUE_REQUALIFICATION_AUDIT.md`;
+- the latest private existing-catalogue evidence pass (`existing-catalogue-v2`, 26 July 2026) classified all 1,601 published listings: 619 qualified and 982 retained as background evidence exceptions. It made no listing-state change and does not create a manual operator backlog; see `docs/AUTOMATION/EXISTING_CATALOGUE_REQUALIFICATION_AUDIT.md`;
 - the full repository safety suite, web lint and production build passed on the release baseline. Lint has three existing non-blocking `img` performance warnings.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
@@ -90,7 +90,9 @@ Public directory reads use `public.published_vendors`, a safe projection contain
 
 `/ops` is deny-by-default and requires both a valid Supabase session and an active `operator_users` row. Service credentials are not an alternate operator identity.
 
-Implemented queues:
+The default Ops workspace is **Work**, which shows only genuine human decisions. **Businesses** is the operator register and **System** is quiet health/readiness context. The protected routes below remain deep links from those three surfaces; they are not a daily workflow checklist.
+
+Implemented protected workflows:
 
 - `/ops/listings`: draft, review, publish, reject, unpublish, restore, and legacy classification;
 - `/ops/claims`: reviewed ownership requests and revocation;
@@ -110,13 +112,13 @@ The permanent operator is `admin@suburbmates.com.au`; the hosted database has ex
 
 The safe automated discovery path is:
 
-1. acquire public-source candidates;
-2. normalize, audit, and deduplicate them;
-3. generate a review artifact;
-4. import new rows as `pending_review` and unpublished;
-5. let an operator review evidence and approve publication.
+1. acquire approved-source candidates;
+2. normalise, audit and deduplicate them;
+3. retain an evidence artefact and private handoff record;
+4. deterministically qualify each candidate against source, scope, contact, duplicate and safety rules; and
+5. create an unclaimed published listing only for a qualifying approved-source candidate while the public-release gate is enabled. Exceptions remain private; raw or uncertain records are never published.
 
-`scripts/seed.ts` preserves publication for existing rows and explicitly sets new rows to unpublished pending review. It must never auto-publish. Empty import fields must not erase existing stored values, and same-name businesses at different addresses must remain distinct.
+`scripts/seed.ts` is a controlled legacy import tool, not the approved-source discovery route. It preserves publication for existing rows and sets new seed rows to unpublished pending review. Empty import fields must not erase existing stored values, and same-name businesses at different addresses must remain distinct.
 
 The weekly GitHub `Catalogue Discovery` workflow acquires/audits/merges candidate evidence, uploads its artifact, and sends approved OpenStreetMap candidates to the authenticated qualification handoff. The handoff retains private evidence for every candidate; only a candidate that passes the deterministic policy may become an unclaimed public listing. It never publishes raw, uncertain or user-submitted data.
 
@@ -175,7 +177,7 @@ After deployment, verify the served production response—not only browser cache
 
 ## Remaining work
 
-1. Exercise every authenticated `/ops` queue in the browser, confirming each routine decision is clear to the non-technical operator and leaves the required audit evidence.
+1. Preserve the released Work/Businesses/System Ops model through a real-data desktop and narrow-mobile acceptance walkthrough after each material Ops change.
 2. Review the one remaining unpublished original seed using real evidence; do not publish it by migration.
 3. Decide whether historical catalogue source fields need a separate immutable evidence migration beyond their canonical `approved_import` provenance.
 4. Review weekly outbound-website evidence reports. The automated checker follows HTTPS redirects only after public-DNS validation, records evidence, and opens one review issue when needed; it never changes a listing automatically. Complete the real ABN and owner-media walkthroughs before treating their workflows as accepted.

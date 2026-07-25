@@ -140,4 +140,4 @@ Linear records the verified outcome
 
 ## Alignment required
 
-The older manual-publication wording in the Master Architecture, Unified Operations Specification and Handover must be revised to match this owner decision before the default-publication implementation is enabled. Until that alignment and its tests are complete, existing safe-off behaviour remains in force.
+The older manual-publication, holding-posture and billing wording in the Master Architecture, Unified Operations Specification and historical lane records must be clearly marked as superseded where it conflicts with this authority. The current approved-source default-publication implementation is enabled and tested for new candidates; its qualification, evidence and audit controls must remain intact. Existing-catalogue evidence remains private and does not itself change a listing's visibility.
