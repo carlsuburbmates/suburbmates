@@ -24,7 +24,7 @@ export default async function OpsCandidatesPage({ searchParams }: { searchParams
   const params = await searchParams;
   const status = statuses.includes(params.status as Status) ? (params.status as Status) : "open";
   const supabase = await createOpsDataClient();
-  const { data, error } = await supabase.rpc("ops_list_candidate_handoff_records", { p_status: status, p_limit: 100, p_offset: 0 });
+  const { data, error } = await supabase.rpc("ops_list_candidate_handoff_records", { p_status: status, p_limit: 100, p_offset: 0, p_record_id: null });
   if (error) throw new Error("The candidate exceptions could not be loaded.");
   const records = (data ?? []) as CandidateException[];
 

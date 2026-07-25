@@ -47,7 +47,7 @@ export function composeWorkItems(source: WorkSource): WorkItem[] {
     ...source.contacts.map((item) => ({ id: `contact:${item.contact_request_id}`, priority: "needs_decision" as const, kind: "contact" as const, title: item.business_name ?? item.requester_name, decision: `Review ${label(item.topic)} request`, evidence: "This private request does not change a listing by itself.", href: `/ops/contact/${item.contact_request_id}`, createdAt: item.created_at })),
     ...source.candidates
       .filter(isOnlyPossibleDuplicate)
-      .map((item) => ({ id: `candidate:${item.record_id}`, priority: "needs_decision" as const, kind: "candidate" as const, title: candidateName(item.candidate_data), decision: "Review a possible duplicate discovery", evidence: "This is private discovery evidence, not a Business or a publication decision.", href: "/ops/candidates?status=open", createdAt: item.created_at })),
+      .map((item) => ({ id: `candidate:${item.record_id}`, priority: "needs_decision" as const, kind: "candidate" as const, title: candidateName(item.candidate_data), decision: "Review a possible duplicate discovery", evidence: "This is private discovery evidence, not a Business or a publication decision.", href: `/ops/candidates/${item.record_id}`, createdAt: item.created_at })),
     ...source.catalogue
       .filter(isOnlyPossibleDuplicate)
       .map((item) => ({ id: `catalogue:${item.record_id}`, priority: "later_review" as const, kind: "catalogue" as const, title: item.business_name, decision: "Review an older possible duplicate", evidence: "This historic evidence needs a later listing decision; it is not urgent work.", href: `/ops/listings/${item.vendor_id}`, createdAt: item.created_at })),
