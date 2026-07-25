@@ -96,7 +96,7 @@ The following are build commitments, not indefinite deferrals:
 - a safe, evidence-backed media/logo capability when it improves a public listing; and
 - observable operational jobs, exception queues, audit history, mobile accessibility, SEO and public-route acceptance.
 
-These capabilities must be implemented with their relevant safety controls and verified before public release. They must not remain merely documented.
+The first public release is live. These capabilities must remain implemented with their relevant safety controls and verified whenever a release-affecting change is made; they must not become merely documented promises.
 
 ### Permanent guardrails
 
@@ -109,11 +109,11 @@ The following are prohibited product behaviours, not postponed features:
 - marketing email, uncontrolled retries, or an exposed public support inbox; and
 - broad service-role or privileged Edge-function paths that bypass the server-authorised workflow and audit boundaries.
 
-Default publication applies only after the qualification policy above is implemented, tested and operationally observable. Public contact intake becomes available with the public release rather than during the holding posture.
+Default publication applies only after the qualification policy above is implemented, tested and operationally observable. Public contact intake is available under the live public-release posture and remains subject to its approved validation, handling and communication boundaries.
 
-## Release gates
+## Release and change gates
 
-Before public directory release, prove that:
+The first public directory release has passed. Before any future release-affecting change, prove that:
 
 1. the public directory shows only qualifying published listings with accurate trust signals;
 2. `/ops` lets the authorised operator understand and complete routine exception, claim, correction and lifecycle work without provider dashboards;
