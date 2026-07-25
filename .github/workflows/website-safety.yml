@@ -35,4 +35,5 @@ jobs:
           if-no-files-found: error
           path: artifacts/website-safety-report.json
       - name: Record evidence summary
-        run: node -e 'const report=require("./artifacts/website-safety-report.json"); console.log(`Website evidence retained: ${report.total} checked, ${report.flagged} background exception(s).`);'
+        run: |
+          node -e 'const report=require("./artifacts/website-safety-report.json"); console.log(`Website evidence retained: ${report.total} checked, ${report.flagged} background exception(s).`);'
