@@ -7,6 +7,7 @@ const page = fs.readFileSync("web/src/app/ops/page.tsx", "utf8");
 const businesses = fs.readFileSync("web/src/app/ops/listings/page.tsx", "utf8");
 const system = fs.readFileSync("web/src/app/ops/system/page.tsx", "utf8");
 const registerMigration = fs.readFileSync("supabase/migrations/20260725120000_alphabetical_ops_business_register.sql", "utf8");
+const globalStyles = fs.readFileSync("web/src/app/globals.css", "utf8");
 const navigationMigration = fs.readFileSync("supabase/migrations/20260725133000_complete_ops_navigation_filters.sql", "utf8");
 
 assert.match(layout, /Work/);
@@ -40,6 +41,7 @@ assert.match(navigationMigration, /p_listing_source TEXT DEFAULT NULL/);
 assert.match(navigationMigration, /p_record_id UUID DEFAULT NULL/);
 assert.match(system, /Commercial readiness/);
 assert.match(system, /Billing is off/);
+assert.match(globalStyles, /@layer base\s*\{[\s\S]*?a\s*\{[\s\S]*?color:\s*inherit;/);
 for (const forbidden of ["work_items", "realtime", "Stripe checkout", "subscription", "invoice", "ABN request"]) {
   assert(!page.includes(forbidden) && !work.includes(forbidden), `Ops Work must not introduce ${forbidden}`);
 }
