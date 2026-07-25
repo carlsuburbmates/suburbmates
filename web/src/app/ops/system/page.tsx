@@ -39,13 +39,19 @@ export default async function OpsSystemPage() {
 
       <section className={`rounded-2xl border p-6 shadow-sm ${attention.length === 0 ? "border-green-200 bg-green-50" : "border-amber-300 bg-amber-50"}`}>
         <h3 className="text-xl font-bold">{attention.length === 0 ? "All clear" : `${attention.length} item${attention.length === 1 ? "" : "s"} need attention`}</h3>
-        {attention.length === 0 ? <p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p> : <div className="mt-4 space-y-3">{attention.map((item) => <article key={item.reference} className="rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: ask for technical help and quote reference {item.reference}.</p></article>)}</div>}
+        {attention.length === 0 ? <p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p> : <div className="mt-4 space-y-3">{attention.map((item) => <article id={item.reference} key={item.reference} className="scroll-mt-6 rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: ask for technical help and quote reference {item.reference}.</p></article>)}</div>}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">What is deliberately not active</h3>
         <p className="mt-1 text-sm text-slate-600">These are planned or optional services. They are not faults and do not need action unless you decide to introduce them.</p>
         {dormant.length === 0 ? <p className="mt-4 text-sm text-slate-600">No deliberately inactive services are currently recorded.</p> : <ul className="mt-4 space-y-2 text-sm text-slate-700">{dormant.map((item) => <li key={item.integration_name}><span className="font-semibold">{label(item.integration_name)}:</span> {dormantMessage(item)}</li>)}</ul>}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-xl font-bold">Commercial readiness</h3>
+        <p className="mt-2 text-sm text-slate-600">Billing is off. No paid offer is configured, and there is no payment action for you to take here.</p>
+        <p className="mt-3 text-sm text-slate-600">Future activation needs an approved benefit, price, entitlement rules, cancellation and refund handling, reconciliation, and verified implementation.</p>
       </section>
 
       <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">

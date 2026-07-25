@@ -2,7 +2,7 @@ import Link from "next/link";
 import { QueuePagination } from "@/components/ops/QueuePagination";
 import { createOpsDataClient } from "@/lib/ops/auth";
 
-const statuses = ["review", "unclassified", "draft", "pending_review", "published", "rejected", "unpublished"] as const;
+const statuses = ["all", "review", "unclassified", "draft", "pending_review", "published", "rejected", "unpublished"] as const;
 type Status = (typeof statuses)[number];
 
 type OpsListing = {
@@ -20,7 +20,7 @@ type OpsListing = {
 
 export default async function OpsListingsPage({ searchParams }: { searchParams: Promise<{ status?: string; q?: string; page?: string }> }) {
   const params = await searchParams;
-  const status = statuses.includes(params.status as Status) ? (params.status as Status) : "review";
+  const status = statuses.includes(params.status as Status) ? (params.status as Status) : "all";
   const q = typeof params.q === "string" ? params.q.slice(0, 200) : "";
   const page = pageNumber(params.page);
   const supabase = await createOpsDataClient();
@@ -40,9 +40,9 @@ export default async function OpsListingsPage({ searchParams }: { searchParams: 
   return (
     <div className="space-y-7">
       <div>
-        <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Listings</p>
-        <h2 className="mt-2 text-4xl font-black tracking-tight">Listing review queue</h2>
-        <p className="mt-3 max-w-3xl text-slate-600">Review source facts, prepare approved public fields and control publication without changing ownership, ABN, payment or tier state.</p>
+        <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Businesses</p>
+        <h2 className="mt-2 text-4xl font-black tracking-tight">Business register</h2>
+        <p className="mt-3 max-w-3xl text-slate-600">Search real directory records and open one business to see its authorised evidence, requests and safe actions. Private candidate records are not businesses.</p>
       </div>
 
       <form className="flex max-w-xl gap-3" action="/ops/listings">
@@ -72,7 +72,7 @@ export default async function OpsListingsPage({ searchParams }: { searchParams: 
                     {listing.active_draft_id && <Badge>Draft saved</Badge>}
                   </div>
                   <p className="mt-2 text-sm text-slate-600">{listing.category_slug ?? "No category"} · {listing.suburb_slug ?? "No location"}</p>
-                  <p className="mt-1 text-xs text-slate-500">Source: {listing.listing_source ?? "Unrecorded"} · Ownership: {statusLabel(listing.ownership_status)} · Tier: {listing.tier}</p>
+                  <p className="mt-1 text-xs text-slate-500">Source: {listing.listing_source ?? "Unrecorded"} · Ownership: {statusLabel(listing.ownership_status)}</p>
                 </div>
                 <Link href={`/ops/listings/${listing.vendor_id}`} className="font-bold underline underline-offset-4">Review</Link>
               </div>
@@ -90,6 +90,7 @@ function Badge({ children }: { children: React.ReactNode }) {
 }
 
 function statusLabel(value: string) {
+  if (value === "all") return "All businesses";
   if (value === "review") return "Attention";
   if (value === "unclassified") return "Needs classification";
   return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
