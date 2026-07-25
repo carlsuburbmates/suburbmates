@@ -10,7 +10,7 @@ export async function resolveCandidateExceptionAction(formData: FormData) {
   const recordId = String(formData.get("recordId") ?? "");
   const action = String(formData.get("action") ?? "");
   const note = String(formData.get("note") ?? "").trim();
-  const detailPath = "/ops/candidates";
+  const detailPath = `/ops/candidates/${recordId}`;
   const { supabase } = await verifyOpsAdmin(detailPath);
   if (!uuidPattern.test(recordId) || !["acknowledge", "dismiss"].includes(action) || note.length < 1 || note.length > 2000) {
     redirect(`${detailPath}?error=invalid`);
@@ -22,6 +22,7 @@ export async function resolveCandidateExceptionAction(formData: FormData) {
   });
   if (error) redirect(`${detailPath}?error=resolve`);
   revalidatePath("/ops");
+  revalidatePath("/ops/candidates");
   revalidatePath(detailPath);
   redirect(`${detailPath}?success=${action}`);
 }

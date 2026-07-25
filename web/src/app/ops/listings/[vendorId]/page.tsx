@@ -46,7 +46,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const message = await searchParams;
   const supabase = await createOpsDataClient();
   const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult, submissionResult, mediaResult] = await Promise.all([
-    supabase.rpc("ops_list_listings", { p_status: "all", p_query: null, p_vendor_id: vendorId, p_limit: 1, p_offset: 0 }),
+    supabase.rpc("ops_list_listings", { p_status: "all", p_query: null, p_vendor_id: vendorId, p_ownership_status: null, p_listing_source: null, p_limit: 1, p_offset: 0 }),
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase.rpc("ops_list_listing_evidence", { p_vendor_id: vendorId }),

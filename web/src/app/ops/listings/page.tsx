@@ -3,7 +3,11 @@ import { QueuePagination } from "@/components/ops/QueuePagination";
 import { createOpsDataClient } from "@/lib/ops/auth";
 
 const statuses = ["all", "review", "unclassified", "draft", "pending_review", "published", "rejected", "unpublished"] as const;
+const ownershipStatuses = ["all", "unclaimed", "claim_pending", "claimed", "owner_verified"] as const;
+const sources = ["all", "seeded_by_suburbmates", "operator_added", "business_submitted", "claimed_existing_listing", "approved_import"] as const;
 type Status = (typeof statuses)[number];
+type OwnershipStatus = (typeof ownershipStatuses)[number];
+type Source = (typeof sources)[number];
 
 type OpsListing = {
   vendor_id: string;
@@ -18,9 +22,11 @@ type OpsListing = {
   active_draft_id: string | null;
 };
 
-export default async function OpsListingsPage({ searchParams }: { searchParams: Promise<{ status?: string; q?: string; page?: string }> }) {
+export default async function OpsListingsPage({ searchParams }: { searchParams: Promise<{ status?: string; ownership?: string; source?: string; q?: string; page?: string }> }) {
   const params = await searchParams;
   const status = statuses.includes(params.status as Status) ? (params.status as Status) : "all";
+  const ownership = ownershipStatuses.includes(params.ownership as OwnershipStatus) ? (params.ownership as OwnershipStatus) : "all";
+  const source = sources.includes(params.source as Source) ? (params.source as Source) : "all";
   const q = typeof params.q === "string" ? params.q.slice(0, 200) : "";
   const page = pageNumber(params.page);
   const supabase = await createOpsDataClient();
@@ -28,6 +34,8 @@ export default async function OpsListingsPage({ searchParams }: { searchParams: 
     p_status: status,
     p_query: q || null,
     p_vendor_id: null,
+    p_ownership_status: ownership === "all" ? null : ownership,
+    p_listing_source: source === "all" ? null : source,
     p_limit: 101,
     p_offset: page * 100,
   });
@@ -35,7 +43,8 @@ export default async function OpsListingsPage({ searchParams }: { searchParams: 
   const results = (data ?? []) as OpsListing[];
   const listings = results.slice(0, 100);
   const hasNextPage = results.length > 100;
-  const pageHref = (targetPage: number) => `/ops/listings?${new URLSearchParams({ status, ...(q ? { q } : {}), ...(targetPage ? { page: String(targetPage) } : {}) }).toString()}`;
+  const pageHref = (targetPage: number) => `/ops/listings?${new URLSearchParams({ status, ownership, source, ...(q ? { q } : {}), ...(targetPage ? { page: String(targetPage) } : {}) }).toString()}`;
+  const filterHref = (nextStatus: Status) => `/ops/listings?${new URLSearchParams({ status: nextStatus, ownership, source, ...(q ? { q } : {}) }).toString()}`;
 
   return (
     <div className="space-y-7">
@@ -45,15 +54,21 @@ export default async function OpsListingsPage({ searchParams }: { searchParams: 
         <p className="mt-3 max-w-3xl text-slate-600">Search real directory records and open one business to see its authorised evidence, requests and safe actions. Private candidate records are not businesses.</p>
       </div>
 
-      <form className="flex max-w-xl gap-3" action="/ops/listings">
+      <form className="grid max-w-3xl gap-3 sm:grid-cols-[1fr_auto_auto_auto]" action="/ops/listings">
         <input type="hidden" name="status" value={status} />
         <input name="q" defaultValue={q} maxLength={200} placeholder="Search business name" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3" />
         <button className="btn btn-primary">Search</button>
+        <select aria-label="Filter by ownership" name="ownership" defaultValue={ownership} className="rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm font-semibold">
+          {ownershipStatuses.map((item) => <option key={item} value={item}>{ownershipLabel(item)}</option>)}
+        </select>
+        <select aria-label="Filter by source" name="source" defaultValue={source} className="rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm font-semibold">
+          {sources.map((item) => <option key={item} value={item}>{sourceLabel(item)}</option>)}
+        </select>
       </form>
 
       <nav className="flex flex-wrap gap-2" aria-label="Listing status filters">
         {statuses.map((item) => (
-          <Link key={item} href={`/ops/listings?status=${item}`} aria-current={item === status ? "page" : undefined}
+          <Link key={item} href={filterHref(item)} aria-current={item === status ? "page" : undefined}
             className={`rounded-full border px-4 py-2 text-sm font-bold ${item === status ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300 bg-white"}`}>
             {statusLabel(item)}
           </Link>
@@ -94,6 +109,14 @@ function statusLabel(value: string) {
   if (value === "review") return "Attention";
   if (value === "unclassified") return "Needs classification";
   return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function ownershipLabel(value: OwnershipStatus) {
+  return value === "all" ? "All ownership" : `Ownership: ${statusLabel(value)}`;
+}
+
+function sourceLabel(value: Source) {
+  return value === "all" ? "All sources" : `Source: ${statusLabel(value)}`;
 }
 
 function pageNumber(value: string | undefined) {

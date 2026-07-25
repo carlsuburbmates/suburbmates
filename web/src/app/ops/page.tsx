@@ -8,13 +8,13 @@ const pageSize = 200;
 export default async function OpsWorkPage() {
   const supabase = await createOpsDataClient();
   const [listings, pendingClaims, waitingClaims, profiles, newContacts, activeContacts, candidates, catalogue, health, jobs] = await Promise.all([
-    loadAll((offset) => supabase.rpc("ops_list_listings", { p_status: "review", p_query: null, p_vendor_id: null, p_limit: pageSize, p_offset: offset })),
+    loadAll((offset) => supabase.rpc("ops_list_listings", { p_status: "review", p_query: null, p_vendor_id: null, p_ownership_status: null, p_listing_source: null, p_limit: pageSize, p_offset: offset })),
     loadAll((offset) => supabase.rpc("ops_list_claim_requests", { p_status: "pending", p_claim_request_id: null, p_limit: pageSize, p_offset: offset })),
     loadAll((offset) => supabase.rpc("ops_list_claim_requests", { p_status: "needs_information", p_claim_request_id: null, p_limit: pageSize, p_offset: offset })),
     loadAll((offset) => supabase.rpc("ops_list_profile_changes", { p_status: "pending", p_change_request_id: null, p_limit: pageSize, p_offset: offset })),
     loadAll((offset) => supabase.rpc("ops_list_contact_requests", { p_status: "new", p_contact_request_id: null, p_limit: pageSize, p_offset: offset })),
     loadAll((offset) => supabase.rpc("ops_list_contact_requests", { p_status: "in_progress", p_contact_request_id: null, p_limit: pageSize, p_offset: offset })),
-    loadAll((offset) => supabase.rpc("ops_list_candidate_handoff_records", { p_status: "open", p_limit: pageSize, p_offset: offset })),
+    loadAll((offset) => supabase.rpc("ops_list_candidate_handoff_records", { p_status: "open", p_limit: pageSize, p_offset: offset, p_record_id: null })),
     loadAll((offset) => supabase.rpc("ops_list_existing_catalogue_requalification_exceptions", { p_status: "open", p_limit: pageSize, p_offset: offset })),
     onePage(() => supabase.rpc("ops_list_integration_health")),
     onePage(() => supabase.rpc("ops_list_automation_jobs", { p_limit: pageSize })),
