@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 const migration = fs.readFileSync("supabase/migrations/20260720080458_ops_audit_evidence_projection.sql", "utf8");
+const abnHealthCorrection = fs.readFileSync("supabase/migrations/20260725210822_correct_abn_health_readiness.sql", "utf8");
 const page = fs.readFileSync("web/src/app/ops/system/page.tsx", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION private\.redact_ops_audit_state/);
@@ -18,5 +19,9 @@ assert.match(page, /Is anything needing attention\?/);
 assert.match(page, /Everything currently monitored is operating normally/);
 assert.match(page, /What to do: ask for technical help/);
 assert.match(page, /Technical details and recent checks/);
+assert.match(page, /Bulk ABN checks/);
 assert.doesNotMatch(page, /metadata\.provider_error/);
+assert.match(abnHealthCorrection, /UPDATE public\.integration_health/);
+assert.match(abnHealthCorrection, /'abr_lookup'/);
+assert.match(abnHealthCorrection, /Bulk ABN checks are intentionally disabled/);
 console.log("Ops System explanation and audit boundary checks passed.");
