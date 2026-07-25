@@ -9,6 +9,12 @@ export default function DirectoryLayout({
 }>) {
   return (
     <div className="min-h-screen flex flex-col">
+      <a
+        href="#main-content"
+        className="sr-only absolute left-4 top-4 z-50 rounded-lg bg-white px-4 py-3 font-bold text-black shadow-lg focus:not-sr-only focus:outline-none focus:ring-4 focus:ring-black"
+      >
+        Skip to main content
+      </a>
       {/* ── Header ───────────────────────────────────────── */}
       <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b"
         style={{
@@ -16,26 +22,26 @@ export default function DirectoryLayout({
           borderColor: "var(--sm-border)",
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto h-16 px-4 sm:h-20 sm:px-6 flex items-center justify-between gap-3">
 
           {/* Logo */}
           <Link
             href="/"
-            className="text-2xl font-black tracking-tighter uppercase focus-visible:outline-none rounded"
+            className="text-xl font-black tracking-tighter uppercase focus-visible:outline-none rounded sm:text-2xl"
             style={{ color: "var(--sm-text-primary)" }}
             aria-label="SuburbMates home"
           >
             SuburbMates
           </Link>
 
-          <p className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: "var(--sm-text-tertiary)" }}>
+          <p className="hidden text-xs font-bold uppercase tracking-[0.16em] sm:block" style={{ color: "var(--sm-text-tertiary)" }}>
             {publicLaunchEnabled ? "Discover local businesses" : "Preparing for launch"}
           </p>
         </div>
       </header>
 
       {/* ── Main ─────────────────────────────────────────── */}
-      <main className="flex-grow pt-20" id="main-content">
+      <main className="flex-grow pt-16 sm:pt-20" id="main-content">
         {children}
       </main>
 

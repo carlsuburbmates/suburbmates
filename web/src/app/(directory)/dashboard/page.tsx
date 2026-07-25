@@ -12,7 +12,6 @@ type OwnerVendor = {
   business_name: string
   suburb_slug: string | null
   category_slug: string | null
-  tier: string
   is_published: boolean
   street_address: string | null
   contact_email: string | null
@@ -145,9 +144,6 @@ export default async function DashboardPage() {
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-800 px-2 py-0.5 rounded">Published</span>
                         ) : (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">Draft</span>
-                        )}
-                        {vendor.tier === 'premium' && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider bg-black text-white px-2 py-0.5 rounded">Premium</span>
                         )}
                       </div>
                       <p className="text-sm text-slate-500">

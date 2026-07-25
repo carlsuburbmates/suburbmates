@@ -6,12 +6,13 @@ async function source(path: string) {
 }
 
 async function run() {
-  const [home, browse, taxonomy, profile, contact] = await Promise.all([
+  const [home, browse, taxonomy, profile, contact, directoryLayout] = await Promise.all([
     source("web/src/app/(directory)/page.tsx"),
     source("web/src/app/(directory)/businesses/page.tsx"),
     source("web/src/app/(directory)/[suburb]/[service]/page.tsx"),
     source("web/src/app/vendor/[slug]/page.tsx"),
     source("web/src/components/minisite/contact/ContactComponents.tsx"),
+    source("web/src/app/(directory)/layout.tsx"),
   ]);
 
   assert.match(home, /NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED/, "public home must remain behind the launch flag");
@@ -22,6 +23,8 @@ async function run() {
   assert.doesNotMatch(taxonomy, /tier === "premium"/, "taxonomy results must not present an unapproved premium tier");
   assert.match(contact, /google\.com\/maps\/search/, "public address must provide a directions action");
   assert.match(profile, /listing_correction/, "profiles must provide a safe report-problem entry point");
+  assert.match(directoryLayout, /Skip to main content/, "public pages must offer a keyboard skip link");
+  assert.match(directoryLayout, /hidden[^\"]*sm:block/, "the fixed header must avoid mobile tagline overlap");
 
   console.log("Resident journey policy tests passed.");
 }

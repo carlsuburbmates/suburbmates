@@ -24,6 +24,7 @@ const valid = {
 };
 
 assert.equal(qualifyExistingCatalogueListing(valid, options).outcome, "qualified");
+assert.equal(qualifyExistingCatalogueListing({ ...valid, businessName: "Different Business", streetAddress: "2 Main Street" }, options).outcome, "qualified");
 assert(qualifyExistingCatalogueListing({ ...valid, phone: null, website: null, contactEmail: null }, options).reasons.includes("missing_reachable_contact"));
 assert(qualifyExistingCatalogueListing({ ...valid, listingSource: "seeded_by_suburbmates", sourceUrl: null, sourceCheckedOn: null }, options).reasons.includes("unproven_existing_provenance"));
 assert(qualifyExistingCatalogueListing({ ...valid, phone: "03 9000 0000" }, options).reasons.includes("strong_duplicate"));

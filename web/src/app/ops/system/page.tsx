@@ -39,13 +39,19 @@ export default async function OpsSystemPage() {
 
       <section className={`rounded-2xl border p-6 shadow-sm ${attention.length === 0 ? "border-green-200 bg-green-50" : "border-amber-300 bg-amber-50"}`}>
         <h3 className="text-xl font-bold">{attention.length === 0 ? "All clear" : `${attention.length} item${attention.length === 1 ? "" : "s"} need attention`}</h3>
-        {attention.length === 0 ? <p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p> : <div className="mt-4 space-y-3">{attention.map((item) => <article key={item.reference} className="rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: ask for technical help and quote reference {item.reference}.</p></article>)}</div>}
+        {attention.length === 0 ? <p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p> : <div className="mt-4 space-y-3">{attention.map((item) => <article id={item.reference} key={item.reference} className="scroll-mt-6 rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: ask for technical help and quote reference {item.reference}.</p></article>)}</div>}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">What is deliberately not active</h3>
         <p className="mt-1 text-sm text-slate-600">These are planned or optional services. They are not faults and do not need action unless you decide to introduce them.</p>
         {dormant.length === 0 ? <p className="mt-4 text-sm text-slate-600">No deliberately inactive services are currently recorded.</p> : <ul className="mt-4 space-y-2 text-sm text-slate-700">{dormant.map((item) => <li key={item.integration_name}><span className="font-semibold">{label(item.integration_name)}:</span> {dormantMessage(item)}</li>)}</ul>}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-xl font-bold">Commercial readiness</h3>
+        <p className="mt-2 text-sm text-slate-600">Billing is off. No paid offer is configured, and there is no payment action for you to take here.</p>
+        <p className="mt-3 text-sm text-slate-600">Future activation needs an approved benefit, price, entitlement rules, cancellation and refund handling, reconciliation, and verified implementation.</p>
       </section>
 
       <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -80,7 +86,7 @@ function HealthDetails({ item }: { item: Health }) { const details = safeHealthD
 function AuditState({ label: title, value }: { label: string; value: Record<string, unknown> | null }) { const entries = Object.entries(value ?? {}); return entries.length === 0 ? null : <p className="mt-2 text-xs text-slate-600"><span className="font-semibold">{title}:</span> {entries.map(([key, entry]) => `${label(key)} ${formatValue(entry)}`).join("; ")}</p>; }
 function safeHealthDetails(metadata: Record<string, unknown> | null) { if (!metadata) return [] as Array<[string, string]>; const labels: Record<string, string> = { monitoring: "Monitoring", mode: "Mode", schedule: "Schedule", domain: "Domain", failed_jobs: "Failed jobs", overdue_jobs: "Overdue jobs", listings_needing_review: "Listings needing review", pending_claims: "Pending claims", pending_profile_changes: "Pending profile edits" }; return Object.entries(labels).flatMap(([key, name]) => { const value = metadata[key]; return value === undefined ? [] : [[name, formatValue(value)] as [string, string]]; }); }
 function date(value: string) { return formatOpsDateTime(value); }
-function label(value: string) { return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()); }
+function label(value: string) { return value === "abr_lookup" ? "Bulk ABN checks" : value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()); }
 function text(value: unknown) { return typeof value === "string" && value.trim() ? value : null; }
 function number(value: unknown) { return typeof value === "number" && Number.isFinite(value) ? value : null; }
 function formatValue(value: unknown): string { return Array.isArray(value) ? value.map(formatValue).join(", ") : typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? String(value) : "recorded"; }

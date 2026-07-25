@@ -1,5 +1,11 @@
 # SuburbMates — Unified Operations Specification
 
+## Current authority and operating posture — 26 July 2026
+
+This is a detailed reference only where it agrees with the current [Target State and Operating Authority](./SuburbMates%20%E2%80%94%20Target%20State%20and%20Operating%20Authority.md), [Decision Log](./SuburbMates%20%E2%80%94%20Decision%20Log.md), and [Operations Responsibility and Follow-through Map](./SuburbMates%20%E2%80%94%20Operations%20Responsibility%20and%20Follow-through%20Map.md). The current protected Ops surface is **Work**, **Businesses** and **System**: Work contains only genuine human decisions; Businesses is the real directory register; System is quiet health/readiness context. Deep workflow routes remain protected implementation details, not top-level daily destinations.
+
+The historical Stripe, Payments, tier, payment-status, provider-dashboard, AI-content and manual-only-publication sections below are not active scope. Billing is off and must remain off until a separately approved commercial model exists. Deterministically qualifying approved-source candidates may become unclaimed listings with retained evidence; raw, uncertain or user-submitted candidates remain private. No future implementation may revive a historical section that conflicts with these controls.
+
 **Document status:** Standalone Phase 1 specification
 **Authority:** Subordinate to the corrected SuburbMates Master Architecture and Execution Plan
 **Primary operator:** One authorised solo operator

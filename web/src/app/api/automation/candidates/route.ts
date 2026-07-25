@@ -184,6 +184,11 @@ export async function POST(request: NextRequest) {
       const completedAt = new Date().toISOString();
       await admin.from("candidate_handoff_runs").update({ status: "completed", qualified_count: qualifiedCount, exception_count: exceptionCount, completed_at: completedAt }).eq("id", run.id);
       await admin.from("automation_jobs").update({ status: "succeeded", result: { qualified_count: qualifiedCount, exception_count: exceptionCount }, completed_at: completedAt }).eq("id", job.data.id);
+      await admin.from("automation_jobs")
+        .update({ status: "cancelled", error_message: "Safely superseded by a resumed candidate handoff attempt.", result: { recovered: true, recovered_by_job_id: job.data.id }, completed_at: completedAt })
+        .eq("correlation_id", run.correlation_id)
+        .eq("status", "failed")
+        .eq("error_message", "Candidate handoff exceeded the processing window and was safely resumed.");
       await admin.from("integration_health").upsert({ integration_name: "candidate_handoff", status: "healthy", last_success_at: completedAt, metadata: { last_run_id: run.id, qualified_count: qualifiedCount, exception_count: exceptionCount } }, { onConflict: "integration_name" });
       return NextResponse.json({ received: true, idempotent: false, runId: run.id, qualifiedCount, exceptionCount });
     } catch (error) {

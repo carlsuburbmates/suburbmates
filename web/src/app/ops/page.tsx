@@ -1,156 +1,67 @@
 import Link from "next/link";
+import { formatOpsDate } from "@/lib/ops/date";
 import { createOpsDataClient } from "@/lib/ops/auth";
+import { composeWorkItems, workPriorityOrder, type WorkItem, type WorkPriority, type WorkSource } from "@/lib/ops/work";
 
-type ClaimOverview = {
-  pending_count: number;
-  needs_information_count: number;
-  approved_count: number;
-  rejected_count: number;
-  revoked_count: number;
-};
+const pageSize = 200;
 
-type ProfileChangeOverview = {
-  pending_count: number;
-  approved_count: number;
-  rejected_count: number;
-};
-
-type ListingOverview = {
-  review_count: number;
-  published_count: number;
-  rejected_count: number;
-  unpublished_count: number;
-};
-
-type SystemOverview = {
-  failed_count: number;
-  degraded_count: number;
-  stale_count: number;
-  failed_job_count: number;
-};
-
-type ContactOverview = {
-  new_count: number;
-  in_progress_count: number;
-  resolved_count: number;
-  spam_count: number;
-};
-
-type ActionOverview = {
-  candidate_exception_count: number;
-  catalogue_exception_count: number;
-};
-
-export default async function OpsOverviewPage() {
+export default async function OpsWorkPage() {
   const supabase = await createOpsDataClient();
-  const [listingResult, claimResult, profileResult, contactResult, systemResult, actionResult] = await Promise.all([
-    supabase.rpc("ops_listing_overview"),
-    supabase.rpc("ops_claim_overview"),
-    supabase.rpc("ops_profile_change_overview"),
-    supabase.rpc("ops_contact_overview"),
-    supabase.rpc("ops_system_overview"),
-    supabase.rpc("ops_action_overview"),
+  const [listings, pendingClaims, waitingClaims, profiles, newContacts, activeContacts, candidates, catalogue, health, jobs] = await Promise.all([
+    loadAll((offset) => supabase.rpc("ops_list_listings", { p_status: "review", p_query: null, p_vendor_id: null, p_ownership_status: null, p_listing_source: null, p_limit: pageSize, p_offset: offset })),
+    loadAll((offset) => supabase.rpc("ops_list_claim_requests", { p_status: "pending", p_claim_request_id: null, p_limit: pageSize, p_offset: offset })),
+    loadAll((offset) => supabase.rpc("ops_list_claim_requests", { p_status: "needs_information", p_claim_request_id: null, p_limit: pageSize, p_offset: offset })),
+    loadAll((offset) => supabase.rpc("ops_list_profile_changes", { p_status: "pending", p_change_request_id: null, p_limit: pageSize, p_offset: offset })),
+    loadAll((offset) => supabase.rpc("ops_list_contact_requests", { p_status: "new", p_contact_request_id: null, p_limit: pageSize, p_offset: offset })),
+    loadAll((offset) => supabase.rpc("ops_list_contact_requests", { p_status: "in_progress", p_contact_request_id: null, p_limit: pageSize, p_offset: offset })),
+    loadAll((offset) => supabase.rpc("ops_list_candidate_handoff_records", { p_status: "open", p_limit: pageSize, p_offset: offset, p_record_id: null })),
+    loadAll((offset) => supabase.rpc("ops_list_existing_catalogue_requalification_exceptions", { p_status: "open", p_limit: pageSize, p_offset: offset })),
+    onePage(() => supabase.rpc("ops_list_integration_health")),
+    onePage(() => supabase.rpc("ops_list_automation_jobs", { p_limit: pageSize })),
   ]);
 
-  if (listingResult.error || claimResult.error || profileResult.error || contactResult.error || systemResult.error || actionResult.error) {
-    throw new Error("The operations overview could not be loaded.");
+  const items = composeWorkItems({
+    listings: listings as WorkSource["listings"],
+    claims: [...pendingClaims, ...waitingClaims] as WorkSource["claims"],
+    profiles: profiles as WorkSource["profiles"],
+    contacts: [...newContacts, ...activeContacts] as WorkSource["contacts"],
+    candidates: candidates as WorkSource["candidates"],
+    catalogue: catalogue as WorkSource["catalogue"],
+    health: health as WorkSource["health"],
+    jobs: jobs as WorkSource["jobs"],
+  });
+  const grouped = new Map(workPriorityOrder.map((priority) => [priority, items.filter((item) => item.priority === priority)]));
+
+  return <div className="space-y-8">
+    <header className="max-w-3xl"><p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Work</p><h2 className="mt-2 text-4xl font-black tracking-tight">What needs your judgment?</h2><p className="mt-3 text-slate-600">Only real decisions appear here. Background automation is kept out of your way.</p></header>
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-5"><div><p className="text-sm font-semibold text-slate-600">All open work</p><p className="mt-1 text-4xl font-black tabular-nums">{items.length}</p></div><Link href="#all-work" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-bold text-white">Open work list</Link></div></section>
+    {items.length === 0 ? <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7"><h3 className="text-xl font-bold text-emerald-950">Nothing needs your decision right now</h3><p className="mt-2 text-sm text-emerald-900">The monitored queues are clear. Background evidence remains available in System if it is ever needed.</p></section> : <section id="all-work" className="space-y-8" aria-label="All open work">{workPriorityOrder.map((priority) => <WorkGroup key={priority} priority={priority} items={grouped.get(priority) ?? []} />)}</section>}
+    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600"><p className="font-semibold text-slate-800">Quiet background context</p><p className="mt-1">Automatic exclusions, repeat discoveries and historic evidence gaps are retained for audit and future batch improvement. They are not work for you to process one by one.</p><Link href="/ops/system" className="mt-3 inline-block font-bold underline underline-offset-4">Open System</Link></section>
+  </div>;
+}
+
+function WorkGroup({ priority, items }: { priority: WorkPriority; items: WorkItem[] }) {
+  const copy: Record<WorkPriority, [string, string]> = { act_now: ["Act now", "A real technical, safety, privacy or security issue needs attention."], needs_decision: ["Needs a decision", "Open an item to see its evidence and the safe choices already available."], later_review: ["Later review", "Older possible duplicates are worth reviewing, but they are not urgent."] };
+  const [title, detail] = copy[priority];
+  if (!items.length) return null;
+  return <section><div className="mb-3 flex items-baseline justify-between gap-4"><div><h3 className="text-2xl font-black tracking-tight">{title}</h3><p className="mt-1 text-sm text-slate-600">{detail}</p></div><span className="rounded-full bg-slate-200 px-3 py-1 text-sm font-bold tabular-nums">{items.length}</span></div><div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">{items.map((item) => <WorkRow key={item.id} item={item} />)}</div></section>;
+}
+
+function WorkRow({ item }: { item: WorkItem }) {
+  return <Link href={item.href} className="group flex min-h-28 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 last:border-b-0 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-indigo-600 hover:bg-slate-50"><div className="min-w-0"><p className="font-bold text-slate-950">{item.title}</p><p className="mt-1 text-sm font-semibold text-slate-700">{item.decision}</p><p className="mt-1 text-sm text-slate-600">{item.evidence}</p>{item.createdAt && <p className="mt-2 text-xs text-slate-500">Recorded {formatOpsDate(item.createdAt)}</p>}</div><span aria-hidden="true" className="text-xl font-bold text-slate-400 transition-transform motion-reduce:transition-none group-hover:translate-x-0.5">›</span></Link>;
+}
+
+async function onePage<T>(request: () => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
+  const result = await request();
+  if (result.error) throw new Error("The Work list could not be loaded.");
+  return result.data ?? [];
+}
+
+async function loadAll<T>(request: (offset: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
+  const results: T[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await onePage(() => request(offset));
+    results.push(...page);
+    if (page.length < pageSize) return results;
   }
-
-  const overview = (claimResult.data?.[0] ?? {
-    pending_count: 0,
-    needs_information_count: 0,
-    approved_count: 0,
-    rejected_count: 0,
-    revoked_count: 0,
-  }) as ClaimOverview;
-  const profileOverview = (profileResult.data?.[0] ?? {
-    pending_count: 0,
-    approved_count: 0,
-    rejected_count: 0,
-  }) as ProfileChangeOverview;
-  const listingOverview = (listingResult.data?.[0] ?? {
-    review_count: 0,
-    published_count: 0,
-    rejected_count: 0,
-    unpublished_count: 0,
-  }) as ListingOverview;
-  const systemOverview = (systemResult.data?.[0] ?? {
-    failed_count: 0,
-    degraded_count: 0,
-    stale_count: 0,
-    failed_job_count: 0,
-  }) as SystemOverview;
-  const contactOverview = (contactResult.data?.[0] ?? {
-    new_count: 0,
-    in_progress_count: 0,
-    resolved_count: 0,
-    spam_count: 0,
-  }) as ContactOverview;
-  const actionOverview = (actionResult.data?.[0] ?? {
-    candidate_exception_count: 0,
-    catalogue_exception_count: 0,
-  }) as ActionOverview;
-
-  const systemExceptions = Number(systemOverview.failed_count) + Number(systemOverview.degraded_count) + Number(systemOverview.stale_count) + Number(systemOverview.failed_job_count);
-  const openContactCount = Number(contactOverview.new_count) + Number(contactOverview.in_progress_count);
-  const claimCount = Number(overview.pending_count) + Number(overview.needs_information_count);
-  const attentionCount = Number(listingOverview.review_count) + claimCount + Number(profileOverview.pending_count) + openContactCount + systemExceptions + Number(actionOverview.candidate_exception_count) + Number(actionOverview.catalogue_exception_count);
-  const actions = [
-    Number(overview.pending_count) > 0 && { count: Number(overview.pending_count), title: "Review ownership claims", detail: "Decide whether each person has provided enough evidence to own the listed business.", href: "/ops/claims?status=pending", button: "Review claims" },
-    Number(overview.needs_information_count) > 0 && { count: Number(overview.needs_information_count), title: "Check claims awaiting more information", detail: "Review new evidence or keep the ownership request waiting. Nothing changes automatically.", href: "/ops/claims?status=needs_information", button: "Open waiting claims" },
-    Number(profileOverview.pending_count) > 0 && { count: Number(profileOverview.pending_count), title: "Review owner profile edits", detail: "Approve or reject proposed public listing changes.", href: "/ops/profile-edits?status=pending", button: "Review profile edits" },
-    Number(contactOverview.new_count) > 0 && { count: Number(contactOverview.new_count), title: "Read new contact requests", detail: "Classify the request and record the next step. These requests do not change a listing by themselves.", href: "/ops/contact?status=new", button: "Open new requests" },
-    Number(listingOverview.review_count) > 0 && { count: Number(listingOverview.review_count), title: "Review listings", detail: "Check the public facts and make the appropriate listing decision.", href: "/ops/listings?status=review", button: "Open listing review" },
-    Number(actionOverview.candidate_exception_count) > 0 && { count: Number(actionOverview.candidate_exception_count), title: "Triage discovered-business exceptions", detail: "Each candidate failed an automatic safety or data-quality rule. Acknowledge a follow-up or dismiss it as unsuitable.", href: "/ops/candidates?status=open", button: "Triage candidates" },
-    Number(actionOverview.catalogue_exception_count) > 0 && { count: Number(actionOverview.catalogue_exception_count), title: "Review existing catalogue exceptions", detail: "These older listings need evidence or a listing decision before they can be treated as fully qualified.", href: "/ops/catalogue-review?status=open", button: "Review catalogue evidence" },
-    systemExceptions > 0 && { count: systemExceptions, title: "Resolve system exceptions", detail: "Check the plain-English status, then follow its recommended next step or ask for technical help.", href: "/ops/system", button: "Open system health" },
-  ].filter(Boolean) as Array<{ count: number; title: string; detail: string; href: string; button: string }>;
-
-  return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Overview</p>
-        <h2 className="mt-2 text-4xl font-black tracking-tight">Items needing attention</h2>
-        <p className="mt-3 max-w-2xl text-slate-600">
-          Routine review stays here. External dashboards are only needed for account setup or exceptional incidents.
-        </p>
-      </div>
-
-      <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-6" aria-label="Operations summary">
-        <SummaryCard label="All open work" value={attentionCount} urgent={attentionCount > 0} />
-        <SummaryCard label="Listings to review" value={Number(listingOverview.review_count)} />
-        <SummaryCard label="Claims to review" value={claimCount} />
-        <SummaryCard label="Profile edits" value={Number(profileOverview.pending_count)} />
-        <SummaryCard label="Contact requests" value={openContactCount} />
-        <SummaryCard label="System exceptions" value={systemExceptions} urgent={systemExceptions > 0} />
-      </section>
-
-      {actions.length === 0 ? (
-        <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 shadow-sm">
-          <h3 className="text-xl font-bold text-emerald-950">Nothing needs your decision right now</h3>
-          <p className="mt-2 text-sm text-emerald-900">The queues are clear and the monitored system checks are normal. You do not need to work through the tabs.</p>
-        </section>
-      ) : (
-        <section aria-label="Next actions" className="space-y-4">
-          <div><h3 className="text-2xl font-black">Do these next</h3><p className="mt-1 text-sm text-slate-600">Only queues with real work appear here. Each button opens the exact items that need your decision.</p></div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {actions.map((action) => <ActionCard key={`${action.href}-${action.title}`} {...action} />)}
-          </div>
-        </section>
-      )}
-    </div>
-  );
-}
-
-function ActionCard({ count, title, detail, href, button }: { count: number; title: string; detail: string; href: string; button: string }) {
-  return <section className="rounded-2xl border border-amber-300 bg-amber-50 p-6 shadow-sm"><div className="flex items-start gap-4"><p className="rounded-xl bg-amber-200 px-3 py-2 text-2xl font-black tabular-nums text-amber-950">{count}</p><div><h3 className="text-lg font-bold text-slate-950">{title}</h3><p className="mt-2 text-sm text-slate-700">{detail}</p><Link href={href} className="mt-4 inline-flex font-bold underline underline-offset-4">{button} →</Link></div></div></section>;
-}
-
-function SummaryCard({ label, value, urgent = false }: { label: string; value: number; urgent?: boolean }) {
-  return (
-    <div className={`rounded-2xl border p-6 shadow-sm ${urgent ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white"}`}>
-      <p className="text-sm font-semibold text-slate-600">{label}</p>
-      <p className="mt-3 text-4xl font-black tabular-nums">{value}</p>
-    </div>
-  );
 }

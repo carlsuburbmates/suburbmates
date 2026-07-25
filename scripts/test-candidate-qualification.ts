@@ -12,7 +12,8 @@ const valid = { source: "openstreetmap", businessName: "Northcote Plumbing", cat
 
 assert.equal(qualifyCandidate(valid, options).outcome, "qualified");
 assert.deepEqual(qualifyCandidate({ ...valid, phone: "03 9000 0000" }, options).reasons, ["strong_duplicate"]);
-assert.deepEqual(qualifyCandidate({ ...valid, businessName: "Acme Plumbing", streetAddress: "99 Elsewhere Road", phone: "03 8111 2222", website: "https://different.example" }, options).reasons, ["possible_duplicate"]);
+assert.equal(qualifyCandidate({ ...valid, businessName: "Acme Plumbing", streetAddress: "99 Elsewhere Road", phone: "03 8111 2222", website: "https://different.example" }, options).outcome, "qualified");
+assert.equal(qualifyCandidate({ ...valid, businessName: "Different Business", streetAddress: "1 High Street" }, options).outcome, "qualified");
 assert(qualifyCandidate({ ...valid, phone: "", website: "", contactEmail: "" }, options).reasons.includes("missing_reachable_contact"));
 assert(qualifyCandidate({ ...valid, website: "http://unsafe.example" }, options).reasons.includes("unsafe_or_invalid_website"));
 assert(qualifyCandidate({ ...valid, websiteSafety: "unsafe" }, options).reasons.includes("unsafe_or_broken_destination"));

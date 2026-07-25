@@ -10,6 +10,8 @@ Owner decisions and material implementation deviations are recorded in [SuburbMa
 
 The complete non-technical experience is defined in [SuburbMates — Complete User Journey Map](./SuburbMates%20%E2%80%94%20Complete%20User%20Journey%20Map.md). Its technical automation companion is `docs/AUTOMATION/WORKFLOWS.md`.
 
+The exact split between system follow-through and the solo operator's genuine decisions is defined in the [Operations Responsibility and Follow-through Map](./SuburbMates%20%E2%80%94%20Operations%20Responsibility%20and%20Follow-through%20Map.md).
+
 All execution follows [SuburbMates — Execution Governance and Readiness Protocol](./SuburbMates%20%E2%80%94%20Execution%20Governance%20and%20Readiness%20Protocol.md).
 
 The owner decisions that govern implementation are recorded in the [Decision Log](./SuburbMates%20%E2%80%94%20Decision%20Log.md), including D-007 and the authorised first public release.
@@ -94,7 +96,7 @@ The following are build commitments, not indefinite deferrals:
 - a safe, evidence-backed media/logo capability when it improves a public listing; and
 - observable operational jobs, exception queues, audit history, mobile accessibility, SEO and public-route acceptance.
 
-These capabilities must be implemented with their relevant safety controls and verified before public release. They must not remain merely documented.
+The first public release is live. These capabilities must remain implemented with their relevant safety controls and verified whenever a release-affecting change is made; they must not become merely documented promises.
 
 ### Permanent guardrails
 
@@ -107,11 +109,11 @@ The following are prohibited product behaviours, not postponed features:
 - marketing email, uncontrolled retries, or an exposed public support inbox; and
 - broad service-role or privileged Edge-function paths that bypass the server-authorised workflow and audit boundaries.
 
-Default publication applies only after the qualification policy above is implemented, tested and operationally observable. Public contact intake becomes available with the public release rather than during the holding posture.
+Default publication applies only after the qualification policy above is implemented, tested and operationally observable. Public contact intake is available under the live public-release posture and remains subject to its approved validation, handling and communication boundaries.
 
-## Release gates
+## Release and change gates
 
-Before public directory release, prove that:
+The first public directory release has passed. Before any future release-affecting change, prove that:
 
 1. the public directory shows only qualifying published listings with accurate trust signals;
 2. `/ops` lets the authorised operator understand and complete routine exception, claim, correction and lifecycle work without provider dashboards;
@@ -138,4 +140,4 @@ Linear records the verified outcome
 
 ## Alignment required
 
-The older manual-publication wording in the Master Architecture, Unified Operations Specification and Handover must be revised to match this owner decision before the default-publication implementation is enabled. Until that alignment and its tests are complete, existing safe-off behaviour remains in force.
+The older manual-publication, holding-posture and billing wording in the Master Architecture, Unified Operations Specification and historical lane records must be clearly marked as superseded where it conflicts with this authority. The current approved-source default-publication implementation is enabled and tested for new candidates; its qualification, evidence and audit controls must remain intact. Existing-catalogue evidence remains private and does not itself change a listing's visibility.

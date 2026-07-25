@@ -42,7 +42,8 @@
     "submitter-owner-identity:test": "tsx scripts/test-submitter-owner-identity-boundary.ts",
     "owner-submitted-business-candidate:test": "tsx scripts/test-owner-submitted-business-candidate-boundary.ts",
     "ops-system:test": "tsx scripts/test-ops-system-boundary.ts",
-    "ops-action-queue:test": "tsx scripts/test-ops-action-queue-boundary.ts",
+    "ops-action-queue:test": "tsx scripts/test-ops-action-queue-boundary.ts && npm run ops-workspace:test",
+    "ops-workspace:test": "tsx scripts/test-ops-workspace-boundary.ts",
     "verify:db": "tsx --env-file=.env.local scripts/verify-db.ts"
   },
   "devDependencies": {
