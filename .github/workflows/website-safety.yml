@@ -3,7 +3,7 @@ name: Website safety evidence
 on:
   schedule:
     - cron: "41 8 * * 1"
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read

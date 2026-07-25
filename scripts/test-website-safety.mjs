@@ -19,6 +19,7 @@ await assert.rejects(
   /ended early/,
 );
 const workflow = fs.readFileSync(".github/workflows/website-safety.yml", "utf8");
+assert.match(workflow, /workflow_dispatch: \{\}/);
 assert.match(workflow, /Record evidence summary/);
 assert.doesNotMatch(workflow, /Fail when review is needed/);
 assert.doesNotMatch(workflow, /website check\(s\) need review/);
