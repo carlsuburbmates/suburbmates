@@ -47,8 +47,6 @@
     "verify:db": "tsx --env-file=.env.local scripts/verify-db.ts"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@supabase/mcp-server-supabase": "^0.8.2",
     "@types/node": "^26.1.1",
     "tsx": "^4.23.1",
     "typescript": "^5.9.2",
