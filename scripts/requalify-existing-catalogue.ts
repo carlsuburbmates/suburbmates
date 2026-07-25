@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { qualifyExistingCatalogueListing, type ExistingCatalogueListing } from "../web/src/lib/automation/existing-catalogue-requalification";
 
-const policyVersion = "existing-catalogue-v1";
+const policyVersion = "existing-catalogue-v2";
 const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
 const secret = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 

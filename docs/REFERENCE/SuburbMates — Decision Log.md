@@ -126,6 +126,14 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Guardrail:** This authorisation does not enable Stripe, general outbound email, bulk ABN checks, AI publication, raw-candidate publication or automated ownership decisions.
 - **Outstanding evidence:** Complete real authenticated owner/submitter and operator walkthroughs, including the candidate-to-Ops, ABN evidence and owner-media paths. Any failure must be recorded and corrected; it is not a reason to publish additional listings.
 
+### D-014 — Address-only matching is not duplicate evidence
+
+- **Date:** 26 July 2026
+- **Decision:** A shared street address alone is not a duplicate signal. Shopping centres and multi-tenant buildings legitimately contain many different businesses; automation must not create an operator task merely because two listings share an address.
+- **Rule:** Automatic duplicate blocking requires a strong identifier match: the same normalised website, phone number, or both business name and address. Similar names at different addresses remain distinct listings unless separate source evidence shows they are the same entity.
+- **Current state:** The existing-catalogue requalification policy is versioned to re-run under this rule. It changes only private evidence status; it does not delete, merge, publish, unpublish, claim or alter any business record.
+- **Evidence to close:** Regression coverage for shared-address businesses, a completed requalification run, and an Ops Work list with address-only false positives removed.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |

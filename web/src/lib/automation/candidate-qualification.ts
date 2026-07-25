@@ -42,7 +42,6 @@ export function qualifyCandidate(candidate: CandidateInput, options: { allowedSo
   if (candidate.websiteSafety === "unsafe") reasons.push("unsafe_or_broken_destination");
   const duplicate = findStrongDuplicate(normalized, options.existingListings);
   if (duplicate) reasons.push("strong_duplicate");
-  else if (findNearDuplicate(normalized, options.existingListings)) reasons.push("possible_duplicate");
   return { outcome: reasons.length === 0 ? "qualified" : "exception", reasons, duplicateVendorId: duplicate?.id ?? null, normalized };
 }
 
@@ -54,9 +53,6 @@ function findStrongDuplicate(normalized: Qualification["normalized"], listings: 
     const website = normalizeWebsite(listing.website); const phone = normalizePhone(listing.phone); const name = normalizeText(listing.businessName); const address = normalizeText(listing.streetAddress);
     return (normalized.website !== "" && normalized.website === website) || (normalized.phone !== "" && normalized.phone === phone) || (normalized.businessName !== "" && normalized.businessName === name && normalized.streetAddress !== "" && normalized.streetAddress === address);
   });
-}
-function findNearDuplicate(normalized: Qualification["normalized"], listings: readonly ExistingListing[]) {
-  return listings.some((listing) => normalized.businessName !== "" && normalized.businessName === normalizeText(listing.businessName) || normalized.streetAddress !== "" && normalized.streetAddress === normalizeText(listing.streetAddress));
 }
 export function normalizeText(value: string | null | undefined) { return (value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim(); }
 export function normalizePhone(value: string | null | undefined) { return (value ?? "").replace(/\D/g, "").replace(/^61(?=\d{9,10}$)/, "0"); }
