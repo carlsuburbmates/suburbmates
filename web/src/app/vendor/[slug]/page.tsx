@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Phone } from "lucide-react";
 import { getVendorDesign } from "@/lib/minisite/engine";
 import { HeroSplit } from "@/components/minisite/heroes/HeroSplit";
@@ -137,7 +138,7 @@ export default async function VendorWebsite({ params }: PageProps) {
         {design.contact === 'Sidebar' ? (
           <div className="grid md:grid-cols-3 gap-12">
             <div className="md:col-span-2 space-y-12">
-              {media.length > 0 && <section><h2 className="text-3xl font-black tracking-tight mb-6">Photos</h2><div className="grid gap-4 sm:grid-cols-2">{media.map((item) => <img key={item.media_id} src={`/api/media/${item.media_id}`} alt={item.alt_text} className="h-64 w-full rounded-2xl object-cover" />)}</div></section>}
+              <PublicMediaGallery media={media} />
               <section>
                 <h2 className="text-3xl font-black tracking-tight mb-6">About Us</h2>
                 <div className="prose prose-lg max-w-none">
@@ -154,7 +155,7 @@ export default async function VendorWebsite({ params }: PageProps) {
         ) : (
           <div className="space-y-16">
             <div className="max-w-3xl">
-              {media.length > 0 && <section className="mb-12"><h2 className="text-3xl font-black tracking-tight mb-6">Photos</h2><div className="grid gap-4 sm:grid-cols-2">{media.map((item) => <img key={item.media_id} src={`/api/media/${item.media_id}`} alt={item.alt_text} className="h-64 w-full rounded-2xl object-cover" />)}</div></section>}
+              <PublicMediaGallery media={media} className="mb-12" />
               <section>
                 <h2 className="text-3xl font-black tracking-tight mb-6">About Us</h2>
                 <div className="prose prose-lg max-w-none">
@@ -199,4 +200,9 @@ export default async function VendorWebsite({ params }: PageProps) {
       </footer>
     </div>
   );
+}
+
+function PublicMediaGallery({ media, className = "" }: { media: { media_id: string; media_kind: string; alt_text: string }[]; className?: string }) {
+  if (media.length === 0) return null;
+  return <section className={className}><h2 className="text-3xl font-black tracking-tight mb-6">Photos</h2><div className="grid gap-4 sm:grid-cols-2">{media.map((item) => <Image key={item.media_id} src={`/api/media/${item.media_id}`} alt={item.alt_text} width={800} height={512} sizes="(max-width: 640px) 100vw, 50vw" className="h-64 w-full rounded-2xl object-cover" />)}</div></section>;
 }
