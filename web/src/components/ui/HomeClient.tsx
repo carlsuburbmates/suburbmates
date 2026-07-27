@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import ReactDOM from "react-dom";
 import { HeroSearch } from "@/components/ui/HeroSearch";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
@@ -53,6 +54,10 @@ const valueProps = [
 
 export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientProps) {
   const router = useRouter();
+
+  // This is the only above-the-fold image on the public home. The CSS background
+  // would otherwise be discovered after the page body is parsed.
+  ReactDOM.preload("/hero-bg.jpg", { as: "image", fetchPriority: "high" });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.hash.slice(1));
