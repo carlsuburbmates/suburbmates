@@ -13,9 +13,14 @@ assert.match(migration, /'publication_unchanged', true/);
 assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.submit_owned_business_candidate_for_current_user[\s\S]*TO authenticated/);
 assert.match(actions, /submit_owned_business_candidate_for_current_user/);
 assert.match(actions, /createClient\(\)/);
+assert.match(actions, /verifyBusinessSubmission\(fields\.token, next\)/);
+assert.match(actions, /fail\(error\.code, next\)/);
 assert.match(join, /I own or represent it/);
 assert.match(join, /Suggest a local business/);
 assert.match(join, /Submit business and ownership request/);
+assert.match(join, /CategoryField/);
+assert.match(join, /Submitting securely/);
+assert.match(join, /min-w-0/);
 for (const forbidden of ["is_published = true", "SET owner_id =", "is_claimed = true", "TO anon"]) {
   assert(!migration.includes(forbidden), `Owner candidate flow must not contain ${forbidden}.`);
 }

@@ -5,8 +5,8 @@ import { TurnstileVerificationError, verifyTurnstileToken } from "@/lib/turnstil
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 
-function fail(code: string): never {
-  redirect(`/join?error=${encodeURIComponent(code)}`);
+function fail(code: string, next = "/join"): never {
+  redirect(`${next}${next.includes("?") ? "&" : "?"}error=${encodeURIComponent(code)}`);
 }
 
 function readBusinessFields(formData: FormData) {
@@ -39,12 +39,12 @@ function validBusinessFields(fields: ReturnType<typeof readBusinessFields>) {
   );
 }
 
-async function verifyBusinessSubmission(token: string) {
+async function verifyBusinessSubmission(token: string, next?: string) {
   try {
     return await verifyTurnstileToken(token, "business_submission");
   } catch (error) {
-    if (error instanceof TurnstileVerificationError) fail(error.code);
-    fail("verification");
+    if (error instanceof TurnstileVerificationError) fail(error.code, next);
+    fail("verification", next);
   }
 }
 
@@ -106,7 +106,7 @@ export async function submitOwnedBusinessAction(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) redirect(`/login?next=${encodeURIComponent(next)}`);
-  const verification = await verifyBusinessSubmission(fields.token);
+  const verification = await verifyBusinessSubmission(fields.token, next);
 
   const { error } = await supabase.rpc("submit_owned_business_candidate_for_current_user", {
     p_submitter_name: fields.submitterName,
