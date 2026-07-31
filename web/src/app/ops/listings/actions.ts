@@ -121,6 +121,28 @@ export async function decideListingAction(formData: FormData) {
   redirect(`${detailPath}?success=${encodeURIComponent(decision)}`);
 }
 
+export async function deleteRejectedListingAction(formData: FormData) {
+  const vendorId = String(formData.get("vendorId") ?? "");
+  const confirmation = String(formData.get("confirmation") ?? "");
+  const note = String(formData.get("operatorNote") ?? "").trim();
+  const detailPath = `/ops/listings/${vendorId}`;
+  const { supabase } = await verifyOpsAdmin(detailPath);
+  if (!uuidPattern.test(vendorId) || confirmation !== "DELETE" || note.length < 1 || note.length > 2000) {
+    redirect(`${detailPath}?error=delete`);
+  }
+  const { error } = await supabase.rpc("ops_delete_rejected_listing", {
+    p_vendor_id: vendorId,
+    p_operator_note: note,
+  });
+  if (error) redirect(`${detailPath}?error=delete`);
+  revalidatePath("/ops");
+  revalidatePath("/ops/listings");
+  revalidatePath("/");
+  revalidatePath("/businesses");
+  revalidatePath("/sitemap.xml");
+  redirect("/ops/listings?status=rejected&success=deleted");
+}
+
 function nullable(value: FormDataEntryValue | null) {
   const normalized = String(value ?? "").trim();
   return normalized || null;

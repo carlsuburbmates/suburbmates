@@ -22,11 +22,12 @@ type OpsListing = {
   active_draft_id: string | null;
 };
 
-export default async function OpsListingsPage({ searchParams }: { searchParams: Promise<{ status?: string; ownership?: string; source?: string; q?: string; page?: string }> }) {
+export default async function OpsListingsPage({ searchParams }: { searchParams: Promise<{ status?: string; ownership?: string; source?: string; q?: string; page?: string; success?: string }> }) {
   const params = await searchParams;
   const status = statuses.includes(params.status as Status) ? (params.status as Status) : "all";
   const ownership = ownershipStatuses.includes(params.ownership as OwnershipStatus) ? (params.ownership as OwnershipStatus) : "all";
   const source = sources.includes(params.source as Source) ? (params.source as Source) : "all";
+  const success = params.success ?? "";
   const q = typeof params.q === "string" ? params.q.slice(0, 200) : "";
   const page = pageNumber(params.page);
   const supabase = await createOpsDataClient();
@@ -53,6 +54,8 @@ export default async function OpsListingsPage({ searchParams }: { searchParams: 
         <h2 className="mt-2 text-4xl font-black tracking-tight">Business register</h2>
         <p className="mt-3 max-w-3xl text-slate-600">Search real directory records and open one business to see its authorised evidence, requests and safe actions. Private candidate records are not businesses.</p>
       </div>
+
+      {success === "deleted" && <p role="status" className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">The rejected listing was permanently deleted. Its audit history remains.</p>}
 
       <form className="grid max-w-3xl gap-3 sm:grid-cols-[1fr_auto_auto_auto]" action="/ops/listings">
         <input type="hidden" name="status" value={status} />

@@ -134,6 +134,14 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Current state:** The existing-catalogue requalification policy is versioned to re-run under this rule. It changes only private evidence status; it does not delete, merge, publish, unpublish, claim or alter any business record.
 - **Evidence to close:** Regression coverage for shared-address businesses, a completed requalification run, and an Ops Work list with address-only false positives removed.
 
+### D-015 — Exceptional deletion of rejected listings
+
+- **Date:** 31 July 2026
+- **Decision:** The operator may permanently delete one rejected listing from its protected detail view when it was never public and has no linked operational records. A reason and an explicit `DELETE` confirmation are required.
+- **Guardrail:** This is not bulk clean-up, does not apply to a public or previously public listing, and must retain an append-only audit event. A record with claims, evidence, drafts, submissions, candidate/requalification links, media or redirect history remains retained.
+- **Current state:** The 21 reviewed, never-public rejected legacy records were owner-authorised for deletion. Their audit history was retained.
+- **Evidence to close:** Protected-function, UI-boundary and database verification; an authenticated operator walkthrough when a future eligible rejected record exists.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |

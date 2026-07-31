@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
-import { decideListingAction, decideMediaProposalAction, runAbnCheckAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
+import { decideListingAction, decideMediaProposalAction, deleteRejectedListingAction, runAbnCheckAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 type Listing = {
@@ -85,7 +85,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
         {listing.is_published && publicSlug && <Link href={`/vendor/${publicSlug}`} className="btn btn-outline">View public profile</Link>}
       </div>
 
-      {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : message.error === "abn" ? "The ABN check could not be recorded. Enter 11 digits and try again." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
+      {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : message.error === "abn" ? "The ABN check could not be recorded. Enter 11 digits and try again." : message.error === "delete" ? "This record could not be deleted. Only a never-public rejected listing with no linked operational records can be permanently deleted." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
       {abnStatus && <AbnResult status={abnStatus} />}
       {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : "Decision recorded with an audit event."}</p>}
 
@@ -155,6 +155,17 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
         {status === "pending_review" && <ReasonDecision vendorId={vendorId} decision="reject" label="Reject listing" reasons={rejectReasons} />}
         {status === "published" && <ReasonDecision vendorId={vendorId} decision="unpublish" label="Unpublish listing" reasons={unpublishReasons} />}
       </section>
+
+      {status === "rejected" && <section className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
+        <h3 className="text-xl font-bold text-red-950">Permanently delete rejected listing</h3>
+        <p className="mt-2 text-sm text-red-900">Use this only when this never-public rejected record is no longer needed. It cannot be restored. Its audit history remains.</p>
+        <form action={deleteRejectedListingAction} className="mt-5 space-y-4">
+          <input type="hidden" name="vendorId" value={vendorId} />
+          <label className="block text-sm font-bold text-red-950">Why delete this record?<textarea name="operatorNote" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-red-300 bg-white p-3 font-normal text-slate-950" placeholder="Record why permanent deletion is appropriate." /></label>
+          <label className="block text-sm font-bold text-red-950">Type DELETE to confirm<input name="confirmation" required autoComplete="off" className="mt-2 w-full rounded-xl border border-red-300 bg-white p-3 font-normal text-slate-950" /></label>
+          <button className="btn border-red-800 bg-red-800 text-white hover:bg-red-900">Permanently delete listing</button>
+        </form>
+      </section>}
     </div>
   );
 }
