@@ -32,6 +32,7 @@ This contract turns the owner-approved directory policy into a buildable model. 
 3. **Public release remains separate:** a `published` listing becomes publicly browseable only while the global launch gate is enabled. The owner authorised the first public release on 23 July 2026; future release or rollback remains governed by `SUB-14`, not an import or claim.
 4. **Claims remain independent:** the approved normal exact-email path and its future exception/revocation flow never publish a listing or change commercial/SEO state.
 5. **Evidence remains precise:** an ABN or website result is stored as supporting evidence. It is not a universal entry requirement.
+6. **Exceptional permanent deletion:** a protected operator may permanently delete one rejected listing only when it was never public and has no linked operational records. The operator must provide a reason and explicit confirmation; an append-only audit event remains. This is not a bulk clean-up tool and does not apply to public, unpublished or linked records.
 
 ## Allowed lifecycle transitions
 

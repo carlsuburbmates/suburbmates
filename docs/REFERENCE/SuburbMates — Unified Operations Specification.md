@@ -1922,7 +1922,7 @@ Use it directly only for:
 * Missing ABN status does not block publication.
 * Payment status does not control publication.
 * AI output cannot control publication.
-* Rejected listings are retained with reasons.
+* Rejected listings are retained with reasons by default. A never-public rejected listing with no linked operational records may be permanently deleted through the protected detail action, with an explicit reason, confirmation and retained audit event.
 * Every privileged action creates an audit record.
 
 ## 23.3 Claims
@@ -2003,7 +2003,6 @@ The following are deliberately deferred until the core Ops system is stable:
 * real-time analytics warehouse
 * custom report builder
 * complete native-dashboard parity
-* permanent rejected-record purge UI
 * configurable notification centre
 * advanced bulk SEO inspection
 
@@ -2018,7 +2017,7 @@ These must be resolved during repository analysis and must not be silently assum
 3. Claim-verification method.
 4. Premium billing model: recurring, fixed-duration or both.
 5. Slug changes and redirect policy.
-6. Rejected-record retention period.
+6. Rejected-record retention/purge criteria for records that do not meet the protected permanent-deletion conditions.
 7. Exact Search Console OAuth and property model.
 8. Exact Cloudflare datasets available under the account plan.
 9. Cloudflare warning thresholds.
