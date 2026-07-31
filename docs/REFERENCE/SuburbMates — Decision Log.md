@@ -139,7 +139,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Date:** 31 July 2026
 - **Decision:** The operator may permanently delete one rejected listing from its protected detail view when it was never public and has no linked operational records. A reason and an explicit `DELETE` confirmation are required.
 - **Guardrail:** This is not bulk clean-up, does not apply to a public or previously public listing, and must retain an append-only audit event. A record with claims, evidence, drafts, submissions, candidate/requalification links, media or redirect history remains retained.
-- **Current state:** The 21 reviewed, never-public rejected legacy records were owner-authorised for deletion. Their audit history was retained.
+- **Current state:** The 21 reviewed, never-public rejected records were owner-authorised for deletion. Their audit history was retained.
 - **Evidence to close:** Protected-function, UI-boundary and database verification; an authenticated operator walkthrough when a future eligible rejected record exists.
 
 ## Open deviations to track
