@@ -35,7 +35,7 @@ Reverified on 23 July 2026 (Australia/Melbourne):
 - `/`, `/businesses`, a representative published profile, and a populated category route return successfully; `/sitemap.xml` contains 1,685 public URLs;
 - `www.suburbmates.com.au` permanently redirects to the apex domain and unauthenticated `/ops` remains protected behind sign-in;
 - the latest private existing-catalogue evidence pass (`existing-catalogue-v2`, 26 July 2026) classified all 1,601 published listings: 619 qualified and 982 retained as background evidence exceptions. It made no listing-state change and does not create a manual operator backlog; see `docs/AUTOMATION/EXISTING_CATALOGUE_REQUALIFICATION_AUDIT.md`;
-- the full repository safety suite, web lint and production build passed on the release baseline. Lint has three existing non-blocking `img` performance warnings.
+- the full repository safety suite, web lint and production build passed on the current baseline. The former public-image performance warnings were resolved in PR #72; PR #73 adds a high-priority preload for the public home hero. The remaining Next.js `middleware.ts` deprecation warning is a verified OpenNext compatibility limitation; see **Production website** below.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
@@ -139,7 +139,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; migrations aligned through `20260722155953` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; local and remote migrations aligned through `20260725210822` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth SMTP only at launch | Domain verified; passwordless email-code sign-in into `/ops` is the approved path |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
