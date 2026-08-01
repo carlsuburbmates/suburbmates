@@ -85,7 +85,7 @@ export default async function JoinPage({ searchParams }: {
         {message.error && <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">{submissionError(message.error)}</p>}
 
         {!siteKey ? <p className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900">Secure business submission is temporarily unavailable. You can still search and claim an existing listing.</p> : (
-          <form action={submitBusinessAction} className="mt-6 grid min-w-0 gap-5 sm:grid-cols-2">
+          <form action={submitBusinessAction} className="mt-6 grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2">
             <div className="hidden" aria-hidden="true"><label>Leave empty<input name="companyWebsite" tabIndex={-1} autoComplete="off" /></label></div>
             <Field label="Your name" name="submitterName" required maxLength={120} autoComplete="name" />
             <div><Field label="Your email" name="submitterEmail" type="email" required maxLength={254} autoComplete="email" /><p className="mt-2 text-xs font-normal leading-5 text-slate-600">No account is created. This is only used if you later choose to check the private submission status.</p></div>

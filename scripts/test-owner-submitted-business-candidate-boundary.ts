@@ -27,6 +27,8 @@ assert.match(join, /OwnerSubmissionForm/);
 assert.match(join, /TurnstileField/);
 assert.match(join, /dogtrainersdirectory\.com\.au/);
 assert.match(ownerForm, /block min-w-0/);
+assert.match(ownerForm, /grid-cols-1/);
+assert.match(join, /grid-cols-1/);
 assert.match(ownerForm, /TurnstileField/);
 assert.match(ownerForm, /Your entered details are still here/);
 assert.equal(normaliseSubmissionWebsite("dogtrainersdirectory.com.au"), "https://dogtrainersdirectory.com.au/");
