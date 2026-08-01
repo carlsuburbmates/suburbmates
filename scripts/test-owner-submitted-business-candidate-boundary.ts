@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { normaliseSubmissionWebsite } from "../web/src/lib/submission-input";
 
 const migration = fs.readFileSync("supabase/migrations/20260722003158_owner_submitted_business_candidate.sql", "utf8");
 const actions = fs.readFileSync("web/src/app/(directory)/join/actions.ts", "utf8");
 const join = fs.readFileSync("web/src/app/(directory)/join/page.tsx", "utf8");
+const ownerForm = fs.readFileSync("web/src/app/(directory)/join/OwnerSubmissionForm.tsx", "utf8");
 
 assert.match(migration, /auth\.uid\(\)/);
 assert.match(migration, /INSERT INTO public\.claim_requests/);
@@ -13,14 +15,23 @@ assert.match(migration, /'publication_unchanged', true/);
 assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.submit_owned_business_candidate_for_current_user[\s\S]*TO authenticated/);
 assert.match(actions, /submit_owned_business_candidate_for_current_user/);
 assert.match(actions, /createClient\(\)/);
-assert.match(actions, /verifyBusinessSubmission\(fields\.token, next\)/);
-assert.match(actions, /fail\(error\.code, next\)/);
+assert.match(actions, /verifyTurnstileToken\(fields\.token, "business_submission"\)/);
+assert.match(actions, /OwnerSubmissionState/);
 assert.match(join, /I own or represent it/);
 assert.match(join, /Suggest a local business/);
-assert.match(join, /Submit business and ownership request/);
+assert.match(ownerForm, /Submit business and ownership request/);
 assert.match(join, /CategoryField/);
 assert.match(join, /Submitting securely/);
 assert.match(join, /min-w-0/);
+assert.match(join, /OwnerSubmissionForm/);
+assert.match(join, /TurnstileField/);
+assert.match(join, /dogtrainersdirectory\.com\.au/);
+assert.match(ownerForm, /block min-w-0/);
+assert.match(ownerForm, /TurnstileField/);
+assert.match(ownerForm, /Your entered details are still here/);
+assert.equal(normaliseSubmissionWebsite("dogtrainersdirectory.com.au"), "https://dogtrainersdirectory.com.au/");
+assert.equal(normaliseSubmissionWebsite("http://example.com/path"), "https://example.com/path");
+assert.equal(normaliseSubmissionWebsite("https://example.com"), "https://example.com/");
 for (const forbidden of ["is_published = true", "SET owner_id =", "is_claimed = true", "TO anon"]) {
   assert(!migration.includes(forbidden), `Owner candidate flow must not contain ${forbidden}.`);
 }
