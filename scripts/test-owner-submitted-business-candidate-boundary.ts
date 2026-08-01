@@ -6,6 +6,7 @@ const migration = fs.readFileSync("supabase/migrations/20260722003158_owner_subm
 const actions = fs.readFileSync("web/src/app/(directory)/join/actions.ts", "utf8");
 const join = fs.readFileSync("web/src/app/(directory)/join/page.tsx", "utf8");
 const ownerForm = fs.readFileSync("web/src/app/(directory)/join/OwnerSubmissionForm.tsx", "utf8");
+const controls = fs.readFileSync("web/src/app/(directory)/join/JoinFormControls.tsx", "utf8");
 
 assert.match(migration, /auth\.uid\(\)/);
 assert.match(migration, /INSERT INTO public\.claim_requests/);
@@ -31,6 +32,7 @@ assert.match(ownerForm, /grid-cols-1/);
 assert.match(join, /grid-cols-1/);
 assert.match(ownerForm, /TurnstileField/);
 assert.match(ownerForm, /Your entered details are still here/);
+assert.match(controls, /w-full whitespace-normal sm:w-auto/);
 assert.equal(normaliseSubmissionWebsite("dogtrainersdirectory.com.au"), "https://dogtrainersdirectory.com.au/");
 assert.equal(normaliseSubmissionWebsite("http://example.com/path"), "https://example.com/path");
 assert.equal(normaliseSubmissionWebsite("https://example.com"), "https://example.com/");

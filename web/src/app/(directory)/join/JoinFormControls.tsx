@@ -62,7 +62,7 @@ export function CategoryField({ options }: { options: Option[] }) {
 
 export function SubmitButton({ children, pendingLabel }: { children: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
-  return <button disabled={pending} className="btn btn-primary" aria-describedby="submission-progress">{pending ? pendingLabel : children}<span id="submission-progress" className="sr-only" aria-live="polite">{pending ? " Submission in progress." : ""}</span></button>;
+  return <button disabled={pending} className="btn btn-primary w-full whitespace-normal sm:w-auto" aria-describedby="submission-progress">{pending ? pendingLabel : children}<span id="submission-progress" className="sr-only" aria-live="polite">{pending ? " Submission in progress." : ""}</span></button>;
 }
 
 export function TurnstileField({ siteKey }: { siteKey: string }) {
