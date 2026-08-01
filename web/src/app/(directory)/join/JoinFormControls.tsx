@@ -1,9 +1,20 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import Script from "next/script";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 type Option = { name: string; slug: string };
+
+type TurnstileApi = {
+  render: (container: HTMLElement, options: Record<string, unknown>) => string;
+  reset: (widgetId: string) => void;
+  remove: (widgetId: string) => void;
+};
+
+declare global {
+  interface Window { turnstile?: TurnstileApi; }
+}
 
 export function CategoryField({ options }: { options: Option[] }) {
   const [query, setQuery] = useState("");
@@ -52,4 +63,46 @@ export function CategoryField({ options }: { options: Option[] }) {
 export function SubmitButton({ children, pendingLabel }: { children: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
   return <button disabled={pending} className="btn btn-primary" aria-describedby="submission-progress">{pending ? pendingLabel : children}<span id="submission-progress" className="sr-only" aria-live="polite">{pending ? " Submission in progress." : ""}</span></button>;
+}
+
+export function TurnstileField({ siteKey }: { siteKey: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+  const [token, setToken] = useState("");
+  const [message, setMessage] = useState("Confirming you are human…");
+
+  function resetOrRender() {
+    setToken("");
+    if (widgetIdRef.current && window.turnstile) {
+      window.turnstile.reset(widgetIdRef.current);
+      setMessage("Confirming you are human…");
+      return;
+    }
+    render();
+  }
+
+  function render() {
+    if (!containerRef.current || !window.turnstile) return;
+    if (widgetIdRef.current) window.turnstile.remove(widgetIdRef.current);
+    containerRef.current.replaceChildren();
+    widgetIdRef.current = window.turnstile.render(containerRef.current, {
+      sitekey: siteKey,
+      action: "business_submission",
+      theme: "light",
+      size: "flexible",
+      callback: (nextToken: string) => { setToken(nextToken); setMessage("Human verification ready."); },
+      "expired-callback": () => { setToken(""); setMessage("Human verification expired. Refresh it before submitting."); },
+      "error-callback": () => { setToken(""); setMessage("Human verification could not load. Check your connection and refresh it."); },
+    });
+  }
+
+  useEffect(() => { if (window.turnstile) render(); return () => { if (widgetIdRef.current && window.turnstile) window.turnstile.remove(widgetIdRef.current); }; // Turnstile is an external imperative widget; mount once and remove once.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return <div className="min-w-0 sm:col-span-2">
+    <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="afterInteractive" onLoad={render} />
+    <input type="hidden" name="cf-turnstile-response" value={token} />
+    <div ref={containerRef} className="min-h-[65px] min-w-0" aria-live="polite" />
+    <p className="mt-2 text-xs leading-5 text-slate-600">{message} {!token && <button type="button" onClick={resetOrRender} className="font-bold underline underline-offset-2">Refresh verification</button>}</p>
+  </div>;
 }

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { TurnstileVerificationError, verifyTurnstileToken } from "@/lib/turnstile";
+import { normaliseSubmissionWebsite } from "@/lib/submission-input";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 
@@ -10,6 +11,7 @@ function fail(code: string, next = "/join"): never {
 }
 
 function readBusinessFields(formData: FormData) {
+  const website = normaliseSubmissionWebsite(String(formData.get("website") ?? ""));
   return {
     submitterName: String(formData.get("submitterName") ?? "").trim(),
     businessName: String(formData.get("businessName") ?? "").trim(),
@@ -17,7 +19,7 @@ function readBusinessFields(formData: FormData) {
     suburbSlug: String(formData.get("suburbSlug") ?? "").trim(),
     contactEmail: String(formData.get("contactEmail") ?? "").trim().toLowerCase(),
     phone: String(formData.get("phone") ?? "").trim(),
-    website: String(formData.get("website") ?? "").trim(),
+    website,
     streetAddress: String(formData.get("streetAddress") ?? "").trim(),
     abn: String(formData.get("abn") ?? "").replace(/\s/g, ""),
     token: String(formData.get("cf-turnstile-response") ?? ""),
@@ -46,6 +48,16 @@ async function verifyBusinessSubmission(token: string, next?: string) {
     if (error instanceof TurnstileVerificationError) fail(error.code, next);
     fail("verification", next);
   }
+}
+
+export type OwnerSubmissionState = {
+  status: "idle" | "error" | "success";
+  code?: "invalid" | "duplicate" | "rate_limit" | "verification" | "verification_unavailable" | "submit";
+  attempt: number;
+};
+
+function ownerError(previousState: OwnerSubmissionState, code: NonNullable<OwnerSubmissionState["code"]>): OwnerSubmissionState {
+  return { status: "error", code, attempt: previousState.attempt + 1 };
 }
 
 export async function submitBusinessAction(formData: FormData) {
@@ -93,20 +105,24 @@ export async function submitBusinessAction(formData: FormData) {
   redirect("/join?submitted=1");
 }
 
-export async function submitOwnedBusinessAction(formData: FormData) {
-  const next = "/join?path=owner";
-  if (String(formData.get("companyWebsite") ?? "").trim()) redirect(`${next}&submitted=1`);
+export async function submitOwnedBusinessAction(previousState: OwnerSubmissionState, formData: FormData): Promise<OwnerSubmissionState> {
+  if (String(formData.get("companyWebsite") ?? "").trim()) return { status: "success", attempt: previousState.attempt };
 
   const fields = readBusinessFields(formData);
   const relationshipExplanation = String(formData.get("relationshipExplanation") ?? "").trim();
   if (!validBusinessFields(fields) || relationshipExplanation.length < 10 || relationshipExplanation.length > 1000) {
-    redirect(`${next}&error=invalid`);
+    return ownerError(previousState, "invalid");
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) redirect(`/login?next=${encodeURIComponent(next)}`);
-  const verification = await verifyBusinessSubmission(fields.token, next);
+  if (!user?.email) redirect(`/login?next=${encodeURIComponent("/join?path=owner")}`);
+  let verification: Awaited<ReturnType<typeof verifyTurnstileToken>>;
+  try {
+    verification = await verifyTurnstileToken(fields.token, "business_submission");
+  } catch (error) {
+    return ownerError(previousState, error instanceof TurnstileVerificationError ? error.code : "verification");
+  }
 
   const { error } = await supabase.rpc("submit_owned_business_candidate_for_current_user", {
     p_submitter_name: fields.submitterName,
@@ -123,10 +139,10 @@ export async function submitOwnedBusinessAction(formData: FormData) {
     p_turnstile_action: verification.action,
   });
   if (error) {
-    if (error.code === "23505" || error.message.includes("matching listing")) redirect(`${next}&error=duplicate`);
-    if (error.message.includes("Too many recent submissions")) redirect(`${next}&error=rate_limit`);
-    redirect(`${next}&error=submit`);
+    if (error.code === "23505" || error.message.includes("matching listing")) return ownerError(previousState, "duplicate");
+    if (error.message.includes("Too many recent submissions")) return ownerError(previousState, "rate_limit");
+    return ownerError(previousState, "submit");
   }
 
-  redirect(`${next}&submitted=1`);
+  return { status: "success", attempt: previousState.attempt };
 }
