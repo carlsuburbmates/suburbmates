@@ -12,7 +12,7 @@ export function OwnerSubmissionForm({ categories, suburbs, siteKey, email }: { c
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => { if (state.status === "success") formRef.current?.reset(); }, [state.status]);
 
-  return <form ref={formRef} action={formAction} className="mt-6 grid min-w-0 gap-5 sm:grid-cols-2">
+  return <form ref={formRef} action={formAction} className="mt-6 grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2">
     <div className="hidden" aria-hidden="true"><label>Leave empty<input name="companyWebsite" tabIndex={-1} autoComplete="off" /></label></div>
     {state.status === "success" && <Outcome state={state} />}
     {state.status === "error" && <Outcome state={state} />}
