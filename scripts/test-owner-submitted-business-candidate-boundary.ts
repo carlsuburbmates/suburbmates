@@ -7,6 +7,7 @@ const actions = fs.readFileSync("web/src/app/(directory)/join/actions.ts", "utf8
 const join = fs.readFileSync("web/src/app/(directory)/join/page.tsx", "utf8");
 const ownerForm = fs.readFileSync("web/src/app/(directory)/join/OwnerSubmissionForm.tsx", "utf8");
 const controls = fs.readFileSync("web/src/app/(directory)/join/JoinFormControls.tsx", "utf8");
+const ownerEmailFix = fs.readFileSync("supabase/migrations/20260804205239_fix_owner_submission_email_validation.sql", "utf8");
 
 assert.match(migration, /auth\.uid\(\)/);
 assert.match(migration, /INSERT INTO public\.claim_requests/);
@@ -32,12 +33,18 @@ assert.match(ownerForm, /grid-cols-1/);
 assert.match(join, /grid-cols-1/);
 assert.match(ownerForm, /TurnstileField/);
 assert.match(ownerForm, /Your entered details are still here/);
+assert.match(actions, /values: OwnerSubmissionValues/);
+assert.match(ownerForm, /defaultValue=\{state\.values\.submitterName\}/);
+assert.match(ownerForm, /defaultValue=\{state\.values\.relationshipExplanation\}/);
+assert.match(ownerForm, /defaultValue=\{state\.values\.suburbSlug\}/);
 assert.match(ownerForm, /name="relationshipExplanation"/);
 assert.match(ownerForm, /minLength=\{10\}/);
 assert.match(controls, /w-full whitespace-normal sm:w-auto/);
 assert.equal(normaliseSubmissionWebsite("dogtrainersdirectory.com.au"), "https://dogtrainersdirectory.com.au/");
 assert.equal(normaliseSubmissionWebsite("http://example.com/path"), "https://example.com/path");
 assert.equal(normaliseSubmissionWebsite("https://example.com"), "https://example.com/");
+assert.match(ownerEmailFix, /p_submitter_email/);
+assert(!ownerEmailFix.includes("\\\\."), "Owner submission email validation must use a single regex escape for the dot.");
 for (const forbidden of ["is_published = true", "SET owner_id =", "is_claimed = true", "TO anon"]) {
   assert(!migration.includes(forbidden), `Owner candidate flow must not contain ${forbidden}.`);
 }

@@ -16,9 +16,10 @@ declare global {
   interface Window { turnstile?: TurnstileApi; }
 }
 
-export function CategoryField({ options }: { options: Option[] }) {
-  const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Option | null>(null);
+export function CategoryField({ options, initialSlug = "" }: { options: Option[]; initialSlug?: string }) {
+  const initialOption = options.find((option) => option.slug === initialSlug) ?? null;
+  const [query, setQuery] = useState(initialOption?.name ?? "");
+  const [selected, setSelected] = useState<Option | null>(initialOption);
   const [open, setOpen] = useState(false);
   const listId = useId();
   const matches = useMemo(() => {

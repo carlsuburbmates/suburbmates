@@ -54,10 +54,41 @@ export type OwnerSubmissionState = {
   status: "idle" | "error" | "success";
   code?: "invalid" | "duplicate" | "rate_limit" | "verification" | "verification_unavailable" | "submit";
   attempt: number;
+  values: OwnerSubmissionValues;
 };
 
-function ownerError(previousState: OwnerSubmissionState, code: NonNullable<OwnerSubmissionState["code"]>): OwnerSubmissionState {
-  return { status: "error", code, attempt: previousState.attempt + 1 };
+export type OwnerSubmissionValues = {
+  submitterName: string;
+  businessName: string;
+  categorySlug: string;
+  suburbSlug: string;
+  contactEmail: string;
+  phone: string;
+  website: string;
+  abn: string;
+  streetAddress: string;
+  relationshipExplanation: string;
+  consent: boolean;
+};
+
+function readOwnerSubmissionValues(formData: FormData): OwnerSubmissionValues {
+  return {
+    submitterName: String(formData.get("submitterName") ?? ""),
+    businessName: String(formData.get("businessName") ?? ""),
+    categorySlug: String(formData.get("categorySlug") ?? ""),
+    suburbSlug: String(formData.get("suburbSlug") ?? ""),
+    contactEmail: String(formData.get("contactEmail") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
+    website: String(formData.get("website") ?? ""),
+    abn: String(formData.get("abn") ?? ""),
+    streetAddress: String(formData.get("streetAddress") ?? ""),
+    relationshipExplanation: String(formData.get("relationshipExplanation") ?? ""),
+    consent: formData.get("consent") === "on",
+  };
+}
+
+function ownerError(previousState: OwnerSubmissionState, code: NonNullable<OwnerSubmissionState["code"]>, values: OwnerSubmissionValues): OwnerSubmissionState {
+  return { status: "error", code, attempt: previousState.attempt + 1, values };
 }
 
 export async function submitBusinessAction(formData: FormData) {
@@ -106,12 +137,13 @@ export async function submitBusinessAction(formData: FormData) {
 }
 
 export async function submitOwnedBusinessAction(previousState: OwnerSubmissionState, formData: FormData): Promise<OwnerSubmissionState> {
-  if (String(formData.get("companyWebsite") ?? "").trim()) return { status: "success", attempt: previousState.attempt };
+  if (String(formData.get("companyWebsite") ?? "").trim()) return { status: "success", attempt: previousState.attempt, values: previousState.values };
 
   const fields = readBusinessFields(formData);
-  const relationshipExplanation = String(formData.get("relationshipExplanation") ?? "").trim();
+  const values = readOwnerSubmissionValues(formData);
+  const relationshipExplanation = values.relationshipExplanation.trim();
   if (!validBusinessFields(fields) || relationshipExplanation.length < 10 || relationshipExplanation.length > 1000) {
-    return ownerError(previousState, "invalid");
+    return ownerError(previousState, "invalid", values);
   }
 
   const supabase = await createClient();
@@ -121,7 +153,7 @@ export async function submitOwnedBusinessAction(previousState: OwnerSubmissionSt
   try {
     verification = await verifyTurnstileToken(fields.token, "business_submission");
   } catch (error) {
-    return ownerError(previousState, error instanceof TurnstileVerificationError ? error.code : "verification");
+    return ownerError(previousState, error instanceof TurnstileVerificationError ? error.code : "verification", values);
   }
 
   const { error } = await supabase.rpc("submit_owned_business_candidate_for_current_user", {
@@ -139,10 +171,10 @@ export async function submitOwnedBusinessAction(previousState: OwnerSubmissionSt
     p_turnstile_action: verification.action,
   });
   if (error) {
-    if (error.code === "23505" || error.message.includes("matching listing")) return ownerError(previousState, "duplicate");
-    if (error.message.includes("Too many recent submissions")) return ownerError(previousState, "rate_limit");
-    return ownerError(previousState, "submit");
+    if (error.code === "23505" || error.message.includes("matching listing")) return ownerError(previousState, "duplicate", values);
+    if (error.message.includes("Too many recent submissions")) return ownerError(previousState, "rate_limit", values);
+    return ownerError(previousState, "submit", values);
   }
 
-  return { status: "success", attempt: previousState.attempt };
+  return { status: "success", attempt: previousState.attempt, values: previousState.values };
 }
