@@ -27,6 +27,7 @@ export function OwnerSubmissionForm({ categories, suburbs, siteKey, email }: { c
     <p className="text-sm text-slate-600 sm:col-span-2">Provide at least one way customers can contact this business: email, phone, or website. A website can be entered with or without `https://`.</p>
     <Field label="ABN (optional)" name="abn" maxLength={14} placeholder="11 digits" />
     <Field label="Street address (optional)" name="streetAddress" maxLength={500} autoComplete="street-address" />
+    <label className="block min-w-0 text-sm font-bold sm:col-span-2">Your connection to this business<textarea name="relationshipExplanation" required minLength={10} maxLength={1000} className="mt-2 block min-h-28 w-full min-w-0 rounded-xl border border-slate-300 p-3 font-normal" placeholder="For example: I am the owner, manager, or authorised representative…" /></label>
     <label className="flex min-w-0 items-start gap-3 text-sm leading-6 text-slate-700 sm:col-span-2"><input name="consent" type="checkbox" required className="mt-1 h-4 w-4 shrink-0" /><span>I confirm these are genuine business details and that I am authorised to request ownership review. SuburbMates may review the details and evidence under its <Link href="/privacy" className="font-bold underline">privacy notice</Link>.</span></label>
     <TurnstileField key={`owner-turnstile-${state.attempt}`} siteKey={siteKey} />
     <div className="sm:col-span-2"><SubmitButton pendingLabel="Submitting securely…">Submit business and ownership request</SubmitButton></div>

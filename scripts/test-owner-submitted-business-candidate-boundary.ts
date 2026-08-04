@@ -32,6 +32,8 @@ assert.match(ownerForm, /grid-cols-1/);
 assert.match(join, /grid-cols-1/);
 assert.match(ownerForm, /TurnstileField/);
 assert.match(ownerForm, /Your entered details are still here/);
+assert.match(ownerForm, /name="relationshipExplanation"/);
+assert.match(ownerForm, /minLength=\{10\}/);
 assert.match(controls, /w-full whitespace-normal sm:w-auto/);
 assert.equal(normaliseSubmissionWebsite("dogtrainersdirectory.com.au"), "https://dogtrainersdirectory.com.au/");
 assert.equal(normaliseSubmissionWebsite("http://example.com/path"), "https://example.com/path");
