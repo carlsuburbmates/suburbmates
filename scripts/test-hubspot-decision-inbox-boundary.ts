@@ -21,6 +21,9 @@ const integration = fs.readFileSync("web/src/lib/hubspot/decision-inbox.ts", "ut
 const route = fs.readFileSync("web/src/app/api/automation/hubspot-decision-inbox/route.ts", "utf8");
 const workflow = fs.readFileSync(".github/workflows/hubspot-decision-inbox.yml", "utf8");
 const migration = fs.readFileSync("supabase/migrations/20260805112425_hubspot_decision_inbox.sql", "utf8");
+const listings = fs.readFileSync("web/src/app/ops/listings/actions.ts", "utf8");
+const claims = fs.readFileSync("web/src/app/ops/claims/actions.ts", "utf8");
+const contact = fs.readFileSync("web/src/app/ops/contact/actions.ts", "utf8");
 
 assert.match(integration, /HUBSPOT_PRIVATE_APP_TOKEN/);
 assert.match(integration, /HUBSPOT_DECISION_INBOX_ENABLED/);
@@ -32,5 +35,8 @@ assert.match(workflow, /hubspot-decision-inbox/);
 assert.match(migration, /ENABLE ROW LEVEL SECURITY/);
 assert.match(migration, /REVOKE ALL ON TABLE public\.hubspot_decision_inbox_items FROM PUBLIC, anon, authenticated/);
 assert.match(migration, /GRANT ALL ON TABLE public\.hubspot_decision_inbox_items TO service_role/);
+assert.match(listings, /decision === "publish" \|\| decision === "reject"/);
+assert.match(claims, /action !== "needs_information"/);
+assert.match(contact, /status === "resolved" \|\| status === "spam"/);
 
 console.log("HubSpot Decision Inbox boundary checks passed.");

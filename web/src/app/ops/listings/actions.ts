@@ -107,7 +107,7 @@ export async function decideListingAction(formData: FormData) {
     p_operator_note: note,
   });
   if (error) redirect(`${detailPath}?error=decision`);
-  await closeHubSpotDecisionInboxTask(`listing:${vendorId}`);
+  if (decision === "publish" || decision === "reject") await closeHubSpotDecisionInboxTask(`listing:${vendorId}`);
   const { data: afterRoute } = await supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId });
 
   revalidatePath("/ops");
