@@ -5,6 +5,7 @@ const migration = fs.readFileSync("supabase/migrations/20260722000839_private_bu
 const joinActions = fs.readFileSync("web/src/app/(directory)/join/actions.ts", "utf8");
 const joinPage = fs.readFileSync("web/src/app/(directory)/join/page.tsx", "utf8");
 const dashboard = fs.readFileSync("web/src/app/(directory)/dashboard/page.tsx", "utf8");
+const opsListingDetail = fs.readFileSync("web/src/app/ops/listings/[vendorId]/page.tsx", "utf8");
 
 assert.match(migration, /submitter_email TEXT NOT NULL/);
 assert.match(migration, /request\.submitter_email=v_email/);
@@ -15,5 +16,8 @@ assert.match(joinActions, /submit_business_listing_with_status/);
 assert.match(dashboard, /list_current_business_submission_statuses/);
 assert.match(joinPage, /No sign-in is needed\./);
 assert.match(joinPage, /You do not need an account to submit\./);
+assert.match(opsListingDetail, /"submission_status"/);
+assert.match(opsListingDetail, /Private submitter status saved\. Publication was not changed\./);
+assert.match(opsListingDetail, /If approved status messages are enabled, the system also attempts to notify the submitter\./);
 for (const forbidden of ["is_published = true", "SET owner_id =", "TO anon"]) assert(!migration.includes(forbidden), `Private submission status must not contain ${forbidden}.`);
 console.log("Private business-submission status boundary checks passed.");
