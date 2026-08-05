@@ -1,0 +1,31 @@
+name: HubSpot Decision Inbox
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hubspot-decision-inbox
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sync genuine Ops decisions only
+        env:
+          HUBSPOT_DECISION_INBOX_SYNC_TOKEN: ${{ secrets.HUBSPOT_DECISION_INBOX_SYNC_TOKEN }}
+        run: |
+          if [ -z "$HUBSPOT_DECISION_INBOX_SYNC_TOKEN" ]; then
+            echo "HubSpot Decision Inbox is not configured yet; no sync was attempted."
+            exit 0
+          fi
+          curl --fail --silent --show-error --retry 1 --retry-all-errors \
+            --request POST \
+            --header "Authorization: Bearer $HUBSPOT_DECISION_INBOX_SYNC_TOKEN" \
+            https://suburbmates.com.au/api/automation/hubspot-decision-inbox

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run audit:test && npm run acquire:osm:test && npm run catalogue:merge:test && npm run seed:test && npm run candidate-qualification:test && npm run candidate-handoff:test && npm run candidate-automation-ingest:test && npm run existing-catalogue-requalification:test && npm run abn-check:test && npm run abn-evidence:test && npm run transactional-communications:test && npm run owner-media:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run resident-journey:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test && npm run ops-system:test && npm run ops-action-queue:test",
+    "check": "npm run audit:test && npm run acquire:osm:test && npm run catalogue:merge:test && npm run seed:test && npm run candidate-qualification:test && npm run candidate-handoff:test && npm run candidate-automation-ingest:test && npm run existing-catalogue-requalification:test && npm run abn-check:test && npm run abn-evidence:test && npm run transactional-communications:test && npm run owner-media:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run resident-journey:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test && npm run ops-system:test && npm run ops-action-queue:test && npm run hubspot-decision-inbox:test",
     "dev": "npm --prefix web run dev",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "seed:test": "tsx --env-file-if-exists=.env.local scripts/test-seed-policy.ts",
@@ -43,6 +43,7 @@
     "owner-submitted-business-candidate:test": "tsx scripts/test-owner-submitted-business-candidate-boundary.ts",
     "ops-system:test": "tsx scripts/test-ops-system-boundary.ts",
     "ops-action-queue:test": "tsx scripts/test-ops-action-queue-boundary.ts && npm run ops-workspace:test && npm run rejected-listing-deletion:test",
+    "hubspot-decision-inbox:test": "tsx scripts/test-hubspot-decision-inbox-boundary.ts",
     "ops-workspace:test": "tsx scripts/test-ops-workspace-boundary.ts",
     "rejected-listing-deletion:test": "tsx scripts/test-rejected-listing-deletion-boundary.ts",
     "verify:db": "tsx --env-file=.env.local scripts/verify-db.ts"

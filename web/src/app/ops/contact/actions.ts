@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
 import { sendStage2Outcome } from "@/lib/communications/stage1-status";
+import { closeHubSpotDecisionInboxTask } from "@/lib/hubspot/decision-inbox";
 
 const allowedStatuses = new Set(["new", "in_progress", "resolved", "spam"]);
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -25,6 +26,7 @@ export async function reviewContactAction(formData: FormData) {
     p_reason: reason,
   });
   if (error) redirect(`${detailPath}?error=decision`);
+  if (status === "resolved" || status === "spam") await closeHubSpotDecisionInboxTask(`contact:${requestId}`);
   if (status === "resolved") await sendStage2Outcome("contact_request", requestId);
 
   revalidatePath("/ops");
