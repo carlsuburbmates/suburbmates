@@ -24,6 +24,8 @@ const migration = fs.readFileSync("supabase/migrations/20260805112425_hubspot_de
 const listings = fs.readFileSync("web/src/app/ops/listings/actions.ts", "utf8");
 const claims = fs.readFileSync("web/src/app/ops/claims/actions.ts", "utf8");
 const contact = fs.readFileSync("web/src/app/ops/contact/actions.ts", "utf8");
+const profileEdits = fs.readFileSync("web/src/app/ops/profile-edits/actions.ts", "utf8");
+const candidates = fs.readFileSync("web/src/app/ops/candidates/actions.ts", "utf8");
 
 assert.match(integration, /HUBSPOT_PRIVATE_APP_TOKEN/);
 assert.match(integration, /HUBSPOT_DECISION_INBOX_ENABLED/);
@@ -41,5 +43,7 @@ assert.match(migration, /GRANT ALL ON TABLE public\.hubspot_decision_inbox_items
 assert.match(listings, /decision === "publish" \|\| decision === "reject"/);
 assert.match(claims, /action !== "needs_information"/);
 assert.match(contact, /status === "resolved" \|\| status === "spam"/);
+assert.match(profileEdits, /closeHubSpotDecisionInboxTask\(`profile:\$\{requestId\}`\)/);
+assert.match(candidates, /closeHubSpotDecisionInboxTask\(`candidate:\$\{recordId\}`\)/);
 
 console.log("HubSpot Decision Inbox boundary checks passed.");
