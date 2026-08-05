@@ -32,6 +32,7 @@ assert.doesNotMatch(integration, /candidate_data|requester_email|requester_name|
 assert.match(route, /HUBSPOT_DECISION_INBOX_SYNC_TOKEN/);
 assert.match(workflow, /HUBSPOT_DECISION_INBOX_SYNC_TOKEN/);
 assert.match(workflow, /hubspot-decision-inbox/);
+assert.match(workflow, /no sync was attempted/);
 assert.match(migration, /ENABLE ROW LEVEL SECURITY/);
 assert.match(migration, /REVOKE ALL ON TABLE public\.hubspot_decision_inbox_items FROM PUBLIC, anon, authenticated/);
 assert.match(migration, /GRANT ALL ON TABLE public\.hubspot_decision_inbox_items TO service_role/);
