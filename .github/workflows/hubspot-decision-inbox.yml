@@ -1,0 +1,28 @@
+name: HubSpot Decision Inbox
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hubspot-decision-inbox
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sync genuine Ops decisions only
+        env:
+          HUBSPOT_DECISION_INBOX_SYNC_TOKEN: ${{ secrets.HUBSPOT_DECISION_INBOX_SYNC_TOKEN }}
+        run: |
+          test -n "$HUBSPOT_DECISION_INBOX_SYNC_TOKEN"
+          curl --fail --silent --show-error --retry 1 --retry-all-errors \
+            --request POST \
+            --header "Authorization: Bearer $HUBSPOT_DECISION_INBOX_SYNC_TOKEN" \
+            https://suburbmates.com.au/api/automation/hubspot-decision-inbox

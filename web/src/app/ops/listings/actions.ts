@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
 import { checkAbn, normalizeAbn } from "@/lib/automation/abn-lookup";
 import { sendStage2Outcome } from "@/lib/communications/stage1-status";
+import { closeHubSpotDecisionInboxTask } from "@/lib/hubspot/decision-inbox";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const decisions = new Set(["publish", "approve_changes", "reject", "unpublish", "restore"]);
@@ -106,6 +107,7 @@ export async function decideListingAction(formData: FormData) {
     p_operator_note: note,
   });
   if (error) redirect(`${detailPath}?error=decision`);
+  await closeHubSpotDecisionInboxTask(`listing:${vendorId}`);
   const { data: afterRoute } = await supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId });
 
   revalidatePath("/ops");

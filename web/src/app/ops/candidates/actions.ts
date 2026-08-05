@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { verifyOpsAdmin } from "@/lib/ops/auth";
+import { closeHubSpotDecisionInboxTask } from "@/lib/hubspot/decision-inbox";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -21,6 +22,7 @@ export async function resolveCandidateExceptionAction(formData: FormData) {
     p_operator_note: note,
   });
   if (error) redirect(`${detailPath}?error=resolve`);
+  await closeHubSpotDecisionInboxTask(`candidate:${recordId}`);
   revalidatePath("/ops");
   revalidatePath("/ops/candidates");
   revalidatePath(detailPath);
