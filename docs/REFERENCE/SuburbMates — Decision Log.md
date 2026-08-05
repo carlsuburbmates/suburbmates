@@ -64,7 +64,7 @@ No branch, pull request, automation run or lane handover changes product policy 
 ### D-006 — Communications and account access
 
 - **Date:** 19 July 2026
-- **Decision:** Communications is a first-class user journey. Passwordless sign-in from `auth@suburbmates.com.au` is active, and only the approved staged status messages may use that sender. A public support inbox, marketing mail, bulk notification system and uncontrolled retries remain disabled.
+- **Decision:** Communications is a first-class user journey. Existing authorised accounts use password sign-in as the normal path; password reset and the eight-digit email-code fallback are delivered from `auth@suburbmates.com.au`. Only the approved staged status messages may use that sender. A public support inbox, marketing mail, bulk notification system and uncontrolled retries remain disabled.
 - **Decision required before expansion:** `SUB-15` must approve the exact post-release message catalogue: trigger, recipient, sender, content boundary, contact/consent basis, retained evidence, failure state, retention and Ops action.
 - **Guardrail:** A user must retain an in-product status/recovery path if a message cannot be delivered. A message never changes publication, ownership, trust, commercial or claim state.
 - **Evidence to close:** Approved journey/map, message catalogue, authorised implementation and end-to-end delivery/failure evidence for each enabled message.
@@ -80,10 +80,10 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **First launch:** The initial public launch is complete when the minimum end-to-end journeys above are proven. Stripe, broad email, bulk ABN checks, AI publication and optional polish are not launch prerequisites.
 - **Evidence to close:** Update authority/issue descriptions; build the ready foundation work; then verify each public journey and release gate.
 
-### D-008 — Cross-device passwordless access
+### D-008 — Cross-device email-code fallback
 
 - **Date:** 22 July 2026
-- **Decision:** The approved `auth@suburbmates.com.au` passwordless email uses an eight-digit, one-time code entered in the browser where the person wants to sign in. It replaces the browser-bound magic-link interaction.
+- **Decision:** The approved `auth@suburbmates.com.au` email-code fallback uses an eight-digit, one-time code entered in the browser where the person wants to sign in. It replaces the browser-bound magic-link interaction; password sign-in remains the normal path for existing authorised accounts.
 - **Guardrail:** This changes neither the approved sender nor any other communications capability. Codes expire through Supabase Auth, are single-use, and do not decide a claim, publication, ownership or any other product state.
 - **Evidence to close:** A live owner-device test of code delivery, expiry, supersession and successful session handoff, followed by removal of the temporary review callback.
 
