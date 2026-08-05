@@ -71,7 +71,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   }));
   const success = message.success ?? "";
   const abnStatus = success.startsWith("abn_") ? success.slice(4) : null;
-  const successfulAction = ["draft", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(success);
+  const successfulAction = ["draft", "submission_status", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(success);
 
   return (
     <div className="space-y-7">
@@ -87,7 +87,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
 
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : message.error === "abn" ? "The ABN check could not be recorded. Enter 11 digits and try again." : message.error === "delete" ? "This record could not be deleted. Only a never-public rejected listing with no linked operational records can be permanently deleted." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
       {abnStatus && <AbnResult status={abnStatus} />}
-      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : "Decision recorded with an audit event."}</p>}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : success === "submission_status" ? "Private submitter status saved. Publication was not changed." : "Decision recorded with an audit event."}</p>}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Source evidence</h3>
@@ -114,7 +114,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
         <p className="mt-3 text-xs text-slate-500">Only a latest active result less than 90 days old may show “ABN checked” publicly. The ABN number itself stays private.</p>
       </section>
 
-      {submission && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 className="text-xl font-bold">Private submitter status</h3><p className="mt-2 text-sm text-slate-600">This is a private, signed-in status only. It does not send email or change publication.</p><p className="mt-4 font-semibold">Current status: {statusLabel(submission.submission_status)}</p>{submission.operator_message && <p className="mt-2 text-sm">Current message: {submission.operator_message}</p>}{!['approved','declined'].includes(submission.submission_status) && <form action={setBusinessSubmissionStatusAction} className="mt-5 space-y-4"><input type="hidden" name="vendorId" value={vendorId} /><label className="block text-sm font-bold">Outcome<select name="outcome" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal"><option value="">Choose one</option><option value="needs_information">Needs information</option><option value="approved">Approved</option><option value="declined">Declined</option></select></label><label className="block text-sm font-bold">Plain-language message<textarea name="message" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label><button className="btn btn-outline">Save private status</button></form>}</section>}
+      {submission && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 className="text-xl font-bold">Private submitter status</h3><p className="mt-2 text-sm text-slate-600">This saves a private, signed-in status and does not change publication. If approved status messages are enabled, the system also attempts to notify the submitter.</p><p className="mt-4 font-semibold">Current status: {statusLabel(submission.submission_status)}</p>{submission.operator_message && <p className="mt-2 text-sm">Current message: {submission.operator_message}</p>}{!['approved','declined'].includes(submission.submission_status) && <form action={setBusinessSubmissionStatusAction} className="mt-5 space-y-4"><input type="hidden" name="vendorId" value={vendorId} /><label className="block text-sm font-bold">Outcome<select name="outcome" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal"><option value="">Choose one</option><option value="needs_information">Needs information</option><option value="approved">Approved</option><option value="declined">Declined</option></select></label><label className="block text-sm font-bold">Plain-language message<textarea name="message" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label><button className="btn btn-outline">Save private status</button></form>}</section>}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Approved public fields and operator draft</h3>
