@@ -111,8 +111,8 @@ export default async function DashboardPage() {
 
         {privateSubmissionStatuses.length > 0 && (
           <section className="space-y-4">
-            <div><h2 className="text-2xl font-bold">Your business submissions</h2><p className="mt-1 text-sm text-slate-600">These are private review updates. They do not publish a listing or assign ownership.</p></div>
-            <div className="grid gap-4">{privateSubmissionStatuses.map((request) => <div key={`${request.business_name}-${request.submitted_at}`} className="rounded-2xl border bg-white p-5 shadow-sm"><p className="font-bold">{request.business_name}</p><p className="mt-2 text-sm text-slate-600">{request.status_message}</p><p className="mt-2 text-sm font-medium text-slate-800">Next step: {request.next_step}</p></div>)}</div>
+            <div><h2 className="text-2xl font-bold">Your business submissions</h2><p className="mt-1 text-sm text-slate-600">These are private updates about your business-submission review. Listing and ownership outcomes are shown separately on this page.</p></div>
+            <div className="grid gap-4">{privateSubmissionStatuses.map((request) => <div key={`${request.business_name}-${request.submitted_at}`} className="rounded-2xl border bg-white p-5 shadow-sm"><p className="font-bold">{request.business_name}</p><p className="mt-2 text-sm text-slate-600">{request.status_message}</p><p className="mt-2 text-sm font-medium text-slate-800">Next step: {submissionNextStep(request)}</p></div>)}</div>
           </section>
         )}
 
@@ -169,4 +169,9 @@ export default async function DashboardPage() {
       </div>
     </div>
   )
+}
+
+function submissionNextStep(request: BusinessSubmissionStatus) {
+  if (request.submission_status === "approved") return "No action is needed. Check Your ownership requests below for ownership status."
+  return request.next_step
 }
