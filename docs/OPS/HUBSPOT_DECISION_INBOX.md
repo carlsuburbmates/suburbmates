@@ -27,7 +27,7 @@ Exactly one HubSpot task may exist for each current, genuine operator action:
 
 The one-way integration creates or updates HubSpot **Tasks** only. Every task includes one canonical protected SuburbMates link and uses a stable SuburbMates work identifier. A successful protected Ops decision attempts to close its mapped HubSpot task, but a HubSpot outage must never block or reverse the decision. The next bounded reconciliation closes anything missed.
 
-Credentials are server-only and least-privilege: HubSpot task write access only. They are never exposed to the browser, stored in the database, or granted access to contacts, companies, deals, marketing, billing, or sensitive data.
+Credentials are server-only and least-privilege within HubSpot's available model: the Task API mandates the single coarse `crm.objects.contacts.write` scope even for unassociated Tasks. The integration code uses that token only for Task create/update calls; it never reads or writes contacts, companies, deals, marketing, billing, or sensitive data. The token is never exposed to the browser or stored in the database.
 
 ## Operator routine
 
