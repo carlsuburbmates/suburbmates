@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "cf:build": "opennextjs-cloudflare build && npm run cf:check-secrets",
+    "cf:build": "npm run cf:check-env && opennextjs-cloudflare build && npm run cf:check-secrets",
+    "cf:check-env": "node --env-file-if-exists=.env.local scripts/check-cloudflare-deploy-env.mjs",
     "cf:check-secrets": "node scripts/check-build-secrets.mjs",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "npm run cf:build && opennextjs-cloudflare deploy",
