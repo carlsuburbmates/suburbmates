@@ -79,7 +79,7 @@ export function SubmitButton({ children, pendingLabel }: { children: string; pen
   return <button ref={buttonRef} disabled={disabled} className="btn btn-primary w-full whitespace-normal sm:w-auto" aria-describedby="submission-progress">{pending ? pendingLabel : children}<span id="submission-progress" className="sr-only" aria-live="polite">{pending ? " Submission in progress." : verificationReady ? "" : " Complete human verification before submitting."}</span></button>;
 }
 
-export function TurnstileField({ siteKey }: { siteKey: string }) {
+export function TurnstileField({ siteKey, action = "business_submission" }: { siteKey: string; action?: "business_submission" | "contact" }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [token, setToken] = useState("");
@@ -116,7 +116,7 @@ export function TurnstileField({ siteKey }: { siteKey: string }) {
     try {
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
-        action: "business_submission",
+        action,
         theme: "light",
         size: "flexible",
         callback: (nextToken: string) => { setToken(nextToken); setMessage("Human verification ready."); notifyVerificationChange(true); },
