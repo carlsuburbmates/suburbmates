@@ -15,15 +15,13 @@ Write the reason in the decision note. The system keeps it as permanent audit ev
 
 ## Getting in
 
-Open `/ops` and sign in with `admin@suburbmates.com.au`. Request a sign-in code, then enter the newest eight-digit code in the browser you are using. The email can be opened on another device. If a code fails, wait for the stated email limit before requesting another.
+Open `/ops` and sign in with `admin@suburbmates.com.au` using the normal password form. If the password is unavailable, use **Set or reset password**. The eight-digit email code is a fallback: request it, then enter the newest code in the browser you are using. The email can be opened on another device. If a code fails, wait for the stated email limit before requesting another.
 
 ## Daily order
 
-1. **Listings** — decide whether a business is suitable for the public directory.
-2. **Claims** — decide whether a person should control an existing listing.
-3. **Profile edits** — decide whether an approved owner’s proposed public changes are accurate.
-4. **Contact** — handle support, correction, claim-help, and privacy messages.
-5. **System** — notice warnings and confirm decisions appear in the permanent record.
+1. **Work** — open only the genuine decisions that need judgment; use its priority groups rather than treating background evidence as a queue.
+2. **Businesses** — find a vendor, its authorised evidence and its protected detail/actions when Work links you there or you need to look something up.
+3. **System** — act only on a plain-language warning; otherwise leave background evidence and routine health alone.
 
 Routine exact-email claims are intended to be low-friction. Claims requiring a challenge, recovery, revocation, conflict resolution or sensitive-change review belong in the protected Claims queue. A claim never publishes a listing or changes unrelated trust/commercial state.
 

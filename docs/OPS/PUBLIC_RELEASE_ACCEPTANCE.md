@@ -6,7 +6,7 @@ The owner authorised the first public release on 23 July 2026. This register pre
 
 Use real activity only. Do not create fake production businesses, claims, ABNs, images or contact requests merely to satisfy this checklist. Record the time, route and plain-English result in the relevant Linear issue after each walkthrough.
 
-1. **Cross-device access:** On the Mac browser, open `/login`, request a code for the approved address, read the newest eight-digit code on the phone, then type it into the Mac browser. Confirm the intended private page opens. Do not click an email link or request repeated codes while rate-limited.
+1. **Account access:** On the Mac browser, open `/login` and sign in with the approved address and password. When the email-code fallback needs verification, request the newest eight-digit code, read it on the phone, then type it into the Mac browser. Confirm the intended private page opens. Do not click an email link or request repeated codes while rate-limited.
 2. **Owner and submitter paths:** Complete the claim, profile-change, missing-business and request-status journeys only when there is a real owner or community submission to use. Confirm that each stays private or pending until the stated operator decision.
 3. **Operator ABN and media:** In `/ops`, use only a real listing with operator-held ABN evidence and an actual owner-authorised image. Check that ABN information stays private and media remains private until the operator decision.
 4. **Status email and failure:** Use an actual permitted decision, not a fabricated request. Confirm the in-product status first. Then record one genuine delivery result and one safe, deliberate provider-failure result without enabling retries, bulk sends, marketing or a general inbox.

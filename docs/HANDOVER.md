@@ -79,7 +79,7 @@ Public directory reads use `public.published_vendors`, a safe projection contain
 
 ### Owners
 
-- `/login`: Supabase passwordless email authentication.
+- `/login`: existing authorised accounts sign in with email and password. Password reset and an eight-digit email-code fallback are delivered through Supabase Auth; there is no public account-registration flow.
 - `/claim`: a matching authenticated email can submit a pending claim request only.
 - `/dashboard`: an approved owner can submit a proposed profile change.
 - claim approval, rejection, information requests, and revocation are operator-only and audited;
@@ -141,7 +141,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
 | Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; local and remote migrations aligned through `20260725210822` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
-| Resend | Supabase Auth SMTP only at launch | Domain verified; passwordless email-code sign-in into `/ops` is the approved path |
+| Resend | Supabase Auth delivery only | Domain verified; password reset and the eight-digit email-code fallback are delivered from `auth@suburbmates.com.au`. No general sender, marketing mail or public inbox is enabled. |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
 | ABN Lookup | Optional operator-run supporting evidence | One-listing-at-a-time evidence path is implemented; never gate listing, claim, or publication on ABN alone |
 
