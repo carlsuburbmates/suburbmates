@@ -5,7 +5,9 @@
   "vars": {
     "TURNSTILE_SITE_KEY": "0x4AAAAAAD2mX1Brs-CzSjzW",
     "TRANSACTIONAL_STATUS_EMAILS_ENABLED": "true",
-    "TRANSACTIONAL_STATUS_FROM": "auth@suburbmates.com.au"
+    "TRANSACTIONAL_STATUS_FROM": "auth@suburbmates.com.au",
+    "HUBSPOT_DECISION_INBOX_ENABLED": "true",
+    "HUBSPOT_OWNER_ID": "96694534"
   },
   "compatibility_date": "2026-07-15",
   "compatibility_flags": [

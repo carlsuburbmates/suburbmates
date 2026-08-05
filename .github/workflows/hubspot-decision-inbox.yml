@@ -25,7 +25,7 @@ jobs:
             echo "HubSpot Decision Inbox is not configured yet; no sync was attempted."
             exit 0
           fi
-          curl --fail --silent --show-error --retry 1 --retry-all-errors \
+          curl --fail-with-body --silent --show-error --retry 1 --retry-all-errors \
             --request POST \
             --header "Authorization: Bearer $HUBSPOT_DECISION_INBOX_SYNC_TOKEN" \
             https://suburbmates.com.au/api/automation/hubspot-decision-inbox

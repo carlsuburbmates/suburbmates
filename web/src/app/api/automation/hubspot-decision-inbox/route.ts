@@ -9,7 +9,16 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await syncHubSpotDecisionInbox();
-    if (!result.enabled) return NextResponse.json({ error: "HubSpot Decision Inbox is not configured" }, { status: 503 });
+    if (!result.enabled) {
+      return NextResponse.json({
+        error: "HubSpot Decision Inbox is not configured",
+        configuration: {
+          enabled: runtimeEnv("HUBSPOT_DECISION_INBOX_ENABLED") === "true",
+          token: Boolean(runtimeEnv("HUBSPOT_PRIVATE_APP_TOKEN")),
+          owner: Boolean(runtimeEnv("HUBSPOT_OWNER_ID")),
+        },
+      }, { status: 503 });
+    }
     return NextResponse.json(result);
   } catch {
     return NextResponse.json({ error: "HubSpot Decision Inbox sync failed" }, { status: 500 });
