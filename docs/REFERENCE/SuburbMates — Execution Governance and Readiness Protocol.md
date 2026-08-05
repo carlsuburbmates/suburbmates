@@ -95,6 +95,21 @@ If any item is missing, improve the issue or return it to Backlog. Do not begin 
 | Communications | Approved catalogue entry, sender/recipient/content boundary, delivery/failure state, retained evidence and user fallback. |
 | Public release/SEO | Production route, sitemap/canonical/redirect evidence, public-data eligibility and owner release decision. |
 
+## 5a. Real user journey verification and repair
+
+Use **Verify and Repair: [user] → [intended outcome]** for any journey that a real person reports as difficult, unclear or failed. This is an end-to-end acceptance workflow, not a feature checklist.
+
+1. State the person's intended outcome and the boundaries that must remain true.
+2. Use a real, authorised journey and data where available; do not fabricate durable production records merely for acceptance.
+3. Record observations separately from inferences and unknowns: visible UI, validation, private/public data state, automation, communications and the resulting Ops work.
+4. Reproduce the failure and trace the exact failing boundary before proposing a fix.
+5. Fix only the confirmed cause, with a focused regression test and the smallest relevant broader checks.
+6. Review, merge, migrate and deploy through the normal controlled path when required.
+7. Repeat the original journey in production and verify the person's clear outcome, recovery path, data state, Ops follow-through and every preserved boundary.
+8. Record the live evidence and any residual limitation in Linear; only then mark the journey accepted.
+
+The standard applies equally to a completed journey and a safe, honest unavailable state. A form submission alone is never acceptance.
+
 ## 6. Deviation and stop rules
 
 | Finding | Required action |
