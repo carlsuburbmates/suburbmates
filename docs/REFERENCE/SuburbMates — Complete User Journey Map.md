@@ -34,12 +34,12 @@ mindmap
     Existing business owner
       Find business
         Claim listing
-          Sign in by email link
+          Sign in with password or email code
           Follow approved claim policy
             Track request or claim outcome
               Manage profile changes
       Communications and account access
-        Email-code sign in and recovery
+        Password sign in, recovery and email-code fallback
         Approved status messages only
         Contact help and privacy intake
     Business not listed
@@ -150,7 +150,7 @@ This is a first-class service journey, not a background detail of claims or form
 
 ### Current release posture
 
-Passwordless sign-in uses an eight-digit code from `auth@suburbmates.com.au`, entered in the browser being used. Approved status messages are limited to the defined claim, profile-change, submission and request-outcome paths; their real delivery and failure walkthroughs remain outstanding. There is no public support inbox, marketing mail, bulk notification system or automatic retry loop.
+Password sign-in is the normal path for existing authorised accounts. A person can set or reset a 12+ character password through their email. An eight-digit email code from `auth@suburbmates.com.au` remains an accessible fallback and may be entered in the browser being used. Approved status messages are limited to the defined claim, profile-change, submission and request-outcome paths; their real delivery and failure walkthroughs remain outstanding. There is no public support inbox, marketing mail, bulk notification system or automatic retry loop.
 
 ### Communications controls after release
 
@@ -281,6 +281,81 @@ A reporter, business owner or affected person must be able to understand the saf
 - Every meaningful decision is attributable, timestamped and reviewable.
 - Automation failures become visible work, not silent data loss or automatic state changes.
 - Disabled features and release safeguards are stated honestly. Any material change needs an authorised, verified release or rollback record.
+
+## 10. Acceptance playbook: exact UI steps and expected outcomes
+
+This section is the practical "do this, see this" companion to the journeys above. It describes the current interface, not an imagined future UI. Unless a message is quoted below, do not invent a toast: the product normally uses an on-page green **status** card or red **alert** card.
+
+### 1. Resident finds and uses a business
+
+1. Open **Home**. In the search panel select a service and/or suburb, then press **Search**. With no selections, **Search** opens the complete directory.
+2. On the directory, use its search and filters, then open a business name. The expected result is a public profile; private candidate or ownership information must not appear.
+3. Choose the available contact card: **Get directions**, **Call Direct**, **Email Us**, or **Website**. Each opens the stated destination (`maps`, phone, email app, or the business website). If none exists, expect: **“Direct contact details have not yet been added to this public profile.”**
+4. To flag a problem, press **Report a problem with this listing**, select the appropriate support topic, provide a message and consent, complete human verification, then press **Send support request**.
+5. Expected success card: **“Your request has been received. Keep this page for your records; an operator will review it.”** The listing does not change automatically.
+
+### 2. Existing owner claims a listed business
+
+1. From a public profile press **Claim this business**, or open **Find your business first** and search by business name and suburb.
+2. If a match is displayed, press **Claim this profile**. If no match appears, expect **“No likely match found”** and choose the owner or community route only if it is genuinely missing.
+3. On **Claim your business**, sign in with email and password. If needed, press **Set or reset password**; expected status: **“Check your email for the password-reset link. You can open it on the device where you want to set your password.”** The fallback button is **Use a one-time email code instead**.
+4. When the exact listing contact email makes a listing eligible, press **Continue to claim**. Enter **Your connection to this business** (10–1,000 characters) and, optionally, an 11-digit ABN. Press **Submit claim for review**.
+5. Expected success card: **“Your claim request has been submitted for review. The listing remains public and unchanged while the request is assessed.”** An invalid connection or ABN must show an alert rather than silently submit.
+6. Open **Dashboard** to see **Your ownership requests** and its visible `Status:`. While pending or needing information, **Withdraw request** is available. Expected withdrawal status: **“Your claim request was withdrawn. The business listing was not changed.”**
+
+### 3. Approved owner updates their profile or proposes media
+
+1. Sign in and open **Dashboard**. Under **Your Businesses**, open the business card; it shows `Published` or `Draft`, then press the relevant edit controls.
+2. Edit permitted fields and press **Submit changes for review**. Expected success: **“Changes submitted for review. Your current public profile remains unchanged until approval.”** The button becomes **Awaiting review** and the page says **“Changes awaiting review. A new request can be submitted after this one is decided.”**
+3. To retract a pending change, press **Withdraw request**. Expected success: **“Your profile-change request was withdrawn. Your public listing was not changed.”**
+4. To propose media, select **Logo** or **Listing image**, choose a JPEG, PNG or WebP up to 2 MB, complete **Describe the image** and **Permission to use it**, then press **Submit for review**.
+5. Expected media status: **“Your image is private and awaiting operator review. It is not public yet.”** The dashboard then shows **Image review status** and any operator note.
+
+### 4. Owner adds a genuinely missing business and requests ownership
+
+1. Open **Add a business** / **Find your business first**. Enter a business name and select a suburb, then press **Search**.
+2. If no likely match is found, choose **I own or represent it**, then **Continue as owner or representative →**. If signed out, press **Sign in to continue**; sign-in does not approve ownership.
+3. Fill the owner form: name, business name, type and select a category, location, at least one contact method, optional ABN/address, and **Your connection to this business**. A bare domain such as `dogtrainersdirectory.com.au` is accepted and made safe by the system. Tick the declaration, wait for **“Human verification ready.”**, then press **Submit business and ownership request**.
+4. Expected success status: **“Your business candidate and ownership request were received for review. They remain private and pending until an operator decides.”** It creates a private candidate and pending claim; it does not publish the business or assign ownership.
+5. If validation, verification or saving fails, the red alert must say what happened and, for the owner form, keep the entered details. For example: **“Human verification was not completed. Your entered details are still here; refresh verification and submit again.”**
+
+### 5. Community member suggests a missing business
+
+1. Perform the same initial name-and-suburb search. When it is genuinely missing, select **I am suggesting it**, then **Continue as a community suggester →**.
+2. Complete the suggestion form: name, email, business name, typed-and-selected category, location, at least one contact method, optional ABN/address and the declaration. Complete human verification, then press **Submit for review**.
+3. Expected success status: **“Submission received for review. It is not public yet. You do not need an account to submit.”** The message also offers an optional **sign in with the email you provided** link to private status.
+4. This journey creates a private candidate only. It never creates an ownership request, public profile, or automatic publication.
+
+### 6. Person reports a correction, privacy concern or other problem
+
+1. From a profile press **Report a problem with this listing**, or open **Contact SuburbMates**.
+2. Under **What do you need help with?**, select **Correct a listing**, **Privacy request**, **Technical problem**, or the appropriate stated topic. Add an optional business name, the required message, consent and human verification.
+3. Press **Send support request**. Expected success status: **“Your request has been received. Keep this page for your records; an operator will review it.”**
+4. An unavailable challenge must show **“The secure contact form is temporarily unavailable. Claim and listing links above remain available.”** A failed challenge must show **“Human verification was not completed. Refresh the page and try again.”**
+5. The report stays private. It is not a promise of a reply, deletion or automatic public change.
+
+### 7. Account access and private request status
+
+1. Open **Sign in to SuburbMates**, enter the account email and password, then press **Sign in**. Success routes to the protected destination; there is no success toast before the redirect.
+2. If the password is unavailable, enter the email then press **Set or reset password**. Use the reset link and on the reset page enter the new 12+ character password, then press **Save password**.
+3. If email code is preferred, press **Use a one-time email code instead**, then **Send sign-in code**. Expected status: **“Check your email for the eight-digit sign-in code. Enter it here; the email can be opened on another device.”** Enter eight digits and press **Verify and sign in**.
+4. In **Dashboard**, expect the relevant private cards: **Your business submissions**, **Your ownership requests**, and **Your Businesses**. These are the primary status record; an email is supplementary, not the only way to know an outcome.
+
+### 8. Operator resolves a real decision in Ops
+
+1. Sign in as an authorised operator and open **Ops**. The default is **Work**, headed **“What needs your judgment?”** Press **Open work list** to jump to every genuine decision. `Act now`, `Needs a decision` and `Later review` count decisions, not businesses.
+2. Open one Work row. It must route to existing protected evidence and a bounded choice. Background exclusions, repeat discovery records and historic evidence gaps must not be presented as work.
+3. For a listing, review **Source evidence**, prepare approved fields if needed, press **Save operator draft**, then make the appropriate lifecycle choice: **Approve & publish**, **Approve changes**, **Reject listing**, **Unpublish listing**, or **Restore for review**. A successful action shows **“Decision recorded with an audit event.”** A saved draft shows **“Operator draft saved. The public listing and sitemap were not changed.”**
+4. For a claim, enter **Decision reason** and choose **Request information**, **Reject**, **Approve ownership**, or (for an approved claim) **Revoke ownership**. These change ownership only; they do not publish or edit the listing.
+5. For a profile edit, compare current and proposed values, enter **Decision basis or reason**, then choose **Approve public changes** or **Reject changes**. Success shows **“Decision recorded with an audit event.”**
+6. For a contact request, record **Action taken or review note**, then choose **Start work**, **Resolve**, **Mark as spam**, or the available safe transition. Expected success: **“Status and audit history updated.”**
+7. For an owner-supplied ABN, enter 11 digits and press **Check ABN**. The result is explicitly private evidence and does not publish, establish ownership, rank a listing or enable billing.
+8. For owner media, enter a decision note and press **Approve media**, **Reject media**, or **Remove approved media**. Approval affects only that media; it does not publish the listing or change ownership.
+9. In **Businesses**, the default is the alphabetical **Business register**. Search/filter existing vendor records and open one detail. Raw candidates are not businesses. In **System**, expect **All clear** or a plain item that says what needs attention and its reference. **Commercial readiness** must say **“Billing is off.”**
+
+### Acceptance evidence for every run
+
+Record the route, button pressed, exact status or alert text, resulting private/public state, and the related Ops/audit outcome. A journey is accepted only when the original user intent succeeds safely. A form submission alone is not acceptance.
 
 ## Build sequencing implied by this map
 
