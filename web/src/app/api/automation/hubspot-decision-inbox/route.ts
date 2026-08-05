@@ -20,7 +20,9 @@ export async function POST(request: NextRequest) {
       }, { status: 503 });
     }
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json({ error: "HubSpot Decision Inbox sync failed" }, { status: 500 });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "Unknown sync error";
+    console.error("HubSpot Decision Inbox sync failed", { reason });
+    return NextResponse.json({ error: "HubSpot Decision Inbox sync failed", reason }, { status: 500 });
   }
 }

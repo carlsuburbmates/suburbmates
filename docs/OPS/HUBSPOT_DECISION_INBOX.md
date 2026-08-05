@@ -8,6 +8,8 @@ HubSpot is the solo operator's daily **Decision Inbox**. SuburbMates `/ops` rema
 
 Exactly one HubSpot task may exist for each current, genuine operator action:
 
+Clearly labelled test and acceptance fixtures are excluded and are automatically closed if an earlier sync created a task for them.
+
 | Label | Source in SuburbMates | HubSpot contents | Closure condition |
 | --- | --- | --- | --- |
 | Listing review | A listing in `draft` or `pending_review` | Plain title, priority, safe business name, direct `/ops/listings/:id` link | Listing no longer needs review after a protected decision. |

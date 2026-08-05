@@ -28,6 +28,8 @@ const contact = fs.readFileSync("web/src/app/ops/contact/actions.ts", "utf8");
 assert.match(integration, /HUBSPOT_PRIVATE_APP_TOKEN/);
 assert.match(integration, /HUBSPOT_DECISION_INBOX_ENABLED/);
 assert.match(integration, /candidate_handoff_records"\)\.select\("id, qualification_reasons"/);
+assert.doesNotMatch(integration, /\.contains\("qualification_reasons"/);
+assert.match(integration, /isTestFixture\(row\.business_name\)/);
 assert.doesNotMatch(integration, /candidate_data|requester_email|requester_name|claimant_email|proposed_changes|ABN/);
 assert.match(route, /HUBSPOT_DECISION_INBOX_SYNC_TOKEN/);
 assert.match(workflow, /HUBSPOT_DECISION_INBOX_SYNC_TOKEN/);

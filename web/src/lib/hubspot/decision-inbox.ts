@@ -99,24 +99,24 @@ async function loadOpenDecisionInboxItems(): Promise<DecisionInboxItem[]> {
     admin.from("claim_requests").select("id, claim_status, vendors!inner(business_name)").in("claim_status", ["pending", "needs_information"]),
     admin.from("listing_change_requests").select("id, vendors!inner(business_name)").eq("change_status", "pending"),
     admin.from("contact_requests").select("id, topic").in("contact_status", ["new", "in_progress"]),
-    admin.from("candidate_handoff_records").select("id, qualification_reasons").eq("qualification_outcome", "exception").eq("exception_status", "open").contains("qualification_reasons", ["possible_duplicate"]),
+    admin.from("candidate_handoff_records").select("id, qualification_reasons").eq("qualification_outcome", "exception").eq("exception_status", "open"),
     admin.from("integration_health").select("integration_name, status").in("status", ["failed", "degraded", "stale"]),
     admin.from("automation_jobs").select("id, job_type").eq("status", "failed"),
     admin.from("existing_catalogue_requalification_runs").select("id").eq("status", "completed").order("completed_at", { ascending: false, nullsFirst: false }).limit(1).maybeSingle(),
   ]);
-  for (const result of [listings, claims, profiles, contacts, candidates, health, jobs, latestCatalogueRun]) {
-    if (result.error) throw new Error("Could not load the current SuburbMates decision queue.");
+  for (const [name, result] of Object.entries({ listings, claims, profiles, contacts, candidates, health, jobs, latestCatalogueRun })) {
+    if (result.error) throw new Error(`Could not load the current SuburbMates decision queue: ${name}.`);
   }
 
   const catalogue = latestCatalogueRun.data
-    ? await admin.from("existing_catalogue_requalification_records").select("id, vendor_id, qualification_reasons").eq("run_id", latestCatalogueRun.data.id).eq("qualification_outcome", "exception").eq("exception_status", "open").contains("qualification_reasons", ["possible_duplicate"])
+    ? await admin.from("existing_catalogue_requalification_records").select("id, vendor_id, qualification_reasons").eq("run_id", latestCatalogueRun.data.id).eq("qualification_outcome", "exception").eq("exception_status", "open")
     : { data: [], error: null };
   if (catalogue.error) throw new Error("Could not load current catalogue review decisions.");
 
   return [
-    ...(listings.data ?? []).map((row) => item(`listing:${row.id}`, "listing", "needs_decision", `/ops/listings/${row.id}`, row.business_name)),
-    ...(claims.data ?? []).map((row) => item(`claim:${row.id}`, "claim", "needs_decision", `/ops/claims/${row.id}`, firstBusinessName(row.vendors))),
-    ...(profiles.data ?? []).map((row) => item(`profile:${row.id}`, "profile", "needs_decision", `/ops/profile-edits/${row.id}`, firstBusinessName(row.vendors))),
+    ...(listings.data ?? []).filter((row) => !isTestFixture(row.business_name)).map((row) => item(`listing:${row.id}`, "listing", "needs_decision", `/ops/listings/${row.id}`, row.business_name)),
+    ...(claims.data ?? []).filter((row) => !isTestFixture(firstBusinessName(row.vendors))).map((row) => item(`claim:${row.id}`, "claim", "needs_decision", `/ops/claims/${row.id}`, firstBusinessName(row.vendors))),
+    ...(profiles.data ?? []).filter((row) => !isTestFixture(firstBusinessName(row.vendors))).map((row) => item(`profile:${row.id}`, "profile", "needs_decision", `/ops/profile-edits/${row.id}`, firstBusinessName(row.vendors))),
     ...(contacts.data ?? []).map((row) => item(`contact:${row.id}`, "contact", "needs_decision", `/ops/contact/${row.id}`, null, row.topic)),
     ...(candidates.data ?? []).filter((row) => isOnlyPossibleDuplicate(row.qualification_reasons)).map((row) => item(`candidate:${row.id}`, "candidate", "needs_decision", `/ops/candidates/${row.id}`)),
     ...(catalogue.data ?? []).filter((row) => isOnlyPossibleDuplicate(row.qualification_reasons)).map((row) => item(`catalogue:${row.id}`, "catalogue", "later_review", `/ops/listings/${row.vendor_id}`)),
@@ -138,6 +138,10 @@ function firstBusinessName(value: unknown): string | null {
 
 function isOnlyPossibleDuplicate(value: unknown) {
   return Array.isArray(value) && value.length === 1 && value[0] === "possible_duplicate";
+}
+
+function isTestFixture(value: string | null) {
+  return /\b(?:test|fixture)\b/i.test(value ?? "");
 }
 
 async function saveMapping(admin: ReturnType<typeof createAdminClient>, input: { workItemId: string; taskId: string; workKind: DecisionInboxKind; state: "open" | "completed"; fingerprint: string }) {
