@@ -121,7 +121,7 @@ export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientP
               className="text-xl md:text-2xl font-light tracking-wide mb-12 max-w-2xl mx-auto"
               style={{ color: "var(--sm-text-on-inverse-secondary)" }}
             >
-              Find local businesses in your suburb instantly.
+              Find local businesses across the City of Darebin instantly.
               No sign-ups. No middlemen. Just direct contact.
             </motion.p>
 
@@ -324,18 +324,20 @@ export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientP
             className="text-xl font-light leading-relaxed mb-12 max-w-2xl mx-auto"
             style={{ color: "var(--sm-text-on-inverse-secondary)" }}
           >
-            Join the most straightforward local directory. Get in front of customers
-            looking for exactly what you do — no lock-in contracts.
+            First, look for your existing Darebin business so you can claim it without creating a duplicate. If it is genuinely missing, add it for review.
           </motion.p>
 
-          <motion.div variants={fadeInUp}>
+          <motion.div variants={fadeInUp} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/join"
               className="btn btn-inverse"
-              aria-label="List your business on SuburbMates"
+              aria-label="Find or claim your business on SuburbMates"
             >
-              <span>List Your Business</span>
+              <span>Find or claim your business</span>
               <ArrowRight size={20} aria-hidden="true" />
+            </Link>
+            <Link href="/join?add=1" className="btn btn-outline border-white/70 text-white hover:bg-white hover:text-black" aria-label="Add a missing business to SuburbMates">
+              Add a missing business
             </Link>
           </motion.div>
         </motion.div>

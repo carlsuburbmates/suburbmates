@@ -12,102 +12,89 @@ interface HeroSearchProps {
 
 export function HeroSearch({ categories, suburbs }: HeroSearchProps) {
   const router = useRouter();
+  const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSuburb, setSelectedSuburb] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
     const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
     if (selectedCategory) params.set("category", selectedCategory);
     if (selectedSuburb) params.set("suburb", selectedSuburb);
-    
-    // If no filters selected, it will just go to /businesses
-    router.push(`/businesses${params.toString() ? '?' + params.toString() : ''}`);
+    router.push(`/businesses${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
   return (
     <motion.form
       onSubmit={handleSearch}
-      className="relative w-full max-w-3xl mx-auto"
+      className="relative mx-auto w-full max-w-5xl"
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.25, duration: 0.5 }}
       role="search"
     >
       <div
-        className="relative flex flex-col md:flex-row items-center overflow-hidden rounded-2xl md:rounded-full transition-all duration-300"
+        className="grid grid-cols-1 overflow-hidden rounded-2xl transition-all duration-300 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_auto] lg:rounded-full"
         style={{
           backgroundColor: isFocused ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)",
-          border: isFocused
-            ? "1.5px solid rgba(255,255,255,0.75)"
-            : "1.5px solid rgba(255,255,255,0.30)",
+          border: isFocused ? "1.5px solid rgba(255,255,255,0.75)" : "1.5px solid rgba(255,255,255,0.30)",
           boxShadow: isFocused ? "0 0 0 3px rgba(255,255,255,0.15)" : "none",
         }}
       >
-        {/* Category Select */}
-        <div className="relative w-full md:w-1/2 flex items-center border-b md:border-b-0 md:border-r border-white/20">
-          <div
-            className="absolute left-5 pointer-events-none"
-            style={{ color: "rgba(255,255,255,0.90)" }}
-            aria-hidden="true"
-          >
-            <Search size={20} />
-          </div>
+        <div className="relative flex items-center border-b border-white/20 lg:border-b-0 lg:border-r">
+          <Search className="pointer-events-none absolute left-5" size={20} color="rgba(255,255,255,0.90)" aria-hidden="true" />
+          <label className="sr-only" htmlFor="hero-search">Search business name or keyword</label>
+          <input
+            id="hero-search"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder="Search business name or keyword"
+            className="w-full bg-transparent py-4 pl-12 pr-4 text-base text-white placeholder:text-white/60 focus:outline-none focus:ring-0 sm:text-lg"
+          />
+        </div>
+
+        <div className="flex items-center border-b border-white/20 lg:border-b-0 lg:border-r">
+          <label className="sr-only" htmlFor="hero-category">Select a service</label>
           <select
+            id="hero-category"
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(event) => setSelectedCategory(event.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            aria-label="Select a service"
-            className="w-full pl-12 pr-4 py-4 md:py-5 text-lg bg-transparent border-none focus:outline-none focus:ring-0 appearance-none cursor-pointer"
-            style={{
-              color: selectedCategory ? "var(--sm-text-on-inverse)" : "rgba(255,255,255,0.55)",
-            }}
+            className="w-full cursor-pointer appearance-none border-none bg-transparent px-5 py-4 text-base focus:outline-none focus:ring-0 sm:text-lg"
+            style={{ color: selectedCategory ? "var(--sm-text-on-inverse)" : "rgba(255,255,255,0.75)" }}
           >
-            <option value="" className="text-black">All Services</option>
-            {categories.map((cat) => (
-              <option key={cat.slug} value={cat.slug} className="text-black">
-                {cat.name}
-              </option>
+            <option value="" className="text-black">All services</option>
+            {categories.map((category) => (
+              <option key={category.slug} value={category.slug} className="text-black">{category.name}</option>
             ))}
           </select>
         </div>
 
-        {/* Suburb Select */}
-        <div className="relative w-full md:w-1/2 flex items-center">
+        <div className="flex items-center border-b border-white/20 lg:border-b-0 lg:border-r">
+          <label className="sr-only" htmlFor="hero-suburb">Select a suburb</label>
           <select
+            id="hero-suburb"
             value={selectedSuburb}
-            onChange={(e) => setSelectedSuburb(e.target.value)}
+            onChange={(event) => setSelectedSuburb(event.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            aria-label="Select a suburb"
-            className="w-full pl-6 pr-32 py-4 md:py-5 text-lg bg-transparent border-none focus:outline-none focus:ring-0 appearance-none cursor-pointer"
-            style={{
-              color: selectedSuburb ? "var(--sm-text-on-inverse)" : "rgba(255,255,255,0.55)",
-            }}
+            className="w-full cursor-pointer appearance-none border-none bg-transparent px-5 py-4 text-base focus:outline-none focus:ring-0 sm:text-lg"
+            style={{ color: selectedSuburb ? "var(--sm-text-on-inverse)" : "rgba(255,255,255,0.75)" }}
           >
-            <option value="" className="text-black">All Suburbs</option>
-            {suburbs.map((sub) => (
-              <option key={sub.slug} value={sub.slug} className="text-black">
-                {sub.name}
-              </option>
+            <option value="" className="text-black">All suburbs</option>
+            {suburbs.map((suburb) => (
+              <option key={suburb.slug} value={suburb.slug} className="text-black">{suburb.name}</option>
             ))}
           </select>
-
-          {/* Submit button */}
-          <button
-            type="submit"
-            aria-label="Search"
-            className="btn btn-inverse absolute right-2 top-1/2 -translate-y-1/2"
-            style={{
-              padding: "0.625rem 1.25rem",
-              fontSize: "0.8125rem",
-            }}
-          >
-            Search
-          </button>
         </div>
+
+        <button type="submit" className="btn btn-inverse m-2 min-h-11 justify-center" aria-label="Search directory">Search</button>
       </div>
     </motion.form>
   );
