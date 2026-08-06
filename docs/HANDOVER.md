@@ -21,14 +21,13 @@ The launch model is directory-first with deterministic safeguards:
 
 ## Current hosted state
 
-Reverified on 23 July 2026 (Australia/Melbourne):
+Reverified on 6 August 2026 (Australia/Melbourne):
 
-- 1,622 vendor rows total;
-- 1,601 published rows;
-- 20 exact unpublished legacy duplicates rejected with audited links to their published peers;
-- 1 original seeded listing is an explicit unpublished draft awaiting evidence review;
+- 1,602 vendor rows total, all published;
+- no unpublished vendor rows at this verification point;
 - exactly 1 active operator: `admin@suburbmates.com.au`;
-- 0 claim requests, profile-change requests, missing-business submissions, contact requests, media proposals and queued communications at the verification checkpoint;
+- 1 approved claim request and 1 approved business-submission request from a real owner journey; there are no profile-change requests, contact requests or media proposals at this verification point;
+- 4 recorded transactional status deliveries, all successfully sent; this is evidence of permitted status delivery, not a general communications system;
 - 1,545 distinct OpenStreetMap source records have private candidate-handoff evidence: 1,544 exceptions and one qualified unclaimed listing. The real operator queue walkthrough is still outstanding;
 - three failed claim-test identities were removed; their three truthfully labelled audit events remain immutable;
 - the owner explicitly authorised public release; the public directory is live and indexable;
@@ -139,7 +138,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; local and remote migrations aligned through `20260725210822` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; local and remote migrations aligned through `20260805112425` |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth delivery only | Domain verified; password reset and the eight-digit email-code fallback are delivered from `auth@suburbmates.com.au`. No general sender, marketing mail or public inbox is enabled. |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
@@ -179,7 +178,7 @@ After deployment, verify the served production response—not only browser cache
 
 The released Work/Businesses/System Ops model has received real-data desktop and narrow-mobile acceptance. Repeat that acceptance after a material Ops change; it is a release check, not standing operator work.
 
-One original seed remains deliberately private until genuine evidence supports a listing decision. It must not be published by a migration or as a completion exercise. Historical catalogue provenance can be revisited only if a concrete new source requires an immutable evidence model beyond the existing `approved_import` record.
+All current vendor rows are published. Historical catalogue provenance can be revisited only if a concrete new source requires an immutable evidence model beyond the existing `approved_import` record.
 
 Weekly outbound-website reports are background batch-improvement context. The checker follows HTTPS redirects only after public-DNS validation and never changes a listing or creates an operator task from a raw external failure. ABN evidence and owner-media workflows are protected and covered by automated boundary tests; their next live use occurs when a genuine owner case arises, not through fabricated acceptance records.
 
