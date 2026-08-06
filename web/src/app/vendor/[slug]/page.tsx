@@ -41,12 +41,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const suburbRelation = vendor.suburbs as unknown as { name: string } | { name: string }[] | null;
   const categoryName = (Array.isArray(categoryRelation) ? categoryRelation[0]?.name : categoryRelation?.name) ?? "Local business";
   const suburbName = (Array.isArray(suburbRelation) ? suburbRelation[0]?.name : suburbRelation?.name) ?? vendor.suburb_slug;
+  const title = `${vendor.business_name} | ${categoryName} in ${suburbName}`;
+  const description = vendor.description ? vendor.description.substring(0, 155) : `View public contact details for ${vendor.business_name} in ${suburbName}.`;
+  const canonicalUrl = `/vendor/${route.currentSlug}`;
   
   return {
-    title: `${vendor.business_name} | ${categoryName} in ${suburbName}`,
-    description: vendor.description ? vendor.description.substring(0, 155) : `View public contact details for ${vendor.business_name} in ${suburbName}.`,
-    alternates: { canonical: `/vendor/${route.currentSlug}` },
+    title,
+    description,
+    alternates: { canonical: canonicalUrl },
     robots: vendor.is_published ? undefined : { index: false, follow: false },
+    openGraph: {
+      title,
+      description,
+      url: `https://suburbmates.com.au${canonicalUrl}`,
+      siteName: "SuburbMates",
+      type: "website",
+    },
+    twitter: { card: "summary", title, description },
   };
 }
 
