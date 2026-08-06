@@ -126,32 +126,6 @@ export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientP
             </motion.p>
 
             <HeroSearch categories={categories} suburbs={suburbs} />
-
-            <motion.div
-              variants={fadeInUp}
-              className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-bold tracking-widest uppercase"
-              style={{ color: "rgba(255,255,255,0.85)" }}
-              aria-label="Popular categories"
-            >
-              {categories.slice(0, 5).map((cat, i, arr) => (
-                <span key={cat.slug} className="flex items-center gap-6">
-                  <Link
-                    href={`/categories/${cat.slug}`}
-                    className="hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded"
-                    style={{ color: "inherit" }}
-                  >
-                    {cat.name}
-                  </Link>
-                  {i < arr.length - 1 && (
-                    <span
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: "rgba(255,255,255,0.35)" }}
-                      aria-hidden="true"
-                    />
-                  )}
-                </span>
-              ))}
-            </motion.div>
           </motion.div>
         </div>
       </section>
