@@ -41,9 +41,9 @@ No branch, pull request, automation run or lane handover changes product policy 
 
 - **Date:** 19 July 2026
 - **Decision:** Claiming establishes ownership; it does not decide whether an otherwise legitimate listing is published. Owners may propose profile corrections and supporting information through moderated workflows. A public missing-business submission creates a private candidate and cannot publish raw input directly.
-- **Current state:** The finished owner and public-input workflows are build commitments, not accepted completion.
-- **Required alignment:** Implement claim, request-status, profile-change, submission, validation, abuse-control, moderation and necessary transactional communication flows.
-- **Evidence to close:** End-to-end user and operator acceptance evidence, including failed and abuse-resistant paths.
+- **Current state:** Claim, private status, profile-change, owner/community submission, validation, moderation and bounded transactional-status flows are implemented. A real owner submission and claim have been approved and their permitted status deliveries recorded. Profile-change, community-submission and contact/correction outcomes still need real-world acceptance evidence.
+- **Required alignment:** Maintain the existing claim, request-status, profile-change, submission, validation, abuse-control, moderation and necessary transactional communication boundaries.
+- **Evidence to close:** The remaining real user and operator acceptance evidence, including failed and abuse-resistant paths.
 
 ### D-004 — Capability scope
 
@@ -148,6 +148,6 @@ No branch, pull request, automation run or lane handover changes product policy 
 | --- | --- | --- |
 | Publication policy | New approved-source candidates that pass deterministic qualification become unclaimed public listings with retained evidence. The existing catalogue's 982 `existing-catalogue-v2` exceptions remain a private remediation record; no retrospective visibility decision has been recorded. | Keep new-candidate controls operational and record a separate decision before changing visibility of existing listings. |
 | Public product | Public directory release is live with a populated sitemap and indexable released routes. | Maintain production route checks and correct any observed public-data or SEO defect. |
-| Owner and public input | Claim, status, profile correction and missing-business submission paths are implemented, but the real authenticated walkthrough set is not yet recorded. | Complete and record both user and Ops walkthroughs. |
+| Owner and public input | A real owner submission and claim are approved and recorded. Profile correction, community submission and contact/correction still lack real outcome evidence. | Record those outcomes when genuine cases arise; do not fabricate durable production records. |
 | Monetisation | Stripe is disabled. | Leave disabled until separately approved commercial scope exists. |
 | Automation record | Automation safety controls exist but documentation and issue records need current-state reconciliation. | Maintain evidence, exception handling and current documentation as workflows are hardened. |
