@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://suburbmates.com.au"),
   title: publicLaunchEnabled ? "SuburbMates — Discover local businesses" : "SuburbMates — Preparing for launch",
   description: publicLaunchEnabled
-    ? "Discover local businesses across Melbourne's suburbs."
+    ? "Discover local businesses across the City of Darebin."
     : "SuburbMates is preparing a better way to discover local businesses.",
   alternates: { canonical: "/" },
   robots: publicLaunchEnabled ? undefined : { index: false, follow: false },
