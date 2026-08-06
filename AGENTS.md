@@ -1,5 +1,7 @@
 # SuburbMates: required context before work
 
+Use the local `suburbmates-operating-context` skill at the start of every SuburbMates session. It is the project-specific fast-start guide; this file and the linked repository documents remain the durable authority.
+
 Before any material audit, implementation, migration, release, or Ops action:
 
 1. run the repository bootstrap and refresh `origin/main`;
@@ -14,4 +16,3 @@ Before any material audit, implementation, migration, release, or Ops action:
 Live production, the remote database and `origin/main` are factual evidence; a chat summary, local branch or old report is not. Record an observed contradiction before changing behaviour.
 
 The public directory is released. `/ops` and private workflows remain protected. Stripe, general outbound email, AI publication, bulk ABN checks and automated media processing remain disabled unless the owner explicitly changes that policy. Do not create fake durable production records merely to satisfy acceptance.
-
