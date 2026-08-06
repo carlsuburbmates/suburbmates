@@ -6,7 +6,7 @@ import { HeroSearch } from "@/components/ui/HeroSearch";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Phone, Shield, Store, MapPin, Globe, Star } from "lucide-react";
+import { ArrowRight, Phone, Shield, Store, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface HomeClientProps {
@@ -16,10 +16,6 @@ interface HomeClientProps {
     id: string;
     slug: string;
     business_name: string;
-    description: string | null;
-    phone: string | null;
-    website: string | null;
-    street_address: string | null;
     suburbs: Array<{ name: string }>;
   }>;
 }
@@ -153,63 +149,34 @@ export function HomeClient({ categories, suburbs, featuredVendors }: HomeClientP
                 </p>
               </motion.div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {featuredVendors.map((vendor) => (
                   <motion.article
                     key={vendor.id}
                     variants={fadeInUp}
-                    className="card relative overflow-hidden transition-all duration-300 border-slate-200 hover:border-black hover:shadow-lg flex flex-col h-full"
+                    className="h-full"
                   >
-                    <div className="flex-1 p-6">
-                      <div className="flex flex-wrap items-center gap-3 mb-3">
-                        <h3 className="text-xl font-black tracking-tight text-black">
+                    <Link
+                      href={`/vendor/${vendor.slug}`}
+                      className="group flex min-h-28 h-full items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-900/20"
+                    >
+                      <div className="min-w-0">
+                        <h3 className="truncate text-lg font-black tracking-tight text-black">
                           {vendor.business_name}
                         </h3>
+                        <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                          <MapPin size={15} className="shrink-0 text-slate-400" aria-hidden="true" />
+                          <span className="truncate">{vendor.suburbs?.[0]?.name || "Local area"}</span>
+                        </p>
+                        <span className="mt-3 inline-block text-xs font-bold uppercase tracking-wider text-slate-700">View profile</span>
                       </div>
-                      
-                      <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
-                        <MapPin size={14} className="text-slate-400" aria-hidden="true" />
-                        <span>{vendor.street_address ? `${vendor.street_address} • ` : ''}Servicing {vendor.suburbs?.[0]?.name || 'Local Area'}</span>
-                      </div>
-                      <p className="text-slate-600 text-sm leading-relaxed mb-6 line-clamp-3">
-                        {vendor.description || `No description provided. Contact ${vendor.business_name} directly using the details below.`}
-                      </p>
-                    </div>
-
-                    <div className="p-6 pt-0 mt-auto flex flex-col gap-2">
-                      {vendor.phone && (
-                        <a
-                          href={`tel:${vendor.phone}`}
-                          className="btn btn-primary w-full flex items-center justify-center gap-2"
-                        >
-                          <Phone size={16} aria-hidden="true" />
-                          <span>Call Direct</span>
-                        </a>
-                      )}
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <Link
-                          href={`/vendor/${vendor.slug}`}
-                          className="btn btn-ghost w-full flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 text-xs"
-                        >
-                          <Star size={14} aria-hidden="true" />
-                          <span>View Profile</span>
-                        </Link>
-                        {vendor.website && (
-                          <a
-                            href={vendor.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-outline w-full flex items-center justify-center gap-2 text-xs"
-                          >
-                            <Globe size={14} aria-hidden="true" />
-                            <span>Website</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
+                      <span aria-hidden="true" className="text-2xl font-bold text-slate-400 transition-transform group-hover:translate-x-0.5">›</span>
+                    </Link>
                   </motion.article>
                 ))}
+              </div>
+              <div className="mt-8">
+                <Link href="/businesses" className="btn btn-outline">Browse all businesses</Link>
               </div>
             </motion.div>
           </div>
