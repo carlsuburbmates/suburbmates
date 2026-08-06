@@ -28,6 +28,8 @@ export function HeroSearch({ categories, suburbs }: HeroSearchProps) {
 
   return (
     <motion.form
+      action="/businesses"
+      method="get"
       onSubmit={handleSearch}
       className="relative mx-auto w-full max-w-5xl"
       initial={{ y: 20, opacity: 0 }}
@@ -48,13 +50,14 @@ export function HeroSearch({ categories, suburbs }: HeroSearchProps) {
           <label className="sr-only" htmlFor="hero-search">Search business name or keyword</label>
           <input
             id="hero-search"
+            name="q"
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Search business name or keyword"
-            className="w-full bg-transparent py-4 pl-12 pr-4 text-base text-white placeholder:text-white/60 focus:outline-none focus:ring-0 sm:text-lg"
+            className="w-full rounded-xl bg-transparent py-4 pl-12 pr-4 text-base text-white placeholder:text-white/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black lg:rounded-l-full sm:text-lg"
           />
         </div>
 
@@ -62,11 +65,12 @@ export function HeroSearch({ categories, suburbs }: HeroSearchProps) {
           <label className="sr-only" htmlFor="hero-category">Select a service</label>
           <select
             id="hero-category"
+            name="category"
             value={selectedCategory}
             onChange={(event) => setSelectedCategory(event.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className="w-full cursor-pointer appearance-none border-none bg-transparent px-5 py-4 text-base focus:outline-none focus:ring-0 sm:text-lg"
+            className="w-full cursor-pointer appearance-none rounded-xl border-none bg-transparent px-5 py-4 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:text-lg"
             style={{ color: selectedCategory ? "var(--sm-text-on-inverse)" : "rgba(255,255,255,0.75)" }}
           >
             <option value="" className="text-black">All services</option>
@@ -80,11 +84,12 @@ export function HeroSearch({ categories, suburbs }: HeroSearchProps) {
           <label className="sr-only" htmlFor="hero-suburb">Select a suburb</label>
           <select
             id="hero-suburb"
+            name="suburb"
             value={selectedSuburb}
             onChange={(event) => setSelectedSuburb(event.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className="w-full cursor-pointer appearance-none border-none bg-transparent px-5 py-4 text-base focus:outline-none focus:ring-0 sm:text-lg"
+            className="w-full cursor-pointer appearance-none rounded-xl border-none bg-transparent px-5 py-4 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:text-lg"
             style={{ color: selectedSuburb ? "var(--sm-text-on-inverse)" : "rgba(255,255,255,0.75)" }}
           >
             <option value="" className="text-black">All suburbs</option>
@@ -94,7 +99,7 @@ export function HeroSearch({ categories, suburbs }: HeroSearchProps) {
           </select>
         </div>
 
-        <button type="submit" className="btn btn-inverse m-2 min-h-11 justify-center" aria-label="Search directory">Search</button>
+        <button type="submit" className="btn btn-inverse m-2 min-h-11 justify-center focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black" aria-label="Search directory">Search</button>
       </div>
     </motion.form>
   );

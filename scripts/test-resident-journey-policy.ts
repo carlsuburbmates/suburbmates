@@ -22,6 +22,9 @@ async function run() {
   assert.match(homeClient, /ReactDOM\.preload\("\/hero-bg\.jpg", \{ as: "image", fetchPriority: "high" \}\)/, "the public hero image must preload at high priority");
   assert.match(heroSearch, /Search business name or keyword/, "home search must accept a business name or keyword");
   assert.match(heroSearch, /params\.set\("q", query\.trim\(\)\)/, "home search must carry keyword search into the directory");
+  assert.match(heroSearch, /action="\/businesses"/, "home search must retain a browser-native directory fallback");
+  assert.match(heroSearch, /name="q"/, "home search fallback must submit the keyword");
+  assert.match(heroSearch, /focus-visible:ring-2 focus-visible:ring-white/, "hero controls must show a visible keyboard focus state");
   assert.match(homeClient, /Find or claim your business/, "home must direct owners to the search-first claim journey");
   assert.match(homeClient, /href="\/join\?add=1"/, "home must provide a separate missing-business route");
   assert.match(homeClient, /City of Darebin/, "home must describe the approved local area");
