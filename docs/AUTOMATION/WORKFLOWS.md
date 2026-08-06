@@ -76,7 +76,7 @@ Verified sequence:
 6. Audit `data/vendor-candidates-merged.csv`.
 7. Print coverage information in the workflow log.
 8. Upload the OSM and merged CSVs as 30-day GitHub artifacts.
-9. Send the OSM candidate rows to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare. Single-candidate retry is used to recover safely from an interrupted request.
+9. Send the OSM candidate rows to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare. The handoff includes the versioned `openstreetmap-candidate-v1` contract; a missing or changed version safely holds the source before any candidate or listing record is created. Single-candidate retry is used to recover safely from an interrupted request.
 10. Persist an idempotent handoff run, the candidate facts, normalised facts, qualification outcome, reasons, correlation and immutable audit evidence. Qualifying candidates may become unclaimed listings; exceptions remain private in `/ops/candidates`.
 
 The endpoint accepts only OpenStreetMap records, bounded payloads and a valid private token. It does not accept Google or closed-directory data, does not make ownership or claim decisions, and cannot change the global public-release setting. A full manual run succeeded on 22 July 2026: all 1,545 source rows received private qualification evidence; 1,544 became exceptions and one candidate became an unclaimed listing only after passing every deterministic rule. Interrupted single-candidate retries reuse conclusive evidence already retained for that source record rather than duplicating it.

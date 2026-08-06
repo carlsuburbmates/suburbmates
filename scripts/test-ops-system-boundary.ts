@@ -20,6 +20,8 @@ assert.match(page, /Everything currently monitored is operating normally/);
 assert.match(page, /What to do: ask for technical help/);
 assert.match(page, /Technical details and recent checks/);
 assert.match(page, /Bulk ABN checks/);
+assert.match(page, /OpenStreetMap source/);
+assert.match(page, /Candidate processing is safely held; no listing changed/);
 assert.doesNotMatch(page, /metadata\.provider_error/);
 assert.match(abnHealthCorrection, /UPDATE public\.integration_health/);
 assert.match(abnHealthCorrection, /'abr_lookup'/);

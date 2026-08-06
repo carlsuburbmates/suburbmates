@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { hasOpenStreetMapSourceContract, OPENSTREETMAP_SOURCE_CONTRACT_VERSION } from "../web/src/lib/automation/openstreetmap-source-contract";
 
 const route = fs.readFileSync("web/src/app/api/automation/candidates/route.ts", "utf8");
 const workflow = fs.readFileSync(".github/workflows/catalogue-discovery.yml", "utf8");
@@ -7,7 +8,13 @@ const workflow = fs.readFileSync(".github/workflows/catalogue-discovery.yml", "u
 assert.match(route, /AUTOMATION_INGEST_TOKEN/);
 assert.match(route, /MAX_CANDIDATES = 100/);
 assert.match(route, /source !== allowedSource/);
-assert.match(route, /hostname !== "www\.openstreetmap\.org"/);
+assert.match(route, /hasOpenStreetMapSourceContract/);
+assert.match(route, /holdOpenStreetMapSourceContract/);
+assert.match(route, /markOpenStreetMapSourceContractHealthy/);
+assert.match(route, /Candidate processing was held; no listing changed/);
+assert.match(route, /hostname !== OPENSTREETMAP_SOURCE_HOST/);
+assert.match(route, /Candidate source must match the approved source batch/);
+assert(route.indexOf("hasOpenStreetMapSourceContract") < route.indexOf("body.candidates"), "The source contract must be checked before candidate records are read.");
 assert.match(route, /qualification_outcome: qualification\.outcome/);
 assert.match(route, /listing_status: "published"/);
 assert.match(route, /ownership_status: "unclaimed"/);
@@ -24,11 +31,16 @@ assert.doesNotMatch(route, /stripe/i);
 assert.match(workflow, /candidate:handoff/);
 assert.match(workflow, /AUTOMATION_INGEST_TOKEN/);
 const handoff = fs.readFileSync("scripts/submit-candidate-handoff.ts", "utf8");
+const sourceContract = fs.readFileSync("web/src/lib/automation/openstreetmap-source-contract.ts", "utf8");
 assert.match(handoff, /const BATCH_SIZE = 1/);
 assert.match(handoff, /const MAX_CONCURRENT_BATCHES = 2/);
 assert.match(handoff, /const MAX_ATTEMPTS = 9/);
 assert.match(handoff, /\[429, 500, 502, 503, 504\]/);
 assert.match(handoff, /response\.status === 202/);
+assert.match(handoff, /sourceContractVersion: OPENSTREETMAP_SOURCE_CONTRACT_VERSION/);
 assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /await response\.text\(\)/);
+assert.match(sourceContract, /OPENSTREETMAP_SOURCE_CONTRACT_VERSION = "openstreetmap-candidate-v1"/);
+assert.equal(hasOpenStreetMapSourceContract(OPENSTREETMAP_SOURCE_CONTRACT_VERSION), true);
+assert.equal(hasOpenStreetMapSourceContract("openstreetmap-candidate-v0"), false);
 
 console.log("Candidate automation ingestion boundary checks passed.");

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { qualifyCandidate, type CandidateInput, type ExistingListing } from "@/lib/automation/candidate-qualification";
+import { hasOpenStreetMapSourceContract, OPENSTREETMAP_SOURCE, OPENSTREETMAP_SOURCE_CONTRACT_VERSION, OPENSTREETMAP_SOURCE_HOST } from "@/lib/automation/openstreetmap-source-contract";
 import { runtimeEnv } from "@/lib/runtime-env";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 const MAX_CANDIDATES = 100;
-const allowedSource = "openstreetmap";
+const allowedSource = OPENSTREETMAP_SOURCE;
 // The Worker request cannot legitimately outlive this window. Treat a longer
 // processing record as interrupted, close its job and resume idempotently.
 const STALE_PROCESSING_MS = 30 * 1000;
@@ -30,12 +31,21 @@ export async function POST(request: NextRequest) {
     const source = asText(body.source);
     const artifactSha256 = asText(body.artifactSha256);
     const artifactUrl = optionalHttpsUrl(body.artifactUrl);
-    const candidates = Array.isArray(body.candidates) ? body.candidates.map(readCandidate) : null;
-    if (source !== allowedSource || !/^[0-9a-f]{64}$/.test(artifactSha256) || !candidates || candidates.length < 1 || candidates.length > MAX_CANDIDATES) {
+    if (source !== allowedSource) {
       return NextResponse.json({ error: "Invalid approved-source candidate batch" }, { status: 400 });
     }
 
     const admin = createAdminClient();
+    if (!hasOpenStreetMapSourceContract(asText(body.sourceContractVersion))) {
+      await holdOpenStreetMapSourceContract(admin);
+      return NextResponse.json({ error: "OpenStreetMap source contract changed; candidate processing is held" }, { status: 400 });
+    }
+
+    const candidates = Array.isArray(body.candidates) ? body.candidates.map(readCandidate) : null;
+    if (!/^[0-9a-f]{64}$/.test(artifactSha256) || !candidates || candidates.length < 1 || candidates.length > MAX_CANDIDATES) {
+      return NextResponse.json({ error: "Invalid approved-source candidate batch" }, { status: 400 });
+    }
+    await markOpenStreetMapSourceContractHealthy(admin);
     // A singleton retry is the durable recovery path for a batch that exceeded
     // Worker resources. Reuse conclusive private evidence already retained by
     // an earlier batch instead of creating duplicate exception records.
@@ -209,13 +219,39 @@ function readCandidate(value: unknown): IncomingCandidate {
   if (!value || typeof value !== "object") throw new Error("Invalid candidate.");
   const item = value as Record<string, unknown>;
   const sourceUrl = optionalHttpsUrl(item.sourceUrl);
-  if (!sourceUrl || new URL(sourceUrl).hostname !== "www.openstreetmap.org") throw new Error("Candidate source URL must be an OpenStreetMap record.");
+  if (!sourceUrl || new URL(sourceUrl).hostname !== OPENSTREETMAP_SOURCE_HOST) throw new Error("Candidate source URL must be an OpenStreetMap record.");
+  const candidateSource = asText(item.source);
+  if (candidateSource && candidateSource !== allowedSource) throw new Error("Candidate source must match the approved source batch.");
   return {
-    source: asText(item.source) || allowedSource, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug: asText(item.suburbSlug),
+    source: allowedSource, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug: asText(item.suburbSlug),
     streetAddress: optionalText(item.streetAddress), contactEmail: optionalText(item.contactEmail), phone: optionalText(item.phone), website: optionalText(item.website),
     websiteSafety: item.websiteSafety === "safe" || item.websiteSafety === "unsafe" ? item.websiteSafety : "unknown",
     sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), notes: optionalText(item.notes),
   };
+}
+
+async function holdOpenStreetMapSourceContract(admin: ReturnType<typeof createAdminClient>) {
+  const now = new Date().toISOString();
+  const health = await admin.from("integration_health").upsert({
+    integration_name: "openstreetmap_source",
+    status: "failed",
+    last_failure_at: now,
+    last_error: "The expected OpenStreetMap source contract was not received. Candidate processing was held; no listing changed.",
+    metadata: { action: "source_contract_held" },
+  }, { onConflict: "integration_name" });
+  if (health.error) throw new Error("Could not record the OpenStreetMap source contract hold.");
+}
+
+async function markOpenStreetMapSourceContractHealthy(admin: ReturnType<typeof createAdminClient>) {
+  const now = new Date().toISOString();
+  const health = await admin.from("integration_health").upsert({
+    integration_name: "openstreetmap_source",
+    status: "healthy",
+    last_success_at: now,
+    last_error: null,
+    metadata: { source_contract: OPENSTREETMAP_SOURCE_CONTRACT_VERSION },
+  }, { onConflict: "integration_name" });
+  if (health.error) throw new Error("Could not record the OpenStreetMap source contract check.");
 }
 
 async function loadListings(admin: ReturnType<typeof createAdminClient>): Promise<ExistingListing[]> {

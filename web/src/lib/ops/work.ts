@@ -74,5 +74,5 @@ function changedFields(values: Record<string, unknown>) {
 }
 
 function label(value: string) {
-  return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+  return value === "openstreetmap_source" ? "OpenStreetMap source" : value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 }
