@@ -15,7 +15,7 @@ export default async function Home() {
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase
       .from("published_vendors")
-      .select("id, slug, business_name, description, phone, website, street_address, suburbs(name)")
+      .select("id, slug, business_name, suburbs(name)")
       .order("business_name", { ascending: true })
       .limit(6),
   ]);

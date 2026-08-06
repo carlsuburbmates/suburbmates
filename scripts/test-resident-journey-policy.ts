@@ -25,6 +25,10 @@ async function run() {
   assert.match(homeClient, /Find or claim your business/, "home must direct owners to the search-first claim journey");
   assert.match(homeClient, /href="\/join\?add=1"/, "home must provide a separate missing-business route");
   assert.match(homeClient, /City of Darebin/, "home must describe the approved local area");
+  assert.match(homeClient, /Browse all businesses/, "home previews must provide a path to the full directory");
+  assert.match(homeClient, /View profile/, "home previews must direct people to the complete profile");
+  assert.doesNotMatch(homeClient, /Call Direct/, "home previews must not duplicate profile contact controls");
+  assert.doesNotMatch(homeClient, /No description provided/, "home previews must not expose profile detail before selection");
   assert.match(browse, /vendorsError/, "directory fetch failures must not appear as an empty result");
   assert.match(taxonomy, /vendorsRes\.error/, "taxonomy fetch failures must not appear as an empty result");
   assert.doesNotMatch(browse, /tier === "premium"/, "public browse must not present an unapproved premium tier");
