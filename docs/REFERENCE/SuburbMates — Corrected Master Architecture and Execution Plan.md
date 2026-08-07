@@ -8,7 +8,7 @@ The historical sections below that describe a holding-only site, manual-only pub
 
 ## Document status
 
-This document consolidates and corrects the complete platform blueprint supplied in this conversation.
+This document preserves historical architecture detail. It is not an active implementation plan where it conflicts with the current authority above.
 
 It:
 
@@ -16,7 +16,7 @@ It:
 * resolves contradictions identified during research
 * positions SuburbMates as a **directory-first platform**
 * excludes the design and implementation of the internal Ops dashboard, which will be documented separately
-* retains manual Phase 1 publication as a platform requirement without prescribing the Ops interface
+* records the former manual Phase 1 publication design as historical context; current publication policy is defined by the Target State and Decision Log
 
 The original architecture established Next.js, Supabase, Cloudflare deployment, the dual-link discovery model, core tables, vendor profiles and published-only visibility. The supplied pSEO analysis added structured data, canonical, abuse-protection and image-accessibility requirements.  
 

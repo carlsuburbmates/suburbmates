@@ -20,7 +20,7 @@ Database health updates and contact retention are narrow, audited **Ops** proces
 ## Current operating status
 
 - The internal Supabase health monitor and contact-retention job are active as Ops processes outside this lane.
-- GitHub has four active workflows on `main`: Verify, Catalogue candidate discovery, Website safety evidence, and Production smoke.
+- GitHub has five active workflows on `main`: Verify, Catalogue candidate discovery, Website safety evidence, Production smoke, and the HubSpot Decision Inbox reconciliation. The HubSpot workflow is a one-way Ops companion: it creates or closes low-detail Tasks only and does not change SuburbMates data.
 - Catalogue discovery and Production smoke fixes were merged in pull requests #4 and #5. Controlled manual runs then succeeded on `main`. Website safety retains evidence artefacts without turning raw external failures into operator work.
 - Stripe billing, bulk ABR/ABN checks, AI publication, media/logo processing, and the legacy inactivity pruner are disabled.
 - Candidate-to-Ops handoff is implemented for approved OpenStreetMap batches. A full manual run on 22 July 2026 covered 1,545 source rows: 1,544 private exceptions and one deterministically qualified, unclaimed listing with retained provenance, contact and audit evidence. The protected exception queue remains normal ongoing Ops work.

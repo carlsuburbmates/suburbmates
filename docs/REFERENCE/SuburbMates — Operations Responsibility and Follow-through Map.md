@@ -16,6 +16,7 @@ This map records responsibilities; it does not itself enable an integration, sen
 4. Bulk exclusions, repeated discovery events, missing customer contact, unsupported categories and historic evidence gaps are not an operator backlog. They remain queryable evidence for a future batch-improvement programme.
 5. User-visible status is primarily in-product. `auth@suburbmates.com.au` may send only the approved transactional statuses; there is no general sender, dispatcher, marketing, public inbox or automatic retry loop.
 6. Stripe and billing remain disabled. No row below creates a billing obligation or makes payment relevant to directory treatment.
+7. HubSpot is an optional, one-way Decision Inbox: it may show one low-detail task for a genuine Ops decision, but every decision and all protected evidence remain in SuburbMates. A HubSpot outage never blocks an Ops outcome.
 
 ## Responsibility map
 

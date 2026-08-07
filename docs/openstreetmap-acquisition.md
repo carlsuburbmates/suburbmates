@@ -3,7 +3,7 @@
 This document outlines the purpose, constraints, and operational details of the OpenStreetMap (OSM) acquisition tool used to seed the Darebin vendor directory.
 
 ## Purpose
-The acquisition tool queries the OpenStreetMap Overpass API for commercial businesses within the City of Darebin bounding area, extracting them into a staged CSV file (`data/vendor-candidates-osm.csv`) for review and import. It acts as an automated, reproducible way to build out the directory with real-world geographical data while adhering to data-hygiene constraints.
+The acquisition tool queries the OpenStreetMap Overpass API for commercial businesses within the City of Darebin bounding area, extracting them into a staged CSV file (`data/vendor-candidates-osm.csv`). The CSV is evidence and staging input, not a direct import or publication mechanism. Approved rows proceed only through the versioned, token-protected OpenStreetMap candidate handoff and its deterministic qualification policy.
 
 ## Constraints & Rules
 - **Commercial Only**: The tool filters for named `shop`, `craft`, and `office` tags. For `amenity` tags, it only includes those explicitly matching a commercial allowlist (e.g. bar, cafe, car_rental, car_wash, casino, cinema, clinic, dentists, doctors, fast_food, food_court, fuel, ice_cream, marketplace, nightclub, pharmacy, pub, restaurant, studio, theatre, veterinary).
@@ -13,6 +13,7 @@ The acquisition tool queries the OpenStreetMap Overpass API for commercial busin
 - **Category Derivation**: Categories are mapped directly from OSM tags (e.g., `shop=bakery` -> `bakery`), and default to `other` if no exact match is found.
 - **Data Hygiene**: Website URLs are automatically sanitized to enforce the `https://` protocol as required by `scripts/audit-vendor-candidates.ts`. Invalid URLs are omitted.
 - **Source of Truth**: The target API is `https://maps.mail.ru/osm/tools/overpass/api/interpreter`, with standard Overpass fallbacks.
+- **Source Contract**: The handoff accepts only `openstreetmap-candidate-v1` records from the expected OpenStreetMap host. A missing or changed contract is held safely; no candidate or listing changes.
 
 ## Execution
 Run the unit tests via:

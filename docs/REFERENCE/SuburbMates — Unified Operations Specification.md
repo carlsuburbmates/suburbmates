@@ -6,8 +6,8 @@ This is a detailed reference only where it agrees with the current [Target State
 
 The historical Stripe, Payments, tier, payment-status, provider-dashboard, AI-content and manual-only-publication sections below are not active scope. Billing is off and must remain off until a separately approved commercial model exists. Deterministically qualifying approved-source candidates may become unclaimed listings with retained evidence; raw, uncertain or user-submitted candidates remain private. No future implementation may revive a historical section that conflicts with these controls.
 
-**Document status:** Standalone Phase 1 specification
-**Authority:** Subordinate to the corrected SuburbMates Master Architecture and Execution Plan
+**Document status:** Historical detailed reference; use only where it agrees with the current authority above.
+**Authority:** Subordinate to the Target State and Operating Authority, Decision Log, Journey Map, and Operations Responsibility and Follow-through Map.
 **Primary operator:** One authorised solo operator
 **Primary route:** `/ops`
 **Operating rule:** Routine platform operations occur inside `/ops`; connected-platform dashboards are reserved for setup, exceptional account administration and emergencies.

@@ -19,9 +19,12 @@ Open `/ops` and sign in with `admin@suburbmates.com.au` using the normal passwor
 
 ## Daily order
 
-1. **Work** — open only the genuine decisions that need judgment; use its priority groups rather than treating background evidence as a queue.
-2. **Businesses** — find a vendor, its authorised evidence and its protected detail/actions when Work links you there or you need to look something up.
-3. **System** — act only on a plain-language warning; otherwise leave background evidence and routine health alone.
+1. **HubSpot Decision Inbox (optional)** — use it as your short to-do list when it has tasks. Open the linked SuburbMates page; do not make the decision in HubSpot. It never contains private messages or evidence.
+2. **Work** — open only the genuine decisions that need judgment; use its priority groups rather than treating background evidence as a queue.
+3. **Businesses** — find a vendor, its authorised evidence and its protected detail/actions when Work links you there or you need to look something up.
+4. **System** — act only on a plain-language warning; otherwise leave background evidence and routine health alone.
+
+When an Ops decision reaches its final state, its matching HubSpot task closes automatically. If HubSpot is unavailable, complete the protected Ops decision anyway; the next reconciliation catches up. See [the HubSpot Decision Inbox contract](HUBSPOT_DECISION_INBOX.md).
 
 Routine exact-email claims are intended to be low-friction. Claims requiring a challenge, recovery, revocation, conflict resolution or sensitive-change review belong in the protected Claims queue. A claim never publishes a listing or changes unrelated trust/commercial state.
 

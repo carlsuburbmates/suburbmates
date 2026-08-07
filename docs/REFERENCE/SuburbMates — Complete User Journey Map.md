@@ -111,7 +111,7 @@ The site should retain only the minimum useful operational evidence: anonymous a
 
 1. The owner enters through **Find or claim your business** or finds their listing through search.
 2. They open the existing unclaimed profile and select **Claim this business**.
-3. They sign in through the approved passwordless email path.
+3. They sign in with their password, using password reset or the eight-digit email-code fallback if needed.
 4. They follow the claim method approved for public release and can see what happens next.
 5. The system shows a clear, explainable outcome or request state.
 6. If the approved policy requires review, an authorised operator reviews the evidence and makes the ownership decision.
@@ -129,7 +129,7 @@ The site should retain only the minimum useful operational evidence: anonymous a
 
 **Approved owner decision:** an exact match to the listing's recorded contact email is the normal low-friction claim path. It must be paired with a protected exception, challenge, recovery and revocation path for conflicts, sensitive changes and non-matching evidence. A successful claim changes ownership only; it does not publish a listing or confer unrelated trust/commercial status.
 
-The current repository's direct email-match implementation is not, by itself, proof that the full exception and revocation path exists. That work remains governed by the owner journey and Ops issues.
+The current exact-email path creates a pending claim request; it is not an automatic ownership grant. The protected exception and revocation path remains governed by the owner journey and Ops issues.
 
 ### Media and logo changes
 

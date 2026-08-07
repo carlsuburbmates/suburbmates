@@ -16,7 +16,7 @@ The product status screen is the source of a person's request outcome. A message
 | Password reset from `auth@suburbmates.com.au` | Active. It returns only to the real SuburbMates callback, where the person sets a new password. |
 | Email-code sign-in | Available as a fallback through an eight-digit code entered in the browser being used. |
 | Public contact/help/privacy form | Publicly reachable; it creates a private, moderated request and does not promise an email. |
-| Approved status messages | Enabled only for the approved claim, profile-change, submission and request-outcome paths. The first real successful delivery and deliberate failure evidence are still required. |
+| Approved status messages | Enabled only for the approved claim, profile-change, submission and request-outcome paths. Four real successful deliveries are recorded; one safe, deliberate provider-failure outcome remains to be recorded. |
 | Contact dispatcher / general notification sender | Dormant; not enabled. |
 | Marketing, newsletters, public support inbox, bulk messages, automatic retries | Prohibited. |
 

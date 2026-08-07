@@ -4,7 +4,7 @@
 
 Build the broadest defensible directory of active public-facing businesses in the City of Darebin, starting with Northcote, without inventing records or relying on a prohibited directory scrape.
 
-This is an acquisition pipeline, not a one-time CSV exercise. Every record must retain its source URL, source date, source state, and stable import identity. Incomplete records remain public and can later be claimed or enriched by the business owner.
+This is an acquisition pipeline, not a one-time CSV exercise. Every record must retain its source URL, source date, source state, and stable import identity. Raw or incomplete records remain private until they pass the approved deterministic source, scope, contact, duplicate and safety policy; public listings can later be claimed or enriched by the business owner.
 
 ## Source order
 
@@ -27,7 +27,7 @@ If a paid provider is later selected as the primary coverage source, it must pro
 - Same name at different addresses remains separate listings.
 - Never merge solely because two businesses share a name in the same suburb.
 - Merge fields only when the incoming source is authoritative for that field and retain provenance.
-- New source records are public immediately, regardless of contact completeness or claim state.
+- A new approved-source record may become public only after the deterministic qualification policy passes and evidence is retained. Claim state never decides publication.
 - Never generate a phone, email, address, website, or business record from inference.
 
 ## Refresh workflow
@@ -36,9 +36,9 @@ If a paid provider is later selected as the primary coverage source, it must pro
 2. Audit required fields and source provenance.
 3. Normalize names, addresses, phone numbers, emails, websites, categories, and suburb slugs.
 4. Produce a duplicate report before writing to Supabase.
-5. Upsert by stable source identity with address-aware collision handling.
-6. Preserve owner-entered fields and publication state.
-7. Report additions, enrichments, possible duplicates, stale records, and missing-field coverage.
+5. Send permitted source rows through the versioned candidate handoff; it records qualification, provenance and exceptions before any public listing can exist.
+6. Preserve owner-entered fields and keep publication independent from ownership, ABN and commercial state.
+7. Report additions, enrichments, possible duplicates, stale records, and missing-field coverage without inventing facts or merging a live record by similarity alone.
 
 ## Coverage reality
 

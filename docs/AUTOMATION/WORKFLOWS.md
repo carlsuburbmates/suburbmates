@@ -33,6 +33,12 @@ GitHub production smoke (active on main; public-release route run succeeded)
   -> GitHub issue only on failure
   -> no database write
 
+GitHub HubSpot Decision Inbox reconciliation (active on main)
+  -> authenticated production endpoint
+  -> one low-detail HubSpot Task per genuine protected Ops decision
+  -> close mapped Tasks after terminal Ops outcomes
+  -> no directory import, contact sync, publication, or database decision
+
 Supabase internal health monitor (active Ops process; outside Automation lane)
   -> automation_jobs, listing/claim/profile-change queues
   -> integration_health records
@@ -48,6 +54,7 @@ Supabase internal health monitor (active Ops process; outside Automation lane)
 | Catalogue candidate discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; retain CSVs; send OSM candidates in authenticated handoffs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, Cloudflare, Supabase, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days; private run and exception records in Ops | **Active on `main`; full manual verification succeeded on 22 July 2026.** | Only an approved-source candidate that passes deterministic source, scope, contact, duplicate and safety checks may create an unclaimed listing. Exceptions stay private in Ops. |
 | Website-safety evidence | Monday schedule at `08:41` UTC; manual dispatch | Read `published_vendors`; validate public DNS; make DNS-pinned HTTPS `HEAD` requests; follow at most three HTTPS redirects; write a JSON report and summary | GitHub Actions, Supabase public projection, DNS, HTTPS, GitHub artifacts | JSON report retained 30 days | **Active on `main`; evidence run completed** | No listing write, automatic contact/publication decision, GitHub issue or operator task. A genuine workflow failure still fails the run. |
 | Production smoke | Daily schedule at `19:23` Australia/Melbourne; manual dispatch | Check public routes; require unauthenticated Ops redirects; verify canonical redirects and invalid vendor 404; paginate safe Supabase projections; reconstruct and compare sitemap; sample a public vendor page; open/update one GitHub issue on failure | GitHub Actions, production Cloudflare site, Supabase public projections, GitHub issues | Pass/fail run; one failure issue if needed | **Active on `main`; public-release route verification is recorded** | No Supabase write; no deployment; no listing change |
+| HubSpot Decision Inbox | Every 15 minutes; manual dispatch | Call the protected reconciliation endpoint; create/update one low-detail Task for genuine Ops work and close tasks whose linked work is no longer actionable | GitHub Actions, Cloudflare, HubSpot Task API | Short decision inbox only | **Active on `main`; scheduled runs passed on 7 August 2026** | Task-only one-way mirror. No HubSpot contact, company, deal, marketing, billing, directory or private-evidence sync; it cannot change SuburbMates data. |
 | Internal operations health | Supabase `pg_cron`, hourly at minute 5 | Count failed and overdue automation jobs; count listings needing review, pending claims, and pending profile changes; update integration-health rows; expose them through authenticated Ops RPCs | Supabase PostgreSQL, `pg_cron`, `automation_jobs`, operator workflow tables, `/ops/system` | `integration_health` status and queue counts | **Active Ops process; outside Automation lane** | Writes health records only; never changes listings, ownership, claims, payments, publication, billing, or tier |
 | Contact retention | Supabase `pg_cron`, daily at `03:17` UTC | Delete spam requests unchanged for 30 days and resolved requests unchanged for 12 months; append a retention audit event if content was deleted; update retention health | Supabase PostgreSQL, `pg_cron`, `contact_requests`, `audit_events`, `integration_health` | Retention health, deletion count, immutable audit evidence | **Active Ops process; outside Automation lane** | Deletes only eligible private contact-request content; never touches listings, ownership, claims, payments, or publication |
 | On-demand path revalidation | Authenticated `POST /api/webhook/revalidate` | Require bearer token; require a path/tag; call `revalidatePath`; return response | Next.js, Cloudflare runtime secret `REVALIDATION_TOKEN` | Cache revalidation response | **Available on demand** — no scheduled caller is evidenced | Does not write listing data; changes only rendered-path cache state |
@@ -93,13 +100,19 @@ Sources: `.github/workflows/production-smoke.yml` and `scripts/production-smoke.
 
 It checks the public site and public database projections together: public routes, unauthenticated Ops redirects, canonical redirects, an invalid vendor route, public catalogue pagination, taxonomy eligibility, exact sitemap membership, category links, and one vendor page. A failure creates or updates one GitHub issue. It never writes to Supabase. It supports both holding and released route expectations; live public-route verification is recorded in `SUB-14`.
 
-### 5. Internal health and Ops display
+### 5. HubSpot Decision Inbox
+
+Sources: `.github/workflows/hubspot-decision-inbox.yml`, `web/src/app/api/automation/hubspot-decision-inbox/route.ts`, and `docs/OPS/HUBSPOT_DECISION_INBOX.md`.
+
+Every 15 minutes the workflow asks the protected production endpoint to reconcile only genuine pending Ops decisions. HubSpot receives a plain task title, priority and protected SuburbMates link; it never receives contact text, requester or claimant details, ABNs, evidence, media paths, audit notes, provider errors or directory-wide records. The workflow uses HubSpot Tasks only. A HubSpot failure does not block the Ops action; the next reconciliation closes a task missed during an outage.
+
+### 6. Internal health and Ops display
 
 Source: `supabase/migrations/20260715173000_internal_health_monitoring.sql`.
 
 The scheduler calls `refresh_internal_operations_health()` hourly. It reports the state held in database tables; it does not observe GitHub Action runs or GitHub artifacts. Therefore an empty `automation_jobs` table can report healthy even when the GitHub-based automations have not run. `/ops/system` presents the health rows, jobs, and audit events to an authenticated active operator. Main classifies this as a narrow, audited Ops process outside the Automation lane; it must never affect listings, ownership, claims, payments, or publication.
 
-### 6. Contact retention
+### 7. Contact retention
 
 Source: `supabase/migrations/20260716122000_automate_contact_retention.sql`.
 
@@ -126,6 +139,7 @@ This is intentionally narrower than general data pruning. It deletes only privat
 | Cloudflare / Next.js | Serve protected event routes and the production site | Store server secrets in source or grant client authority |
 | OpenStreetMap / Overpass | Provide candidate-source data | Establish publication or ownership legitimacy on its own |
 | GitHub Issues | Surface one actionable exception | Replace the authenticated Ops queue or decide a listing |
+| HubSpot | Mirror a short, low-detail decision inbox | Read or write contacts, companies, deals, marketing, billing, directory records, private evidence, or SuburbMates state |
 | Stripe, ABR, AI, media services | None while disabled | Change public listing state |
 
 ## Candidate handoff acceptance boundary
