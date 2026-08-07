@@ -142,6 +142,14 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Current state:** The 21 reviewed, never-public rejected records were owner-authorised for deletion. Their audit history was retained.
 - **Evidence to close:** Protected-function, UI-boundary and database verification; an authenticated operator walkthrough when a future eligible rejected record exists.
 
+### D-016 — Deployment-complete sync rule
+
+- **Date:** 7 August 2026
+- **Decision:** For an owner-authorised deployable change, “sync” includes the normal merge, deployment and live verification path. It does not end at a branch push, pull-request merge or passing CI run.
+- **Required evidence:** Record the merged commit or pull request, deployment version or URL, affected live route or integration, and the relevant live result. Public route, sitemap, access-control or catalogue changes also require the production smoke check.
+- **Status rule:** Use only `local only`, `in review`, `merged`, `deployed—verification pending`, or `live verified`. A missing deployment or live proof is a stated blocker; it is never silently handed back to the owner.
+- **Guardrail:** This rule does not authorise an unapproved product, database, security or commercial change. It completes the normal delivery of an already owner-authorised deployable change.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |
