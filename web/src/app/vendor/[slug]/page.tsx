@@ -68,21 +68,25 @@ export default async function VendorWebsite({ params }: PageProps) {
   if (!route) notFound();
   if (route.redirectRequired) permanentRedirect(`/vendor/${route.currentSlug}`);
 
-  const { data: vendor, error } = await supabase
-    .from("published_vendors")
-    .select(`
-      *,
-      suburbs (name),
-      categories (name)
-    `)
-    .eq("id", route.vendorId)
-    .single();
+  // Concurrently fetch published vendor details and public vendor media in a single parallel batch
+  const [vendorResult, mediaResult] = await Promise.all([
+    supabase
+      .from("published_vendors")
+      .select(`
+        *,
+        suburbs (name),
+        categories (name)
+      `)
+      .eq("id", route.vendorId)
+      .single(),
+    supabase.rpc("list_public_vendor_media", { p_vendor_id: route.vendorId }),
+  ]);
 
-  if (error || !vendor) {
+  const vendor = vendorResult.data;
+  if (vendorResult.error || !vendor) {
     notFound();
   }
-  const { data: mediaRows } = await supabase.rpc("list_public_vendor_media", { p_vendor_id: vendor.id });
-  const media = (mediaRows ?? []) as { media_id: string; media_kind: string; alt_text: string }[];
+  const media = (mediaResult.data ?? []) as { media_id: string; media_kind: string; alt_text: string }[];
 
   // Compute design parameters out of existing data deterministically
   const design = getVendorDesign(vendor.id, vendor.created_at);

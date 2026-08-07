@@ -6,7 +6,7 @@ async function source(path: string) {
 }
 
 async function run() {
-  const [home, homeClient, heroSearch, browse, taxonomy, profile, contact, directoryLayout] = await Promise.all([
+  const [home, homeClient, heroSearch, browse, taxonomy, profile, contact, directoryLayout, directoryBrowse] = await Promise.all([
     source("web/src/app/(directory)/page.tsx"),
     source("web/src/components/ui/HomeClient.tsx"),
     source("web/src/components/ui/HeroSearch.tsx"),
@@ -15,6 +15,7 @@ async function run() {
     source("web/src/app/vendor/[slug]/page.tsx"),
     source("web/src/components/minisite/contact/ContactComponents.tsx"),
     source("web/src/app/(directory)/layout.tsx"),
+    source("web/src/components/ui/DirectoryBrowseClient.tsx"),
   ]);
 
   assert.match(home, /NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED/, "public home must remain behind the launch flag");
@@ -32,12 +33,18 @@ async function run() {
   assert.match(homeClient, /View profile/, "home previews must direct people to the complete profile");
   assert.doesNotMatch(homeClient, /Call Direct/, "home previews must not duplicate profile contact controls");
   assert.doesNotMatch(homeClient, /No description provided/, "home previews must not expose profile detail before selection");
-  assert.match(browse, /vendorsError/, "directory fetch failures must not appear as an empty result");
+  assert.match(browse, /vendorsRes\.error/, "directory fetch failures must not appear as an empty result");
+  assert.match(browse, /count: "exact"/, "directory results must retain an exact page count");
+  assert.match(browse, /clampedPage !== requestedPage/, "an out-of-range directory page must reload its valid page");
+  assert.match(browse, /replace\(\/\[%_\\\\\]\/g, "\\\\\$&"\)/, "directory keyword search must escape PostgREST wildcard characters");
   assert.match(taxonomy, /vendorsRes\.error/, "taxonomy fetch failures must not appear as an empty result");
   assert.doesNotMatch(browse, /tier === "premium"/, "public browse must not present an unapproved premium tier");
   assert.doesNotMatch(taxonomy, /tier === "premium"/, "taxonomy results must not present an unapproved premium tier");
   assert.match(contact, /google\.com\/maps\/search/, "public address must provide a directions action");
   assert.match(profile, /listing_correction/, "profiles must provide a safe report-problem entry point");
+  assert.match(profile, /replace\(\/<\/g, "\\\\u003c"\)/, "profile structured data must escape script-breaking characters");
+  assert.match(directoryBrowse, /Loading matching businesses/, "directory changes must show pending feedback");
+  assert.match(directoryBrowse, /aria-pressed=\{viewMode === "grid"\}/, "directory view controls must expose their selected state");
   assert.match(directoryLayout, /Skip to main content/, "public pages must offer a keyboard skip link");
   assert.match(directoryLayout, /hidden[^\"]*xl:block/, "the fixed header must keep the tagline out of constrained layouts");
   assert.match(directoryLayout, /Mobile navigation/, "the fixed header must provide a mobile navigation path");
