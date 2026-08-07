@@ -15,4 +15,6 @@ Before any material audit, implementation, migration, release, or Ops action:
 
 Live production, the remote database and `origin/main` are factual evidence; a chat summary, local branch or old report is not. Record an observed contradiction before changing behaviour.
 
+For an owner-authorised deployable change, **sync** means: merge the approved change, deploy it through the normal `web` delivery path, verify the served production behaviour, and then report the result. A branch push, green CI run or merge is not a completed sync. Use these exact status labels: **local only**, **in review**, **merged**, **deployed—verification pending**, or **live verified**. Stop at an earlier label only when the owner explicitly limits the scope or a concrete deployment blocker is reported.
+
 The public directory is released. `/ops` and private workflows remain protected. Stripe, general outbound email, AI publication, bulk ABN checks and automated media processing remain disabled unless the owner explicitly changes that policy. Do not create fake durable production records merely to satisfy acceptance.

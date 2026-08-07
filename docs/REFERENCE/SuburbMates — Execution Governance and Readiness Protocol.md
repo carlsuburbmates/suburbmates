@@ -81,6 +81,9 @@ If any item is missing, improve the issue or return it to Backlog. Do not begin 
 
 - Review checks scope, authority alignment, dependency state, test evidence and unintended changes.
 - A merge requires a current-baseline comparison; a merge is not a deployment or final acceptance.
+- For an owner-authorised deployable **sync**, release or production push, complete the normal deployment path after merge. Do not reinterpret the request as “CI only” unless the owner explicitly says not to deploy.
+- Before reporting that sync complete, record: merged commit/PR, deployment version or URL, the affected live route or integration, and the live verification result. Run the production smoke check when public catalogue, route, access-control or sitemap behaviour is affected.
+- Use only these delivery states: **local only**, **in review**, **merged**, **deployed—verification pending**, and **live verified**. A missing deployment or live proof is a concrete blocker, not an implicit handoff to the owner.
 - A public release requires the relevant journey, data, Ops and automation evidence plus explicit owner release authority.
 - **Done** requires the issue's evidence, not a commit, pull request or optimistic status update.
 
