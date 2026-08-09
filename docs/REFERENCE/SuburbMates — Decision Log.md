@@ -150,12 +150,22 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Status rule:** Use only `local only`, `in review`, `merged`, `deployed—verification pending`, or `live verified`. A missing deployment or live proof is a stated blocker; it is never silently handed back to the owner.
 - **Guardrail:** This rule does not authorise an unapproved product, database, security or commercial change. It completes the normal delivery of an already owner-authorised deployable change.
 
+### D-017 — Technical completion uses controlled non-production evidence
+
+- **Date:** 9 August 2026
+- **Decision:** SuburbMates may be declared technically complete without waiting for ordinary businesses or community members to create production cases. Required journey acceptance is proved with automated fixtures and controlled end-to-end testing in a local or disposable non-production environment; it does not require a permanent staging system.
+- **Production rule:** Production acceptance is non-mutating: verify public routes, access control, metadata, sitemap, deployment and relevant integrations against real production data. Never create fabricated durable businesses, claims, contact requests, ABN records, media, accounts or audit events in production merely to satisfy acceptance.
+- **Controlled-test rule:** Synthetic data must be clearly identified, isolated from production, covered by reset or teardown, and use test identities, inboxes and provider stubs where needed. It must prove the intended success, validation/error, recovery, permission and private/public-data boundaries for each journey.
+- **Completion rule:** Technical completion requires automated and controlled end-to-end evidence for every required journey and failure branch, production smoke evidence, no unresolved critical or high-severity defect, and recorded results in the relevant Linear work. Genuine customer activity remains valuable post-release operational validation; it is not a release-blocking prerequisite.
+- **Guardrail:** This does not relax any product boundary. Claims, submissions, ABN evidence, media, communications, publication, audit and retention rules must behave identically in the controlled environment; Stripe, general email, AI publication, bulk ABN work and automated media processing remain disabled.
+- **Required alignment:** `SUB-14`, the Journey Map, the post-release acceptance register and execution protocol must distinguish technical completion from later real-world observation.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |
 | --- | --- | --- |
 | Publication policy | New approved-source candidates that pass deterministic qualification become unclaimed public listings with retained evidence. The existing catalogue's 982 `existing-catalogue-v2` exceptions remain a private remediation record; no retrospective visibility decision has been recorded. | Keep new-candidate controls operational and record a separate decision before changing visibility of existing listings. |
 | Public product | Public directory release is live with a populated sitemap and indexable released routes. | Maintain production route checks and correct any observed public-data or SEO defect. |
-| Owner and public input | A real owner submission and claim are approved and recorded. Profile correction, community submission and contact/correction still lack real outcome evidence. | Record those outcomes when genuine cases arise; do not fabricate durable production records. |
+| Owner and public input | A real owner submission and claim are approved and recorded. Profile correction, community submission and contact/correction still lack real outcome evidence. | Prove these flows in controlled non-production acceptance; record genuine cases later as operational observation, without fabricating durable production records. |
 | Monetisation | Stripe is disabled. | Leave disabled until separately approved commercial scope exists. |
 | Automation record | Automation safety controls exist but documentation and issue records need current-state reconciliation. | Maintain evidence, exception handling and current documentation as workflows are hardened. |

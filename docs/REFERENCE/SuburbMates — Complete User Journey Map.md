@@ -4,7 +4,7 @@
 
 This is the owner-readable map of the finished SuburbMates experience. It starts with a person arriving at the home page and follows each person or system until its intent is complete. It covers the visible journey, the private work behind it, the background processes and the evidence Ops needs to safely operate the service.
 
-It is the product-flow companion to the Target State and Operating Authority. It does not replace the detailed Operations Specification or the [Automation workflow map](../AUTOMATION/WORKFLOWS.md). The public directory was authorised and released on 23 July 2026; where this map describes a flow that has not yet been proved through a real authenticated walkthrough, it remains a completion requirement rather than a claim of acceptance.
+It is the product-flow companion to the Target State and Operating Authority. It does not replace the detailed Operations Specification or the [Automation workflow map](../AUTOMATION/WORKFLOWS.md). The public directory was authorised and released on 23 July 2026. A flow not yet observed with a real person remains a post-release operational observation, not an unfinished technical requirement, once its controlled acceptance evidence is complete under D-017.
 
 ## The people and systems served
 
@@ -150,7 +150,7 @@ This is a first-class service journey, not a background detail of claims or form
 
 ### Current release posture
 
-Password sign-in is the normal path for existing authorised accounts. A person can set or reset a 12+ character password through their email. An eight-digit email code from `auth@suburbmates.com.au` remains an accessible fallback and may be entered in the browser being used. Approved status messages are limited to the defined claim, profile-change, submission and request-outcome paths; their real delivery and failure walkthroughs remain outstanding. There is no public support inbox, marketing mail, bulk notification system or automatic retry loop.
+Password sign-in is the normal path for existing authorised accounts. A person can set or reset a 12+ character password through their email. An eight-digit email code from `auth@suburbmates.com.au` remains an accessible fallback and may be entered in the browser being used. Approved status messages are limited to the defined claim, profile-change, submission and request-outcome paths; their success and failure branches require controlled non-production acceptance under D-017. There is no public support inbox, marketing mail, bulk notification system or automatic retry loop.
 
 ### Communications controls after release
 
@@ -355,16 +355,16 @@ This section is the practical "do this, see this" companion to the journeys abov
 
 ### Acceptance evidence for every run
 
-Record the route, button pressed, exact status or alert text, resulting private/public state, and the related Ops/audit outcome. A journey is accepted only when the original user intent succeeds safely. A form submission alone is not acceptance.
+Record the environment, route, button pressed, exact status or alert text, resulting private/public state, and the related Ops/audit outcome. A journey is accepted only when the original user intent succeeds safely. A form submission alone is not acceptance. Use controlled local or disposable non-production data for technical acceptance; record genuine production use separately as later operational observation.
 
 ## Build sequencing implied by this map
 
 1. Approve this map and reconcile it with the Target State, Operations Specification and current implementation.
 2. Maintain the released public directory discovery and profile journey with route, data and SEO checks.
-3. Complete recorded real-world account-access and approved-message delivery/failure evidence.
-4. Complete recorded owner, submitter and moderated profile-change walkthroughs.
-5. Complete recorded protected missing-business, concern-report and Ops walkthroughs.
+3. Complete automated and controlled end-to-end account-access and approved-message delivery/failure evidence.
+4. Complete automated and controlled owner, submitter and moderated profile-change acceptance.
+5. Complete automated and controlled missing-business, concern-report and Ops acceptance.
 6. Prove the audited candidate-to-Ops qualification handoff under a full approved-source run in `SUB-6`.
-7. Maintain end-to-end evidence: browser behaviour, database records, authorisation, background evidence and Ops observability.
+7. Maintain end-to-end evidence: browser behaviour, database records, authorisation, background evidence and Ops observability. Treat later genuine customer activity as operational observation, not a release blocker.
 
 Monetisation is intentionally absent from this sequence until a separate paid offer is approved.
