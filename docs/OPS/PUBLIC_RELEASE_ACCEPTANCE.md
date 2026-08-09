@@ -2,16 +2,22 @@
 
 The owner authorised the first public release on 23 July 2026. This register preserves the evidence still required after release and the rollback rule: a material public safety, privacy, integrity or route failure means deliberately disable the public-launch gate and record why.
 
-## How to finish the remaining authenticated proof
+## Technical completion evidence
 
-Use real activity only. Do not create fake production businesses, claims, ABNs, images or contact requests merely to satisfy this checklist. Record the time, route and plain-English result in the relevant Linear issue after each walkthrough.
+D-017 governs this register. Technical completion does not wait for ordinary production activity. Prove every required journey in controlled local or disposable non-production acceptance with clearly synthetic data, test identities/inboxes and mocked provider outcomes where needed. A permanent staging system is not required.
 
-1. **Account access:** On the Mac browser, open `/login` and sign in with the approved address and password. When the email-code fallback needs verification, request the newest eight-digit code, read it on the phone, then type it into the Mac browser. Confirm the intended private page opens. Do not click an email link or request repeated codes while rate-limited.
-2. **Owner and submitter paths:** Complete the claim, profile-change, missing-business and request-status journeys only when there is a real owner or community submission to use. Confirm that each stays private or pending until the stated operator decision.
-3. **Operator ABN and media:** In `/ops`, use only a real listing with operator-held ABN evidence and an actual owner-authorised image. Check that ABN information stays private and media remains private until the operator decision.
-4. **Status email and failure:** Use an actual permitted decision, not a fabricated request. Confirm the in-product status first. Then record one genuine delivery result and one safe, deliberate provider-failure result without enabling retries, bulk sends, marketing or a general inbox.
+For each journey, record the environment, route, action, visible status or alert, resulting private/public state, relevant audit outcome, success branch, validation/failure branch, recovery path, authorisation boundary and reset/teardown result in Linear. A test form submission alone is not acceptance.
 
-The automated checks already prove code and security boundaries. These walkthroughs prove that a person can complete the real service safely; they remain outstanding until recorded.
+Production verification is deliberately non-mutating: verify real public routes, metadata, sitemap, redirects, access control and relevant live integrations. Do not create fabricated durable production businesses, claims, ABNs, images, contacts, accounts or audit events. Genuine customer activity is useful post-release operational observation, not a release-blocking prerequisite.
+
+### Required controlled acceptance coverage
+
+1. **Account access:** password sign-in, reset, valid/expired/superseded/reused email-code handling and safe recovery.
+2. **Owner and submitter paths:** claim, profile change, owner-submitted candidate, community submission, private status, duplicate handling, moderation and withdrawal where supported.
+3. **Contact and correction:** valid request, unavailable/failed human verification, private intake, safe Ops handling and no automatic public mutation.
+4. **Operator and evidence:** authorised and unauthorised boundaries, listing/claim/profile/contact decisions, candidate exception, ABN provider outcomes and moderated media lifecycle.
+5. **Communications:** permitted in-product status, allowed delivery, controlled delivery failure and retained user fallback—without a general sender, retries or marketing.
+6. **Public routes:** desktop and narrow-mobile browser acceptance for home, directory, taxonomy, profile, contact, privacy, account and protected-route denial, plus metadata/canonical/sitemap evidence.
 
 ## 1. Operator review
 
@@ -43,7 +49,7 @@ Maintain the following release checks and record any failure:
 
 ## 5. Release evidence and rollback
 
-- The release decision is recorded in D-011 and Linear `SUB-14`.
+- The release decision is recorded in D-011; technical completion evidence is governed by D-017 and Linear `SUB-14`.
 - The public launch gate is enabled.
 - Home, browse, one taxonomy page, one vendor profile and the sitemap were verified at first release; repeat this check after material public-route changes.
 - If any acceptance item fails, disable the public launch gate and record why. Do not work around a failure by publishing more listings.

@@ -113,6 +113,12 @@ Use **Verify and Repair: [user] → [intended outcome]** for any journey that a 
 
 The standard applies equally to a completed journey and a safe, honest unavailable state. A form submission alone is never acceptance.
 
+## 5b. Technical completion and post-release observation
+
+D-017 distinguishes technical completion from real-world observation. Required journey acceptance may use automated fixtures and controlled local or disposable non-production end-to-end testing; it does not require a permanent staging system or ordinary production cases. Prove success, validation/failure, recovery, authorisation and private/public-data boundaries, then record the result in Linear.
+
+Production verification remains non-mutating unless a separately authorised operational action is required. Never fabricate durable production records to close acceptance. A genuine customer case after release is valuable operational observation and may reveal a repair task, but it is not a prerequisite to declare the implemented product technically complete.
+
 ## 6. Deviation and stop rules
 
 | Finding | Required action |

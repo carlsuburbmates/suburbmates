@@ -28,7 +28,7 @@ The finished public directory helps residents find useful local businesses. Busi
 
 On 23 July 2026, the owner explicitly authorised the first public release. The production public-launch gate is enabled: the directory, public profiles and eligible taxonomy routes are available; the sitemap is populated; and released pages are indexable. `www` redirects to the canonical apex domain.
 
-This release changes neither the listing lifecycle nor the operating safeguards. Only published listings appear publicly; `/ops` remains protected; candidates, claims, profile proposals, ABN evidence and owner media remain moderated workflows. The remaining authenticated walkthrough evidence is recorded as post-release acceptance work, not as permission to weaken those controls.
+This release changes neither the listing lifecycle nor the operating safeguards. Only published listings appear publicly; `/ops` remains protected; candidates, claims, profile proposals, ABN evidence and owner media remain moderated workflows. Technical acceptance uses automated and controlled non-production end-to-end evidence; genuine customer activity is later post-release operational validation, not permission to weaken those controls or a prerequisite for technical completion.
 
 ## Directory publication policy
 
@@ -120,7 +120,8 @@ The first public directory release has passed. Before any future release-affecti
 3. source, duplicate, safety and publication safeguards are tested and auditable;
 4. owner claim and proposed-edit workflows are authenticated and moderated;
 5. public pages, metadata, sitemap and no-index rules match the active release posture; and
-6. production, database and relevant integrations are verified after deployment.
+6. production, database and relevant integrations are verified after deployment; and
+7. technical journey acceptance is evidenced through automated fixtures and a controlled local or disposable non-production environment. Do not create fabricated durable production records to satisfy it.
 
 ## Operating workflow
 
