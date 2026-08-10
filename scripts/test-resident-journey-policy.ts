@@ -6,7 +6,7 @@ async function source(path: string) {
 }
 
 async function run() {
-  const [home, homeClient, heroSearch, browse, taxonomy, profile, contact, directoryLayout, directoryBrowse] = await Promise.all([
+  const [home, homeClient, heroSearch, browse, taxonomy, profile, contact, directoryLayout, directoryBrowse, heroSplit, heroCentered, minisiteConfig] = await Promise.all([
     source("web/src/app/(directory)/page.tsx"),
     source("web/src/components/ui/HomeClient.tsx"),
     source("web/src/components/ui/HeroSearch.tsx"),
@@ -16,6 +16,9 @@ async function run() {
     source("web/src/components/minisite/contact/ContactComponents.tsx"),
     source("web/src/app/(directory)/layout.tsx"),
     source("web/src/components/ui/DirectoryBrowseClient.tsx"),
+    source("web/src/components/minisite/heroes/HeroSplit.tsx"),
+    source("web/src/components/minisite/heroes/HeroCentered.tsx"),
+    source("web/src/lib/minisite/config.ts"),
   ]);
 
   assert.match(home, /NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED/, "public home must remain behind the launch flag");
@@ -43,6 +46,17 @@ async function run() {
   assert.match(contact, /google\.com\/maps\/search/, "public address must provide a directions action");
   assert.match(profile, /listing_correction/, "profiles must provide a safe report-problem entry point");
   assert.match(profile, /replace\(\/<\/g, "\\\\u003c"\)/, "profile structured data must escape script-breaking characters");
+  assert.match(profile, /Skip to main content/, "public profiles must offer a keyboard skip link");
+  assert.match(profile, /<main className="flex-grow" id="main-content">/, "public profiles must expose a main landmark");
+  assert.match(profile, /bg-slate-950 py-12 text-slate-300/, "public profile footers must keep a reliable dark background");
+  for (const field of ["heroText", "heroMutedText", "heroSurface", "heroAction", "heroSecondary"]) {
+    assert.match(minisiteConfig, new RegExp(`${field}:`), `every profile palette must define ${field}`);
+  }
+  for (const hero of [heroSplit, heroCentered]) {
+    assert.match(hero, /palette\.heroText/, "profile heroes must use a palette-specific foreground colour");
+    assert.match(hero, /palette\.heroMutedText/, "profile hero supporting copy must use a contrast-safe colour");
+    assert.match(hero, /palette\.heroAction/, "profile hero actions must use a palette-specific contrast-safe colour");
+  }
   assert.match(directoryBrowse, /Loading matching businesses/, "directory changes must show pending feedback");
   assert.match(directoryBrowse, /aria-pressed=\{viewMode === "grid"\}/, "directory view controls must expose their selected state");
   assert.match(directoryLayout, /Skip to main content/, "public pages must offer a keyboard skip link");

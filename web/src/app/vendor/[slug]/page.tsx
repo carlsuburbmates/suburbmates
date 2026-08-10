@@ -113,6 +113,12 @@ export default async function VendorWebsite({ params }: PageProps) {
   return (
     <div className={`min-h-screen flex flex-col ${design.font.class} ${design.palette.bg} ${design.palette.text} transition-colors duration-300`}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
+      <a
+        href="#main-content"
+        className="sr-only absolute left-4 top-4 z-[60] rounded-lg bg-white px-4 py-3 font-bold text-black shadow-lg focus:not-sr-only focus:outline-none focus:ring-4 focus:ring-black"
+      >
+        Skip to main content
+      </a>
       
       {/* ── Vendor Header ── */}
       <header className={`border-b sticky top-0 z-50 ${design.palette.bg} ${design.corners.border} border-black/5 dark:border-white/5`}>
@@ -143,13 +149,14 @@ export default async function VendorWebsite({ params }: PageProps) {
         </div>
       </header>
 
-      {/* ── Dynamic Hero Section ── */}
-      {design.hero === 'Split' && <HeroSplit data={vendor} styling={design} />}
-      {design.hero === 'Centered' && <HeroCentered data={vendor} styling={design} />}
-      {design.hero === 'Minimal' && <HeroMinimal data={vendor} styling={design} />}
+      <main className="flex-grow" id="main-content">
+        {/* ── Dynamic Hero Section ── */}
+        {design.hero === 'Split' && <HeroSplit data={vendor} styling={design} />}
+        {design.hero === 'Centered' && <HeroCentered data={vendor} styling={design} />}
+        {design.hero === 'Minimal' && <HeroMinimal data={vendor} styling={design} />}
 
-      {/* ── Main Content & Contact Layout ── */}
-      <main className="flex-grow max-w-5xl mx-auto px-6 py-20 w-full" id="about">
+        {/* ── Main Content & Contact Layout ── */}
+        <div className="max-w-5xl mx-auto px-6 py-20 w-full" id="about">
         {design.contact === 'Sidebar' ? (
           <div className="grid md:grid-cols-3 gap-12">
             <div className="md:col-span-2 space-y-12">
@@ -183,10 +190,11 @@ export default async function VendorWebsite({ params }: PageProps) {
             <ContactInline data={{ ...vendor, suburb_name: vendor.suburbs?.name }} styling={design} />
           </div>
         )}
+        </div>
       </main>
 
       {/* ── Vendor Footer ── */}
-      <footer className={`${design.palette.heroBg} text-white/60 py-12 border-t border-white/10 mt-auto`}>
+      <footer className="mt-auto border-t border-slate-800 bg-slate-950 py-12 text-slate-300">
         <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
             <span className="font-bold text-white tracking-tight">{vendor.business_name}</span>
