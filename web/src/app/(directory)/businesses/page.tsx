@@ -35,35 +35,49 @@ export default async function BusinessesPage({
 
   const supabase = await createClient();
 
-  const escapedQ = q ? q.replace(/[%_\\]/g, "\\$&") : "";
+  const searchQuery = q.trim();
   const vendorFields = "id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address, suburb_slug, category_slug";
 
-  const vendorPage = (targetPage: number) => {
+  const browsePage = (targetPage: number) => {
     const from = (targetPage - 1) * pageSize;
     let query = supabase.from("published_vendors").select(vendorFields, { count: "exact" });
-    if (escapedQ) query = query.ilike("business_name", `%${escapedQ}%`);
     if (suburb) query = query.eq("suburb_slug", suburb);
     if (category) query = query.eq("category_slug", category);
     return query.order("business_name", { ascending: true }).range(from, from + pageSize - 1);
   };
 
+  const searchPage = (targetPage: number) => supabase.rpc("search_published_vendors", {
+    p_query: searchQuery,
+    p_suburb_slug: suburb || null,
+    p_category_slug: category || null,
+    p_limit: pageSize,
+    p_offset: (targetPage - 1) * pageSize,
+  });
+
   // Execute suburbs, categories, and vendor query concurrently in a single parallel batch
   const [suburbsRes, categoriesRes, vendorsRes] = await Promise.all([
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase.from("categories").select("name, slug").order("name"),
-    vendorPage(requestedPage),
+    searchQuery ? searchPage(requestedPage) : browsePage(requestedPage),
   ]);
 
   if (suburbsRes.error || categoriesRes.error || vendorsRes.error) {
     throw new Error("The directory could not be loaded.");
   }
 
-  const totalCount = vendorsRes.count || 0;
+  let totalCount = searchQuery
+    ? Number(vendorsRes.data?.[0]?.total_count ?? 0)
+    : vendorsRes.count || 0;
+  if (searchQuery && totalCount === 0 && requestedPage > 1) {
+    const firstSearchPage = await searchPage(1);
+    if (firstSearchPage.error) throw new Error("The directory could not be loaded.");
+    totalCount = Number(firstSearchPage.data?.[0]?.total_count ?? 0);
+  }
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const clampedPage = Math.max(1, Math.min(requestedPage, totalPages));
   let resolvedVendors = vendorsRes.data ?? [];
   if (clampedPage !== requestedPage) {
-    const correctedPage = await vendorPage(clampedPage);
+    const correctedPage = searchQuery ? await searchPage(clampedPage) : await browsePage(clampedPage);
     if (correctedPage.error) throw new Error("The directory could not be loaded.");
     resolvedVendors = correctedPage.data ?? [];
   }

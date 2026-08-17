@@ -39,7 +39,9 @@ async function run() {
   assert.match(browse, /vendorsRes\.error/, "directory fetch failures must not appear as an empty result");
   assert.match(browse, /count: "exact"/, "directory results must retain an exact page count");
   assert.match(browse, /clampedPage !== requestedPage/, "an out-of-range directory page must reload its valid page");
-  assert.match(browse, /replace\(\/\[%_\\\\\]\/g, "\\\\\$&"\)/, "directory keyword search must escape PostgREST wildcard characters");
+  assert.match(browse, /rpc\("search_published_vendors"/, "directory keyword search must use the public typo-tolerant reader");
+  assert.match(browse, /p_suburb_slug: suburb \|\| null/, "directory keyword search must preserve suburb filtering");
+  assert.match(browse, /p_category_slug: category \|\| null/, "directory keyword search must preserve category filtering");
   assert.match(taxonomy, /vendorsRes\.error/, "taxonomy fetch failures must not appear as an empty result");
   assert.doesNotMatch(browse, /tier === "premium"/, "public browse must not present an unapproved premium tier");
   assert.doesNotMatch(taxonomy, /tier === "premium"/, "taxonomy results must not present an unapproved premium tier");
