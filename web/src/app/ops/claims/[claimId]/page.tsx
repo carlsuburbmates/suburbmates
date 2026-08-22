@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
+import { DecisionReasonField } from "@/components/ops/DecisionReasonField";
 import { reviewClaimAction } from "../actions";
 
 type OpsClaim = {
@@ -70,7 +71,7 @@ export default async function OpsClaimDetailPage({
         </p>
       )}
       {successfulAction && (
-        <p className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800">Decision recorded with an audit event.</p>
+        <p className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800">Decision recorded with an immutable audit event.</p>
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -87,6 +88,9 @@ export default async function OpsClaimDetailPage({
       </div>
 
       <InfoCard title="Evidence">
+        <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-bold ${claim.evidence?.email_match ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-amber-300 bg-amber-50 text-amber-900"}`}>
+          {claim.evidence?.email_match ? "● Recorded email match" : "● Generic or personal email: proof required"}
+        </span>
         <p className="font-semibold">{claim.evidence?.email_match ? "The signed-in email matched the listing contact email." : "No automated email match is recorded."}</p>
         {claim.evidence?.relationship_explanation && <InfoRow label="Connection" value={claim.evidence.relationship_explanation} />}
         {claim.evidence?.abn ? <InfoRow label="ABN" value={`${claim.evidence.abn} — provided by claimant, not automatically verified`} /> : <InfoRow label="ABN" value="Not provided" />}
@@ -103,18 +107,26 @@ export default async function OpsClaimDetailPage({
           <p className="mt-2 text-sm text-slate-600">A clear reason is required and will be stored permanently. Approving gives the claimant control of this listing only; it does not publish it or change its public details.</p>
           <form action={reviewClaimAction} className="mt-5 space-y-4">
             <input type="hidden" name="claimId" value={claim.claim_request_id} />
-            <label className="block text-sm font-bold" htmlFor="reason">Decision basis or reason</label>
-            <textarea id="reason" name="reason" required maxLength={2000} rows={4} className="w-full rounded-xl border border-slate-300 p-3" />
+            <DecisionReasonField
+              id="claim-reason"
+              label="Decision basis or reason"
+              presets={[
+                { label: "Email match: authority reviewed", value: "Claimant email matches the recorded listing contact. Authority connection was reviewed before this ownership decision." },
+                { label: "Request information: ABN or connection proof", value: "More information is needed: provide an ABN or evidence of the claimant’s connection to this business." },
+                { label: "Reject: ineligible or unverified personal email", value: "The available email and evidence do not establish an eligible business connection for this ownership request." },
+              ]}
+            />
             <div className="flex flex-wrap gap-3">
-              {open && <button name="decision" value="needs_information" className="btn btn-outline">Request information</button>}
-              {open && <button name="decision" value="reject" className="btn btn-outline">Reject</button>}
+              {open && <button name="decision" value="needs_information" className="btn border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100">Request information</button>}
+              {open && <button name="decision" value="reject" className="btn border-red-300 bg-red-50 text-red-800 hover:bg-red-100">Reject</button>}
               {open && <button name="decision" value="approve" className="btn btn-primary">Approve ownership</button>}
-              {approved && <button name="decision" value="revoke" className="btn btn-outline">Revoke ownership</button>}
+              {approved && <button name="decision" value="revoke" className="btn border-red-300 bg-red-50 text-red-800 hover:bg-red-100">Revoke ownership</button>}
             </div>
             <p className="text-sm text-slate-600">Request information keeps the claim open. Reject keeps the listing unclaimed. Revoke removes the current ownership approval without changing publication.</p>
           </form>
         </section>
       )}
+      <Link href={`/ops/claims?status=${claim.claim_status}`} className="inline-block text-sm font-bold underline underline-offset-4">← Back to claims</Link>
     </div>
   );
 }

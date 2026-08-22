@@ -71,11 +71,11 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   }));
   const success = message.success ?? "";
   const abnStatus = success.startsWith("abn_") ? success.slice(4) : null;
-  const successfulAction = ["draft", "submission_status", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(success);
+  const successfulAction = ["draft", "submission_status", "publish", "approve_changes", "reject", "unpublish", "restore"].includes(success) || success.startsWith("media_");
 
   return (
     <div className="space-y-7">
-      <Link href="/ops/listings" className="text-sm font-bold underline underline-offset-4">← Back to listings</Link>
+      <Link href="/ops/listings" className="text-sm font-bold underline underline-offset-4">← Back to businesses</Link>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Listing review</p>
@@ -87,7 +87,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
 
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "draft" ? "The draft could not be saved. Check required fields and formats." : message.error === "abn" ? "The ABN check could not be recorded. Enter 11 digits and try again." : message.error === "delete" ? "This record could not be deleted. Only a never-public rejected listing with no linked operational records can be permanently deleted." : "The action failed. Refresh and check the listing state, draft and reason."}</p>}
       {abnStatus && <AbnResult status={abnStatus} />}
-      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : success === "submission_status" ? "Private submitter status saved. Publication was not changed." : "Decision recorded with an audit event."}</p>}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">{success === "draft" ? "Operator draft saved. The public listing and sitemap were not changed." : success === "submission_status" ? "Private submitter status saved. Publication was not changed." : "Decision recorded with an immutable audit event."}</p>}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">Source evidence</h3>
@@ -166,6 +166,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
           <button className="btn border-red-800 bg-red-800 text-white hover:bg-red-900">Permanently delete listing</button>
         </form>
       </section>}
+      <Link href="/ops/listings" className="inline-block text-sm font-bold underline underline-offset-4">← Back to businesses</Link>
     </div>
   );
 }
@@ -180,7 +181,7 @@ function SelectField({ label, name, defaultValue, options, required }: { label: 
 
 function ReasonDecision({ vendorId, decision, label, reasons }: { vendorId: string; decision: string; label: string; reasons: readonly { value: string; label: string }[] }) {
   const outcome = decision === "unpublish" ? "This removes the listing from public access but keeps the record and its decision history." : "This keeps the listing private and retains the record and its decision history.";
-  return <form action={decideListingAction} className="mt-8 space-y-4 border-t border-slate-200 pt-6"><p className="text-sm text-slate-600">{outcome}</p><input type="hidden" name="vendorId" value={vendorId} /><input type="hidden" name="decision" value={decision} /><label className="block text-sm font-bold">Reason<select name="reasonCode" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal"><option value="">Select a reason</option>{reasons.map((reason) => <option key={reason.value} value={reason.value}>{reason.label}</option>)}</select></label><label className="block text-sm font-bold">Operator note<textarea name="operatorNote" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label><button className="btn btn-outline">{label}</button></form>;
+  return <form action={decideListingAction} className="mt-8 space-y-4 border-t border-slate-200 pt-6"><p className="text-sm text-slate-600">{outcome}</p><input type="hidden" name="vendorId" value={vendorId} /><input type="hidden" name="decision" value={decision} /><label className="block text-sm font-bold">Reason<select name="reasonCode" required className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal"><option value="">Select a reason</option>{reasons.map((reason) => <option key={reason.value} value={reason.value}>{reason.label}</option>)}</select></label><label className="block text-sm font-bold">Operator note<textarea name="operatorNote" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-300 p-3 font-normal" /></label><button className="btn border-red-300 bg-red-50 text-red-800 hover:bg-red-100">{label}</button></form>;
 }
 
 function value(source: Listing | Record<string, string | null>, key: string) {
@@ -207,7 +208,7 @@ function AbnResult({ status }: { status: string }) {
 
 function MediaDecisionForm({ vendorId, proposalId, action }: { vendorId: string; proposalId: string; action?: "remove" }) {
   const actions = action ? ["remove"] : ["approve", "reject"];
-  return <form action={decideMediaProposalAction} className="mt-4 space-y-3 border-t border-slate-200 pt-4"><input type="hidden" name="vendorId" value={vendorId} /><input type="hidden" name="proposalId" value={proposalId} /><label className="block text-sm font-bold">Decision note<textarea name="reason" required maxLength={2000} rows={2} className="mt-2 w-full rounded-lg border border-slate-300 p-3 font-normal" placeholder="Record why you are making this decision." /></label><div className="flex flex-wrap gap-3">{actions.map((choice) => <button key={choice} name="action" value={choice} className="btn btn-outline">{choice.replace(/^./, (letter) => letter.toUpperCase())} media</button>)}</div></form>;
+  return <form action={decideMediaProposalAction} className="mt-4 space-y-3 border-t border-slate-200 pt-4"><input type="hidden" name="vendorId" value={vendorId} /><input type="hidden" name="proposalId" value={proposalId} /><label className="block text-sm font-bold">Decision note<textarea name="reason" required maxLength={2000} rows={2} className="mt-2 w-full rounded-lg border border-slate-300 p-3 font-normal" placeholder="Record why you are making this decision." /></label><div className="flex flex-wrap gap-3">{actions.map((choice) => <button key={choice} name="action" value={choice} className={choice === "approve" ? "btn btn-primary" : "btn border-red-300 bg-red-50 text-red-800 hover:bg-red-100"}>{choice.replace(/^./, (letter) => letter.toUpperCase())} media</button>)}</div></form>;
 }
 
 function EvidenceCard({ evidence }: { evidence: ListingEvidence }) {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createOpsDataClient } from "@/lib/ops/auth";
+import { DecisionReasonField } from "@/components/ops/DecisionReasonField";
 import { reviewProfileChangeAction } from "../actions";
 
 const fieldLabels: Record<string, string> = {
@@ -66,8 +67,9 @@ export default async function OpsProfileEditDetailPage({
       </div>
 
       {isStale && <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 font-semibold text-amber-900">The public listing changed after this request was submitted. Approval is blocked; reject it so the owner can submit a fresh request.</p>}
+      {!isStale && <p className="inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-900">● Live state: no conflicts</p>}
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 font-semibold text-red-800">{message.error === "invalid" ? "Enter a decision reason." : "The decision failed. Check whether the request is stale or already decided."}</p>}
-      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">Decision recorded with an audit event.</p>}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 font-semibold text-green-800">Decision recorded with an immutable audit event.</p>}
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="grid grid-cols-[10rem_1fr_1fr] gap-4 bg-slate-100 px-5 py-4 text-xs font-bold uppercase tracking-wide text-slate-600">
@@ -90,15 +92,23 @@ export default async function OpsProfileEditDetailPage({
           <p className="text-sm text-slate-600">Approval updates only these public fields. Rejection makes no public change. Publication, ownership, tier, ABN and payment state remain unchanged. Your reason is recorded permanently.</p>
           <form action={reviewProfileChangeAction} className="mt-5 space-y-4">
             <input type="hidden" name="requestId" value={request.change_request_id} />
-            <label htmlFor="reason" className="block text-sm font-bold">Decision basis or reason</label>
-            <textarea id="reason" name="reason" required maxLength={2000} rows={4} className="w-full rounded-xl border border-slate-300 p-3" />
+            <DecisionReasonField
+              id="profile-reason"
+              label="Decision basis or reason"
+              presets={[
+                { label: "Standard contact update", value: "The proposed contact details and trading information are consistent with the approved listing evidence." },
+                { label: "Business description refinement", value: "The proposed description is a supported refinement of the existing public business information." },
+                { label: "Reject: inconsistent or unverified rebranding", value: "The proposed rebranding is inconsistent with the available public evidence and cannot be approved yet." },
+              ]}
+            />
             <div className="flex flex-wrap gap-3">
-              <button name="decision" value="reject" className="btn btn-outline">Reject changes</button>
+              <button name="decision" value="reject" className="btn border-red-300 bg-red-50 text-red-800 hover:bg-red-100">Reject changes</button>
               <button name="decision" value="approve" disabled={isStale} className="btn btn-primary">Approve public changes</button>
             </div>
           </form>
         </section>
       )}
+      <Link href={`/ops/profile-edits?status=${request.change_status}`} className="inline-block text-sm font-bold underline underline-offset-4">← Back to profile edits</Link>
     </div>
   );
 }

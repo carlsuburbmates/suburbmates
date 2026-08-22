@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
+import { DecisionReasonField } from "@/components/ops/DecisionReasonField";
 import { reviewContactAction } from "../actions";
 
 type ContactRequest = {
@@ -54,7 +55,7 @@ export default async function OpsContactDetailPage({
       </div>
 
       {message.error && <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-800">{message.error === "invalid" ? "Choose a valid action and enter a reason." : "The status could not be changed. Refresh and check its current state."}</p>}
-      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800">Status and audit history updated.</p>}
+      {successfulAction && <p className="rounded-xl border border-green-300 bg-green-50 p-4 text-sm font-semibold text-green-800">Decision recorded with an immutable audit event.</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <InfoCard title="Contact details"><InfoRow label="Reply email" value={request.requester_email} /><InfoRow label="Business" value={request.business_name ?? "Not provided"} /></InfoCard>
@@ -69,12 +70,20 @@ export default async function OpsContactDetailPage({
         <p className="mt-2 text-sm text-slate-600">Record what was done. The status change and reason are written permanently. This never changes a listing or ownership.</p>
         <form action={reviewContactAction} className="mt-5 space-y-4">
           <input type="hidden" name="requestId" value={request.contact_request_id} />
-          <label className="block text-sm font-bold" htmlFor="reason">Action taken or review note</label>
-          <textarea id="reason" name="reason" required maxLength={2000} rows={4} className="w-full rounded-xl border border-slate-300 p-3" />
-          <div className="flex flex-wrap gap-3">{transitions[request.contact_status].map((transition) => <button key={transition.status} name="status" value={transition.status} className={transition.status === "resolved" ? "btn btn-primary" : "btn btn-outline"}>{transition.label}</button>)}</div>
+          <DecisionReasonField
+            id="contact-reason"
+            label="Action taken or review note"
+            presets={[
+              { label: "Resolved: inquiry answered", value: "The inquiry was answered and the requester has the relevant next step." },
+              { label: "Takedown: business closure verified", value: "Available evidence supports that the business has closed. The related listing requires the separate protected listing review process." },
+              { label: "Spam: promotional or automated message", value: "This request is promotional, automated, or otherwise non-genuine and has been marked as spam." },
+            ]}
+          />
+          <div className="flex flex-wrap gap-3">{transitions[request.contact_status].map((transition) => <button key={transition.status} name="status" value={transition.status} className={actionClass(transition.status)}>{transition.label}</button>)}</div>
           <p className="text-sm text-slate-600">Start work keeps the request active. Resolve records that you finished it. Mark as spam hides a non-genuine request from normal work; it can be restored later.</p>
         </form>
       </section>
+      <Link href={`/ops/contact?status=${request.contact_status}`} className="inline-block text-sm font-bold underline underline-offset-4">← Back to contact queue</Link>
     </div>
   );
 }
@@ -87,4 +96,11 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 function formatStatus(value: string) {
   return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function actionClass(status: string) {
+  if (status === "resolved") return "btn btn-primary";
+  if (status === "spam") return "btn border-red-300 bg-red-50 text-red-800 hover:bg-red-100";
+  if (status === "in_progress") return "btn border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100";
+  return "btn btn-outline";
 }

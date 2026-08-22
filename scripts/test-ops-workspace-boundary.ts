@@ -11,6 +11,11 @@ const ownerDashboard = fs.readFileSync("web/src/app/(directory)/dashboard/page.t
 const registerMigration = fs.readFileSync("supabase/migrations/20260725120000_alphabetical_ops_business_register.sql", "utf8");
 const globalStyles = fs.readFileSync("web/src/app/globals.css", "utf8");
 const navigationMigration = fs.readFileSync("supabase/migrations/20260725133000_complete_ops_navigation_filters.sql", "utf8");
+const claimDetail = fs.readFileSync("web/src/app/ops/claims/[claimId]/page.tsx", "utf8");
+const profileDetail = fs.readFileSync("web/src/app/ops/profile-edits/[requestId]/page.tsx", "utf8");
+const contactDetail = fs.readFileSync("web/src/app/ops/contact/[requestId]/page.tsx", "utf8");
+const listingDetailPage = fs.readFileSync("web/src/app/ops/listings/[vendorId]/page.tsx", "utf8");
+const decisionReasonField = fs.readFileSync("web/src/components/ops/DecisionReasonField.tsx", "utf8");
 
 assert.match(layout, /Work/);
 assert.match(layout, /Businesses/);
@@ -49,4 +54,17 @@ assert.match(globalStyles, /@layer base\s*\{[\s\S]*?a\s*\{[\s\S]*?color:\s*inher
 for (const forbidden of ["work_items", "realtime", "Stripe checkout", "subscription", "invoice", "ABN request"]) {
   assert(!page.includes(forbidden) && !work.includes(forbidden), `Ops Work must not introduce ${forbidden}`);
 }
+for (const [name, source] of [["claim", claimDetail], ["profile edit", profileDetail], ["contact", contactDetail]] as const) {
+  assert.match(source, /DecisionReasonField/, `${name} review must offer editable reason presets`);
+  assert.match(source, /Decision recorded with an immutable audit event\./, `${name} review must confirm immutable audit evidence`);
+  assert((source.match(/← Back to/g) ?? []).length >= 2, `${name} review must provide top and bottom return links`);
+}
+assert.match(decisionReasonField, /type="button"/, "reason presets must not submit a decision themselves");
+assert.match(decisionReasonField, /name="reason"/, "reason presets must preserve the required server-action field name");
+assert.match(decisionReasonField, /onChange/, "operators must be able to edit a selected preset");
+assert.match(claimDetail, /Recorded email match/, "claim review must show the exact email-match evidence without overclaiming authority");
+assert.match(profileDetail, /Live state: no conflicts/, "profile review must surface a non-stale status");
+assert.match(contactDetail, /actionClass/, "contact actions must distinguish positive, neutral, and destructive choices");
+assert.match(listingDetailPage, /Decision recorded with an immutable audit event\./, "listing decisions must confirm immutable audit evidence");
+assert((listingDetailPage.match(/← Back to businesses/g) ?? []).length >= 2, "listing detail must provide top and bottom return links");
 console.log("Ops workspace boundary checks passed.");
