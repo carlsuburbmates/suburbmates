@@ -19,6 +19,18 @@
   "assets": {
     "directory": ".open-next/assets"
   },
+  "routes": [
+    {
+      "pattern": "suburbmates.com.au",
+      "zone_name": "suburbmates.com.au",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.suburbmates.com.au",
+      "zone_name": "suburbmates.com.au",
+      "custom_domain": true
+    }
+  ],
   "analytics_engine_datasets": [
     {
       "binding": "DIRECTORY_OBSERVABILITY",
