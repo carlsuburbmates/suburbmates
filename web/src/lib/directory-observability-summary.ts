@@ -19,7 +19,7 @@ type GraphqlResponse = {
   data?: {
     viewer?: {
       accounts?: Array<{
-        total?: Array<{ sum?: { visits?: number } }>;
+        rumPageloadEventsAdaptiveGroups?: Array<{ sum?: { visits?: number } }>;
       }>;
     };
   };
@@ -92,7 +92,7 @@ async function getVisits({ accountId, apiToken, siteTag, rangeStart, rangeEnd }:
   });
   const payload = (await response.json()) as GraphqlResponse;
   if (!response.ok || payload.errors?.length) throw new Error("Cloudflare Web Analytics query failed");
-  return payload.data?.viewer?.accounts?.[0]?.total?.[0]?.sum?.visits ?? 0;
+  return payload.data?.viewer?.accounts?.[0]?.rumPageloadEventsAdaptiveGroups?.[0]?.sum?.visits ?? 0;
 }
 
 async function getActionCounts({ accountId, apiToken }: { accountId: string; apiToken: string }): Promise<EventCounts> {
