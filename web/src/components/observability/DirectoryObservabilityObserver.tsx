@@ -1,0 +1,87 @@
+"use client";
+
+import { useEffect } from "react";
+import type { DirectoryObservabilityEvent } from "@/lib/directory-observability";
+
+function send(event: DirectoryObservabilityEvent) {
+  const body = JSON.stringify({ event });
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon("/api/directory-observability", new Blob([body], { type: "application/json" }));
+    return;
+  }
+  void fetch("/api/directory-observability", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true });
+}
+
+export function recordDirectoryObservabilityEvent(event: DirectoryObservabilityEvent) {
+  send(event);
+}
+
+export function DirectoryObservabilityObserver() {
+  useEffect(() => {
+    recordEntry();
+
+    const onClick = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+      if (!target || !isPublicDirectoryPath(location.pathname)) return;
+      const eventName = outboundEvent(target.href);
+      if (eventName) send(eventName);
+    };
+    const onSubmit = (event: Event) => {
+      const form = event.target instanceof HTMLFormElement ? event.target : null;
+      const query = form?.querySelector<HTMLInputElement>('input[name="q"], #directory-search')?.value.trim();
+      if (form && query && new URL(form.action || location.href, location.href).pathname === "/businesses") send("directory_search");
+    };
+
+    document.addEventListener("click", onClick, true);
+    document.addEventListener("submit", onSubmit, true);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("submit", onSubmit, true);
+    };
+  }, []);
+
+  return null;
+}
+
+export function DirectoryProfileView() {
+  useEffect(() => send("business_profile_view"), []);
+  return null;
+}
+
+function recordEntry() {
+  if (!isPublicDirectoryPath(location.pathname) || isInternalReferrer(document.referrer)) return;
+  send(entryEvent(location.pathname));
+}
+
+function isInternalReferrer(referrer: string) {
+  try {
+    return Boolean(referrer) && new URL(referrer).origin === location.origin;
+  } catch {
+    return false;
+  }
+}
+
+function entryEvent(pathname: string): DirectoryObservabilityEvent {
+  if (pathname === "/") return "entry_home";
+  if (pathname.startsWith("/vendor/")) return "entry_profile";
+  if (pathname === "/contact") return "entry_contact";
+  if (pathname === "/businesses" || pathname.startsWith("/categories") || pathname.startsWith("/locations") || pathname.split("/").filter(Boolean).length <= 2) return "entry_directory";
+  return "entry_owner";
+}
+
+function isPublicDirectoryPath(pathname: string) {
+  return !pathname.startsWith("/ops") && !pathname.startsWith("/api") && !pathname.startsWith("/_next") && !pathname.startsWith("/cdn-cgi");
+}
+
+function outboundEvent(href: string): DirectoryObservabilityEvent | null {
+  if (href.startsWith("tel:")) return "outbound_phone";
+  if (href.startsWith("mailto:")) return "outbound_email";
+  try {
+    const url = new URL(href, location.href);
+    if (url.hostname === "www.google.com" && url.pathname.startsWith("/maps")) return "outbound_directions";
+    if (url.origin !== location.origin && /^https?:$/.test(url.protocol)) return "outbound_website";
+  } catch {
+    return null;
+  }
+  return null;
+}

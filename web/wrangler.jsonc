@@ -7,7 +7,9 @@
     "TRANSACTIONAL_STATUS_EMAILS_ENABLED": "true",
     "TRANSACTIONAL_STATUS_FROM": "auth@suburbmates.com.au",
     "HUBSPOT_DECISION_INBOX_ENABLED": "true",
-    "HUBSPOT_OWNER_ID": "96694534"
+    "HUBSPOT_OWNER_ID": "96694534",
+    "DIRECTORY_OBSERVABILITY_ACCOUNT_ID": "c6a84c8d640f2f545566eacae909fae4",
+    "DIRECTORY_OBSERVABILITY_SITE_TAG": "b3c20702a3a04ff5af834f67e361b92a"
   },
   "compatibility_date": "2026-07-15",
   "compatibility_flags": [
@@ -16,5 +18,11 @@
   ],
   "assets": {
     "directory": ".open-next/assets"
-  }
+  },
+  "analytics_engine_datasets": [
+    {
+      "binding": "DIRECTORY_OBSERVABILITY",
+      "dataset": "suburbmates_directory_observability"
+    }
+  ]
 }

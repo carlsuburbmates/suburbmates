@@ -10,6 +10,7 @@ import { HeroCentered } from "@/components/minisite/heroes/HeroCentered";
 import { HeroMinimal } from "@/components/minisite/heroes/HeroMinimal";
 import { ContactSticky, ContactInline } from "@/components/minisite/contact/ContactComponents";
 import { resolvePublicVendorRoute } from "@/lib/public-vendor-route";
+import { DirectoryProfileView } from "@/components/observability/DirectoryObservabilityObserver";
 
 // Approved listing changes must be visible immediately after operator review.
 export const dynamic = "force-dynamic";
@@ -112,6 +113,7 @@ export default async function VendorWebsite({ params }: PageProps) {
 
   return (
     <div className={`min-h-screen flex flex-col ${design.font.class} ${design.palette.bg} ${design.palette.text} transition-colors duration-300`}>
+      <DirectoryProfileView />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <a
         href="#main-content"

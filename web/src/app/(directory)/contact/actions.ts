@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { TurnstileVerificationError, verifyTurnstileToken } from "@/lib/turnstile";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { recordDirectoryObservabilityEvent } from "@/lib/directory-observability";
 
 const topics = new Set([
   "general",
@@ -71,5 +72,6 @@ export async function submitContactAction(formData: FormData) {
     fail("submit");
   }
 
+  await recordDirectoryObservabilityEvent("contact_request_completed");
   redirect("/contact?sent=1");
 }

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { TurnstileVerificationError, verifyTurnstileToken } from "@/lib/turnstile";
 import { normaliseSubmissionWebsite } from "@/lib/submission-input";
+import { recordDirectoryObservabilityEvent } from "@/lib/directory-observability";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 
@@ -133,6 +134,7 @@ export async function submitBusinessAction(formData: FormData) {
     fail("submit");
   }
 
+  await recordDirectoryObservabilityEvent("missing_business_submission_completed");
   redirect("/join?submitted=1");
 }
 
@@ -176,5 +178,6 @@ export async function submitOwnedBusinessAction(previousState: OwnerSubmissionSt
     return ownerError(previousState, "submit", values);
   }
 
+  await recordDirectoryObservabilityEvent("missing_business_submission_completed");
   return { status: "success", attempt: previousState.attempt, values: previousState.values };
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { Building, MapPin, Tag, CheckCircle2, AlertCircle, Mail } from "lucide-react";
+import { recordDirectoryObservabilityEvent } from "@/components/observability/DirectoryObservabilityObserver";
 
 type ClaimableVendor = {
   id: string;
@@ -68,6 +69,7 @@ export default function ClaimClient({ selectedListingId }: { selectedListingId: 
       setResults((current) => current.filter((vendor) => vendor.id !== vendorId));
       setActiveVendorId(null);
       setSuccess("Your claim request has been submitted for review. The listing remains public and unchanged while the request is assessed.");
+      recordDirectoryObservabilityEvent("claim_completed");
     }
     setClaimingId(null);
   };

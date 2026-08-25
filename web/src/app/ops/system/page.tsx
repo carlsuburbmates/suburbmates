@@ -1,5 +1,6 @@
 import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
+import { getDirectoryObservabilitySummary, type DirectoryObservabilitySummary } from "@/lib/directory-observability-summary";
 
 type Health = {
   integration_name: string;
@@ -17,10 +18,11 @@ type AttentionItem = { title: string; explanation: string; reference: string };
 
 export default async function OpsSystemPage() {
   const supabase = await createOpsDataClient();
-  const [healthResult, jobsResult, auditResult] = await Promise.all([
+  const [healthResult, jobsResult, auditResult, directoryObservability] = await Promise.all([
     supabase.rpc("ops_list_integration_health"),
     supabase.rpc("ops_list_automation_jobs", { p_limit: 200 }),
     supabase.rpc("ops_list_audit_events", { p_limit: 200 }),
+    getDirectoryObservabilitySummary(),
   ]);
   if (healthResult.error || jobsResult.error || auditResult.error) throw new Error("System health could not be loaded.");
   const health = (healthResult.data ?? []) as Health[];
@@ -54,6 +56,8 @@ export default async function OpsSystemPage() {
         <p className="mt-3 text-sm text-slate-600">Future activation needs an approved benefit, price, entitlement rules, cancellation and refund handling, reconciliation, and verified implementation.</p>
       </section>
 
+      <DirectoryObservability summary={directoryObservability} />
+
       <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <summary className="cursor-pointer p-5 text-lg font-bold">Technical details and recent checks</summary>
         <div className="border-t border-slate-200 p-5">
@@ -69,6 +73,23 @@ export default async function OpsSystemPage() {
       </details>
     </div>
   );
+}
+
+function DirectoryObservability({ summary }: { summary: DirectoryObservabilitySummary }) {
+  const eventCount = (event: keyof DirectoryObservabilitySummary["events"]) => summary.events[event] ?? 0;
+  const outbound = ["outbound_website", "outbound_phone", "outbound_email", "outbound_directions"] as const;
+  const forms = ["claim_completed", "missing_business_submission_completed", "contact_request_completed"] as const;
+  const labels: Record<(typeof outbound)[number] | (typeof forms)[number], string> = { outbound_website: "Website", outbound_phone: "Phone", outbound_email: "Email", outbound_directions: "Directions", claim_completed: "Claims", missing_business_submission_completed: "Missing businesses", contact_request_completed: "Contact requests" };
+  return <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-wrap items-baseline justify-between gap-3"><div><h3 className="text-xl font-bold">Directory activity (last 7 days)</h3><p className="mt-1 text-sm text-slate-600">A quiet, aggregate view of whether visitors are finding a useful next step. It creates no work or alerts.</p></div><p className="text-xs text-slate-500">Read {date(summary.readAt)}</p></div><p className="mt-4 text-sm text-slate-600">Reporting range {date(summary.rangeStart)} to {date(summary.rangeEnd)}. Cloudflare Web Analytics is cookie-free and excludes bots here; it provides visits, not a privacy-safe unique-person count.</p><div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Visits" value={summary.visits === null ? "Unavailable" : String(summary.visits)} /><Metric label="Directory searches" value={String(eventCount("directory_search"))} /><Metric label="Business-profile views" value={String(eventCount("business_profile_view"))} /><Metric label="Search → profile" value={`${eventCount("directory_search")} → ${eventCount("business_profile_view")}`} /></div><SummaryGroup title="Top entry pages" empty="No privacy-safe entry activity has been recorded yet.">{summary.topEntries.map((entry) => <Metric key={entry.label} label={entry.label} value={String(entry.count)} />)}</SummaryGroup><SummaryGroup title="Outbound contact actions" empty="No outbound contact action has been recorded yet.">{outbound.map((event) => <Metric key={event} label={labels[event]} value={String(eventCount(event))} />)}</SummaryGroup><SummaryGroup title="Completed protected forms" empty="No completed protected form has been recorded yet.">{forms.map((event) => <Metric key={event} label={labels[event]} value={String(eventCount(event))} />)}</SummaryGroup>{summary.collectionFailures.length > 0 && <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p className="font-bold">Collection status</p>{summary.collectionFailures.map((failure) => <p key={failure} className="mt-1">{failure}</p>)}</div>}<p className="mt-6 text-xs text-slate-500">These are separate aggregate counts, not a person-level funnel. Search text, listing IDs, form content, names, emails, IP addresses, cookies, and fingerprints are not collected.</p></section>;
+}
+
+function SummaryGroup({ title, empty, children }: { title: string; empty: string; children: React.ReactNode }) {
+  const items = Array.isArray(children) ? children.filter(Boolean) : [children].filter(Boolean);
+  return <section className="mt-6"><h4 className="font-bold">{title}</h4>{items.length === 0 ? <p className="mt-2 text-sm text-slate-600">{empty}</p> : <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{items}</div>}</section>;
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-2 text-2xl font-bold tabular-nums text-slate-900">{value}</p></div>;
 }
 
 function attentionItems(health: Health[], jobs: Job[]): AttentionItem[] {

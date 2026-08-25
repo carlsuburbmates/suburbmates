@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AxeCore } from "@/components/AxeCore";
+import { DirectoryObservabilityObserver } from "@/components/observability/DirectoryObservabilityObserver";
 
 const publicLaunchEnabled = process.env.NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED === "true";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased min-h-screen">
         <AxeCore />
+        <DirectoryObservabilityObserver />
         {children}
       </body>
     </html>
