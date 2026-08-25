@@ -16,6 +16,8 @@
     "nodejs_compat",
     "nodejs_compat_populate_process_env"
   ],
+  "workers_dev": true,
+  "preview_urls": true,
   "assets": {
     "directory": ".open-next/assets"
   },
