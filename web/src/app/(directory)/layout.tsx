@@ -6,6 +6,7 @@ const primaryNavigation = [
   { href: "/businesses", label: "Browse" },
   { href: "/categories", label: "Categories" },
   { href: "/locations", label: "Locations" },
+  { href: "/join", label: "For business owners" },
   { href: "/how-it-works", label: "How it works" },
 ];
 
