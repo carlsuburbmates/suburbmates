@@ -50,6 +50,14 @@ This is the primary acquisition model: a business should be able to find itself 
 
 An operator may withhold, unpublish, reject, or correct a listing when those safeguards are not met. Those decisions must be reasoned and audit-recorded. They do not require a separate owner approval for every ordinary qualifying discovery.
 
+### Modern directory direction
+
+D-018 governs the next directory evolution. OpenStreetMap is a permitted seed source, not the permanent sole source of a business's public identity. The directory must develop a versioned approved-source registry and field-level evidence model so lawful, attributable public facts can be normalised, refreshed and safely reconciled over time.
+
+A business without its own website may still have a useful SuburbMates profile when approved evidence establishes its identity, Darebin relevance and non-misleading public facts. Missing contact details reduce what the profile can promise; they do not by themselves make the business invisible. Automated updates may fill empty facts only under the deterministic source, freshness, duplicate and conflict policy. Owner-confirmed facts are never silently overwritten.
+
+The public experience must help a resident understand a business and take a direct next step, not present a bare record. Search is grounded in public directory evidence but understands service intent, language variation and location. Profiles and result cards are visually intentional, accessible and mobile-first. Media is displayed only with owner permission or a recorded compatible licence.
+
 ### Independent states
 
 Publication, ownership, verification, commercial status, source provenance and SEO eligibility remain independent. A published listing may correctly be:
@@ -93,7 +101,9 @@ The following are build commitments, not indefinite deferrals:
 - a public missing-business submission path, protected by validation and abuse controls, that creates a candidate record rather than publishing raw input;
 - claim, ownership, request-status and moderated profile-update journeys;
 - the public contact path, private Ops handling and only the transactional communications genuinely needed by approved user workflows;
-- a safe, evidence-backed media/logo capability when it improves a public listing; and
+- a safe, evidence-backed media/logo capability when it improves a public listing;
+- a versioned multi-source enrichment and refresh lifecycle with field-level provenance, freshness and conflict handling;
+- grounded intent-aware public search and visually useful directory/profile experiences; and
 - observable operational jobs, exception queues, audit history, mobile accessibility, SEO and public-route acceptance.
 
 The first public release is live. These capabilities must remain implemented with their relevant safety controls and verified whenever a release-affecting change is made; they must not become merely documented promises.
