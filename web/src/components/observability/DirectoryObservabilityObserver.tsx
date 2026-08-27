@@ -5,11 +5,15 @@ import type { DirectoryObservabilityEvent } from "@/lib/directory-observability"
 
 function send(event: DirectoryObservabilityEvent) {
   const body = JSON.stringify({ event });
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon("/api/directory-observability", new Blob([body], { type: "application/json" }));
-    return;
-  }
-  void fetch("/api/directory-observability", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true });
+  void fetch("/api/directory-observability", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+    keepalive: true,
+    credentials: "same-origin",
+  }).catch(() => {
+    // Aggregate observation must never affect a public journey.
+  });
 }
 
 export function recordDirectoryObservabilityEvent(event: DirectoryObservabilityEvent) {
@@ -65,12 +69,49 @@ function entryEvent(pathname: string): DirectoryObservabilityEvent {
   if (pathname === "/") return "entry_home";
   if (pathname.startsWith("/vendor/")) return "entry_profile";
   if (pathname === "/contact") return "entry_contact";
-  if (pathname === "/businesses" || pathname.startsWith("/categories") || pathname.startsWith("/locations") || pathname.split("/").filter(Boolean).length <= 2) return "entry_directory";
+  if (
+    pathname === "/businesses" ||
+    pathname.startsWith("/categories") ||
+    pathname.startsWith("/locations") ||
+    pathname.split("/").filter(Boolean).length <= 2
+  ) return "entry_directory";
   return "entry_owner";
 }
 
+const privateRouteRoots = new Set([
+  "api",
+  "auth",
+  "claim",
+  "dashboard",
+  "login",
+  "ops",
+  "reset-password",
+]);
+
 function isPublicDirectoryPath(pathname: string) {
-  return !pathname.startsWith("/ops") && !pathname.startsWith("/api") && !pathname.startsWith("/_next") && !pathname.startsWith("/cdn-cgi");
+  const segments = pathname.split("/").filter(Boolean);
+  const [root] = segments;
+  if (
+    !root ||
+    privateRouteRoots.has(root) ||
+    root.startsWith("_") ||
+    root === "cdn-cgi" ||
+    root === "browse"
+  ) return pathname === "/";
+
+  if (
+    pathname === "/businesses" ||
+    pathname === "/contact" ||
+    pathname === "/join" ||
+    pathname === "/how-it-works" ||
+    pathname === "/privacy"
+  ) return true;
+
+  if (root === "categories" || root === "locations" || root === "vendor") return segments.length === 2;
+
+  // The remaining one- and two-segment routes are published locality and
+  // locality/category pages. Private route roots are explicitly excluded above.
+  return segments.length <= 2;
 }
 
 function outboundEvent(href: string): DirectoryObservabilityEvent | null {

@@ -12,9 +12,16 @@ assert.match(config, /"binding": "DIRECTORY_OBSERVABILITY"/);
 assert.match(config, /"dataset": "suburbmates_directory_observability"/);
 assert.match(events, /directoryObservabilityEvents/);
 assert.match(events, /search text, URL, listing identifier, form content, account identifier, IP,/);
-assert.match(observer, /navigator\.sendBeacon\("\/api\/directory-observability"/);
+assert.match(observer, /fetch\("\/api\/directory-observability"/);
+assert.match(observer, /keepalive: true/);
+assert.match(observer, /credentials: "same-origin"/);
+assert.doesNotMatch(observer, /navigator\.sendBeacon/);
 assert.match(observer, /input\[name="q"\], #directory-search/);
 assert.match(observer, /outbound_directions/);
+assert.match(observer, /const privateRouteRoots/);
+for (const privateRoute of ["api", "auth", "claim", "dashboard", "login", "ops", "reset-password"]) {
+  assert.match(observer, new RegExp(`"${privateRoute}"`));
+}
 assert.match(route, /isDirectoryObservabilityEvent/);
 assert.match(route, /body\.length > 96/);
 assert.match(route, /request\.headers\.get\("origin"\)/);

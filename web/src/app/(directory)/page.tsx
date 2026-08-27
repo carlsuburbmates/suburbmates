@@ -15,7 +15,10 @@ export default async function Home() {
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase
       .from("published_vendors")
-      .select("id, slug, business_name, suburbs(name)")
+      .select(
+        "id, slug, business_name, suburb_slug, category_slug, description",
+        { count: "exact" },
+      )
       .order("business_name", { ascending: true })
       .limit(6),
   ]);
@@ -29,6 +32,7 @@ export default async function Home() {
       categories={categoriesResult.data ?? []}
       suburbs={suburbsResult.data ?? []}
       featuredVendors={listingsResult.data ?? []}
+      publishedCount={listingsResult.count ?? 0}
     />
   );
 }

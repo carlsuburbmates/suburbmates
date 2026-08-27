@@ -14,14 +14,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  ChevronUp,
   LayoutGrid,
   List,
-  Sparkles,
   X,
   Building2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 type DirectoryVendor = {
   id: string;
@@ -64,7 +61,6 @@ export function DirectoryBrowseClient({
   const [q, setQ] = useState(initialQ);
   const [suburb, setSuburb] = useState(initialSuburb);
   const [category, setCategory] = useState(initialCategory);
-  const [expandedVendorId, setExpandedVendorId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isPending, startTransition] = useTransition();
 
@@ -75,7 +71,12 @@ export function DirectoryBrowseClient({
     updateUrl(1, q, suburb, category);
   };
 
-  const updateUrl = (page: number, searchQ: string, sub: string, cat: string) => {
+  const updateUrl = (
+    page: number,
+    searchQ: string,
+    sub: string,
+    cat: string,
+  ) => {
     const params = new URLSearchParams();
     if (searchQ) params.set("q", searchQ);
     if (sub) params.set("suburb", sub);
@@ -91,46 +92,38 @@ export function DirectoryBrowseClient({
     updateUrl(1, "", "", "");
   };
 
-  const toggleExpand = (id: string) => {
-    setExpandedVendorId((prev) => (prev === id ? null : id));
-  };
-
-  const activeFiltersCount = (q ? 1 : 0) + (suburb ? 1 : 0) + (category ? 1 : 0);
+  const activeFiltersCount =
+    (q ? 1 : 0) + (suburb ? 1 : 0) + (category ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-slate-50/70 pb-24">
       {/* ── Header ───────────────────────────────────────────── */}
       <section
-        className="relative bg-black px-6 py-14 text-white overflow-hidden"
-        aria-label="Directory Header"
+        className="border-b border-slate-800 bg-slate-950 px-5 py-12 text-white sm:px-6 sm:py-16"
+        aria-label="Directory header"
       >
-        <div
-          className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[150px] pointer-events-none"
-          style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-          aria-hidden="true"
-        />
-
-        <div className="max-w-6xl mx-auto relative z-10">
+        <div className="mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-bold uppercase tracking-widest text-slate-300 mb-4 border border-white/10">
-                <Sparkles size={13} className="text-amber-400" />
-                Hyper-Local Business Directory
-              </span>
-              <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-300 mb-4">
+                Darebin business directory
+              </p>
+              <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none">
                 Browse Local Businesses
               </h1>
-              <p className="text-base md:text-lg max-w-2xl font-light tracking-wide text-slate-300 mt-3">
-                Discover <span className="font-bold text-white">{totalCount}</span> local businesses across Darebin. Direct contact, zero lead-selling.
+              <p className="text-base md:text-lg max-w-2xl text-slate-300 mt-3">
+                {totalCount.toLocaleString("en-AU")} published listings. Open a
+                profile for the available public details, then contact the
+                business directly.
               </p>
             </div>
 
             {/* View Toggle */}
-            <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md p-1.5 rounded-xl border border-white/10 self-start md:self-auto">
+            <div className="flex items-center gap-1 bg-white/10 p-1.5 rounded-xl border border-white/10 self-start md:self-auto">
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                className={`flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                   viewMode === "grid"
                     ? "bg-white text-black shadow-md scale-100"
                     : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -144,7 +137,7 @@ export function DirectoryBrowseClient({
               <button
                 type="button"
                 onClick={() => setViewMode("list")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                className={`flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                   viewMode === "list"
                     ? "bg-white text-black shadow-md scale-100"
                     : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -160,10 +153,13 @@ export function DirectoryBrowseClient({
         </div>
       </section>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* ── Search & Filter Bar ────────────────────────────── */}
-        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200/80 mb-8 sticky top-20 z-30 transition-all">
-          <form onSubmit={handleSearch} className="flex flex-col lg:flex-row gap-3">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 mb-8 sticky top-20 z-30 transition-all">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col lg:flex-row gap-3"
+          >
             <div className="flex-1 relative">
               <Search
                 size={18}
@@ -194,7 +190,7 @@ export function DirectoryBrowseClient({
                     setCategory(e.target.value);
                     updateUrl(1, q, suburb, e.target.value);
                   }}
-                  className="w-full pl-4 pr-9 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium text-xs sm:text-sm appearance-none cursor-pointer truncate"
+                  className="min-h-11 w-full pl-4 pr-9 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium text-xs sm:text-sm appearance-none cursor-pointer truncate"
                 >
                   <option value="">All Categories</option>
                   {categories.map((c) => (
@@ -203,7 +199,10 @@ export function DirectoryBrowseClient({
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <ChevronDown
+                  size={16}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                />
               </div>
 
               <div className="relative">
@@ -217,7 +216,7 @@ export function DirectoryBrowseClient({
                     setSuburb(e.target.value);
                     updateUrl(1, q, e.target.value, category);
                   }}
-                  className="w-full pl-4 pr-9 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium text-xs sm:text-sm appearance-none cursor-pointer truncate"
+                  className="min-h-11 w-full pl-4 pr-9 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium text-xs sm:text-sm appearance-none cursor-pointer truncate"
                 >
                   <option value="">All Suburbs</option>
                   {suburbs.map((s) => (
@@ -226,14 +225,17 @@ export function DirectoryBrowseClient({
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <ChevronDown
+                  size={16}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                />
               </div>
             </div>
 
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="btn btn-primary flex-1 lg:flex-initial rounded-xl py-3 px-6 text-xs font-bold uppercase tracking-wider bg-black text-white hover:bg-slate-800 transition-all shadow-md active:scale-95"
+                className="btn btn-primary min-h-11 flex-1 lg:flex-initial rounded-xl px-6 text-xs font-bold uppercase tracking-wider bg-black text-white hover:bg-slate-800 transition-all shadow-md active:scale-95"
               >
                 Filter
               </button>
@@ -242,7 +244,7 @@ export function DirectoryBrowseClient({
                 <button
                   type="button"
                   onClick={clearAllFilters}
-                  className="btn btn-outline rounded-xl p-3 border-slate-200 text-slate-600 hover:bg-slate-100 transition-all"
+                  className="btn btn-outline min-h-11 min-w-11 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-100 transition-all"
                   title="Clear all filters"
                   aria-label="Clear all filters"
                 >
@@ -253,29 +255,60 @@ export function DirectoryBrowseClient({
           </form>
 
           <p className="sr-only" role="status" aria-live="polite">
-            {isPending ? "Loading matching businesses…" : "Directory results are ready."}
+            {isPending
+              ? "Loading matching businesses…"
+              : "Directory results are ready."}
           </p>
 
           {/* Active Filter Pills */}
           {activeFiltersCount > 0 && (
             <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-100 text-xs">
-              <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Active Filters:</span>
+              <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                Active Filters:
+              </span>
               {q && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 font-semibold text-slate-800 border border-slate-200">
                   Search: &quot;{q}&quot;
-                  <button onClick={() => { setQ(""); updateUrl(1, "", suburb, category); }} aria-label="Remove search query filter"><X size={12} className="hover:text-black" /></button>
+                  <button
+                    onClick={() => {
+                      setQ("");
+                      updateUrl(1, "", suburb, category);
+                    }}
+                    aria-label="Remove search query filter"
+                  >
+                    <X size={12} className="hover:text-black" />
+                  </button>
                 </span>
               )}
               {category && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 font-semibold text-slate-800 border border-slate-200">
-                  Category: {categories.find((c) => c.slug === category)?.name || category}
-                  <button onClick={() => { setCategory(""); updateUrl(1, q, suburb, ""); }} aria-label="Remove category filter"><X size={12} className="hover:text-black" /></button>
+                  Category:{" "}
+                  {categories.find((c) => c.slug === category)?.name ||
+                    category}
+                  <button
+                    onClick={() => {
+                      setCategory("");
+                      updateUrl(1, q, suburb, "");
+                    }}
+                    aria-label="Remove category filter"
+                  >
+                    <X size={12} className="hover:text-black" />
+                  </button>
                 </span>
               )}
               {suburb && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 font-semibold text-slate-800 border border-slate-200">
-                  Suburb: {suburbs.find((s) => s.slug === suburb)?.name || suburb}
-                  <button onClick={() => { setSuburb(""); updateUrl(1, q, "", category); }} aria-label="Remove suburb filter"><X size={12} className="hover:text-black" /></button>
+                  Suburb:{" "}
+                  {suburbs.find((s) => s.slug === suburb)?.name || suburb}
+                  <button
+                    onClick={() => {
+                      setSuburb("");
+                      updateUrl(1, q, "", category);
+                    }}
+                    aria-label="Remove suburb filter"
+                  >
+                    <X size={12} className="hover:text-black" />
+                  </button>
                 </span>
               )}
               <button
@@ -294,11 +327,17 @@ export function DirectoryBrowseClient({
             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-400">
               <Filter size={28} aria-hidden="true" />
             </div>
-            <h2 className="text-2xl font-black tracking-tight mb-2">No Businesses Found</h2>
+            <h2 className="text-2xl font-black tracking-tight mb-2">
+              No Businesses Found
+            </h2>
             <p className="text-slate-600 text-sm mb-6 max-w-sm mx-auto leading-relaxed">
-              We couldn&apos;t find any local listings matching your selected search criteria.
+              We couldn&apos;t find any local listings matching your selected
+              search criteria.
             </p>
-            <button onClick={clearAllFilters} className="btn btn-primary rounded-xl px-6 py-3">
+            <button
+              onClick={clearAllFilters}
+              className="btn btn-primary rounded-xl px-6 py-3"
+            >
               Clear All Filters
             </button>
           </div>
@@ -311,14 +350,18 @@ export function DirectoryBrowseClient({
             }
           >
             {vendors.map((vendor) => {
-              const subName = suburbs.find((s) => s.slug === vendor.suburb_slug)?.name || vendor.suburb_slug;
-              const catName = categories.find((c) => c.slug === vendor.category_slug)?.name || vendor.category_slug;
-              const isExpanded = expandedVendorId === vendor.id;
+              const subName =
+                suburbs.find((s) => s.slug === vendor.suburb_slug)?.name ||
+                vendor.suburb_slug;
+              const catName =
+                categories.find((c) => c.slug === vendor.category_slug)?.name ||
+                vendor.category_slug;
+              const detail = vendor.description?.replace(/\s+/g, " ").trim();
 
               return (
                 <article
                   key={vendor.id}
-                  className="group bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-slate-400/80 transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                  className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-400 transition-all overflow-hidden flex flex-col justify-between"
                 >
                   {/* Card Header & Compact Info */}
                   <div className="p-5 sm:p-6 flex-1">
@@ -332,60 +375,40 @@ export function DirectoryBrowseClient({
                     </div>
 
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-4">
-                      <MapPin size={14} className="text-slate-400 shrink-0" aria-hidden="true" />
+                      <MapPin
+                        size={14}
+                        className="text-slate-400 shrink-0"
+                        aria-hidden="true"
+                      />
                       <span className="truncate">
-                        {vendor.street_address ? `${vendor.street_address} • ` : ""}Servicing {subName}
+                        {vendor.street_address
+                          ? `${vendor.street_address} · `
+                          : ""}
+                        {subName}
                       </span>
                     </div>
-
-                    {/* Expandable Details Accordion */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.25, ease: "easeInOut" }}
-                          className="overflow-hidden border-t border-slate-100 pt-4 mt-2 space-y-3 text-xs text-slate-600 leading-relaxed"
-                        >
-                          <p className="line-clamp-4">
-                            {vendor.description ||
-                              `No description provided. Contact ${vendor.business_name} directly using the details below.`}
-                          </p>
-
-                          {vendor.contact_email && (
-                            <div className="flex items-center gap-2 font-medium text-slate-800">
-                              <Mail size={13} className="text-slate-400" />
-                              <a href={`mailto:${vendor.contact_email}`} className="hover:underline truncate">
-                                {vendor.contact_email}
-                              </a>
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {detail && (
+                      <p className="line-clamp-3 text-sm leading-6 text-slate-600">
+                        {detail}
+                      </p>
+                    )}
                   </div>
 
                   {/* Card Footer Actions */}
-                  <div className="p-4 sm:px-6 sm:pb-5 bg-slate-50/60 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    {/* Expand / Collapse Button */}
-                    <button
-                      type="button"
-                      onClick={() => toggleExpand(vendor.id)}
-                      className="flex items-center gap-1.5 font-bold text-slate-600 hover:text-black transition-colors py-1 px-2 rounded-lg hover:bg-slate-200/60"
-                      aria-expanded={isExpanded}
-                      aria-label={`${isExpanded ? "Hide details" : "Show quick details"} for ${vendor.business_name}`}
+                  <div className="p-4 sm:px-6 sm:pb-5 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs">
+                    <Link
+                      href={`/vendor/${vendor.slug}`}
+                      className="btn btn-primary min-h-11 rounded-xl px-4 text-[11px] font-bold flex items-center gap-1.5"
+                      aria-label={`View full profile for ${vendor.business_name}`}
                     >
-                      <span>{isExpanded ? "Hide Details" : "Quick Info"}</span>
-                      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-
-                    {/* Quick Action Buttons */}
-                    <div className="flex items-center gap-2">
+                      <Building2 size={14} />
+                      <span>View profile</span>
+                    </Link>
+                    <div className="flex flex-wrap items-center gap-2">
                       {vendor.phone && (
                         <a
                           href={`tel:${vendor.phone}`}
-                          className="btn btn-primary rounded-xl px-3 py-1.5 text-[11px] font-bold flex items-center gap-1.5 bg-black text-white hover:bg-slate-800 transition-all active:scale-95 shadow-sm"
+                          className="btn btn-outline min-h-11 rounded-xl px-3 text-[11px] font-bold flex items-center gap-1.5"
                           aria-label={`Call ${vendor.business_name}`}
                         >
                           <Phone size={13} />
@@ -398,7 +421,7 @@ export function DirectoryBrowseClient({
                           href={vendor.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn btn-outline rounded-xl px-3 py-1.5 text-[11px] font-bold flex items-center gap-1 border-slate-200 text-slate-700 hover:bg-slate-100 transition-all active:scale-95"
+                          className="btn btn-outline min-h-11 rounded-xl px-3 text-[11px] font-bold flex items-center gap-1"
                           aria-label={`Visit ${vendor.business_name} website`}
                         >
                           <Globe size={13} />
@@ -406,14 +429,16 @@ export function DirectoryBrowseClient({
                         </a>
                       )}
 
-                      <Link
-                        href={`/vendor/${vendor.slug}`}
-                        className="btn rounded-xl px-3.5 py-1.5 text-[11px] font-bold flex items-center gap-1.5 bg-slate-100 hover:bg-black hover:text-white text-slate-800 border border-slate-200/80 transition-all active:scale-95"
-                        aria-label={`View full profile for ${vendor.business_name}`}
-                      >
-                        <Building2 size={13} />
-                        <span>Profile</span>
-                      </Link>
+                      {vendor.contact_email && (
+                        <a
+                          href={`mailto:${vendor.contact_email}`}
+                          className="btn btn-outline min-h-11 rounded-xl px-3 text-[11px] font-bold flex items-center gap-1"
+                          aria-label={`Email ${vendor.business_name}`}
+                        >
+                          <Mail size={13} />
+                          <span className="hidden sm:inline">Email</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 </article>
@@ -448,7 +473,7 @@ export function DirectoryBrowseClient({
             </button>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
