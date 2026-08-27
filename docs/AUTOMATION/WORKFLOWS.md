@@ -9,8 +9,9 @@ The map does not imply that a configured workflow has run successfully, or that 
 ## End-to-end map
 
 ```text
-GitHub catalogue discovery and qualification handoff (active on main; full verification succeeded)
-  -> OpenStreetMap / Overpass public data
+GitHub catalogue discovery and qualification handoff (active on main)
+  -> OpenStreetMap / Overpass public data (weekly)
+  -> Victorian liquor licences by location, CC BY 4.0 (monthly)
   -> candidate CSV
   -> data-hygiene audit
   -> merge with curated CSV
@@ -51,7 +52,8 @@ Supabase internal health monitor (active Ops process; outside Automation lane)
 | Workflow | Trigger | Verified steps | Services / infrastructure | Output | Current status | State-changing boundary |
 | --- | --- | --- | --- | --- | --- | --- |
 | Repository verification | GitHub pull request; push to `main` or `codex/**` | Check out code; install Node 22 dependencies; run root checks; lint, build, and Cloudflare build for `web/` | GitHub Actions, Node.js, npm, Next.js, OpenNext/Cloudflare build tooling | Pass/fail GitHub check | **Active** | No hosted data write or deployment command |
-| Catalogue candidate discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; retain CSVs; send OSM candidates in authenticated handoffs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, Cloudflare, Supabase, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days; private run and exception records in Ops | **Active on `main`; full manual verification succeeded on 22 July 2026.** | Only an approved-source candidate that passes deterministic source, scope, contact, duplicate and safety checks may create an unclaimed listing. Exceptions stay private in Ops. |
+| OpenStreetMap catalogue discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; retain CSVs; send source-record handoffs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, Cloudflare, Supabase, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days; private run and exception records in Ops | **Active on `main`; historic manual verification succeeded on 22 July 2026.** | Only an approved-source candidate that passes deterministic source, scope, category, duplicate and safety checks may create an unclaimed listing. Missing public contact details are evidence gaps, not an automatic rejection. Exceptions stay private in Ops. |
+| Victorian liquor-licence discovery | Monthly on day 2 at `19:23` UTC; manual dispatch | Resolve the first-party Victorian Government XLSX, verify size and ZIP structure, parse the published header, select Darebin rows with explicit category mappings, audit and hand off source-record facts | GitHub Actions, Node.js, npm, Victorian Government open-data resource, Cloudflare, Supabase, GitHub artifacts | One candidate CSV retained 30 days; private source/evidence records in Ops | **Active on `main`; read-only rehearsal on 28 August 2026 produced 365 data-hygiene-valid candidates.** | Uses only the licensed source and its stable licence number. It never fetches business websites or images, never stores contact-form text, and cannot make ownership decisions. |
 | Website-safety evidence | Monday schedule at `08:41` UTC; manual dispatch | Read `published_vendors`; validate public DNS; make DNS-pinned HTTPS `HEAD` requests; follow at most three HTTPS redirects; write a JSON report and summary | GitHub Actions, Supabase public projection, DNS, HTTPS, GitHub artifacts | JSON report retained 30 days | **Active on `main`; evidence run completed** | No listing write, automatic contact/publication decision, GitHub issue or operator task. A genuine workflow failure still fails the run. |
 | Production smoke | Daily schedule at `19:23` Australia/Melbourne; manual dispatch | Check public routes; require unauthenticated Ops redirects; verify canonical redirects and invalid vendor 404; paginate safe Supabase projections; reconstruct and compare sitemap; sample a public vendor page; open/update one GitHub issue on failure | GitHub Actions, production Cloudflare site, Supabase public projections, GitHub issues | Pass/fail run; one failure issue if needed | **Active on `main`; public-release route verification is recorded** | No Supabase write; no deployment; no listing change |
 | HubSpot Decision Inbox | Every 15 minutes; manual dispatch | Call the protected reconciliation endpoint; create/update one low-detail Task for genuine Ops work and close tasks whose linked work is no longer actionable | GitHub Actions, Cloudflare, HubSpot Task API | Short decision inbox only | **Active on `main`; scheduled runs passed on 7 August 2026** | Task-only one-way mirror. No HubSpot contact, company, deal, marketing, billing, directory or private-evidence sync; it cannot change SuburbMates data. |
@@ -71,7 +73,7 @@ This is build and regression automation, not business-workflow automation. Its r
 
 ### 2. Catalogue candidate discovery
 
-Sources: `.github/workflows/catalogue-discovery.yml`, `scripts/acquire-openstreetmap.ts`, `scripts/audit-vendor-candidates.ts`, `scripts/merge-vendor-catalogues.ts`, and `scripts/report-catalogue-coverage.ts`.
+Sources: `.github/workflows/catalogue-discovery.yml`, `.github/workflows/catalogue-victorian-liquor-licences.yml`, `scripts/acquire-openstreetmap.ts`, `scripts/acquire-victorian-liquor-licences.ts`, `scripts/audit-vendor-candidates.ts`, `scripts/merge-vendor-catalogues.ts`, and `scripts/report-catalogue-coverage.ts`.
 
 Verified sequence:
 
@@ -86,7 +88,7 @@ Verified sequence:
 9. Send the OSM candidate rows to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare. The handoff includes the versioned `openstreetmap-candidate-v1` contract; a missing or changed version safely holds the source before any candidate or listing record is created. Single-candidate retry is used to recover safely from an interrupted request.
 10. Persist an idempotent handoff run, the candidate facts, normalised facts, qualification outcome, reasons, correlation and immutable audit evidence. Qualifying candidates may become unclaimed listings; exceptions remain private in `/ops/candidates`.
 
-The endpoint accepts only OpenStreetMap records, bounded payloads and a valid private token. It does not accept Google or closed-directory data, does not make ownership or claim decisions, and cannot change the global public-release setting. A full manual run succeeded on 22 July 2026: all 1,545 source rows received private qualification evidence; 1,544 became exceptions and one candidate became an unclaimed listing only after passing every deterministic rule. Interrupted single-candidate retries reuse conclusive evidence already retained for that source record rather than duplicating it.
+The endpoint accepts only versioned source contracts in the private `catalogue_sources` registry, bounded payloads and a valid private token. Current automated contracts are OpenStreetMap and the licensed Victorian liquor-licence source. It does not accept Google or closed-directory data, does not make ownership or claim decisions, and cannot change the global public-release setting. Every applied public field receives a private source-record, observed-date and freshness evidence row; contradictory future evidence must enter the conflict lifecycle rather than overwrite the listing. Interrupted single-candidate retries reuse conclusive evidence already retained for that source record rather than duplicating it.
 
 ### 3. Website-safety evidence
 

@@ -37,6 +37,14 @@ Reverified on 6 August 2026 (Australia/Melbourne):
 - the latest private existing-catalogue evidence pass (`existing-catalogue-v2`, 26 July 2026) classified all 1,601 published listings: 619 qualified and 982 retained as background evidence exceptions. It made no listing-state change and does not create a manual operator backlog; see `docs/AUTOMATION/EXISTING_CATALOGUE_REQUALIFICATION_AUDIT.md`;
 - the full repository safety suite, web lint and production build passed on the current baseline. The former public-image performance warnings were resolved in PR #72; PR #73 adds a high-priority preload for the public home hero. The remaining Next.js `middleware.ts` deprecation warning is a verified OpenNext compatibility limitation; see **Production website** below.
 
+### Modern directory delivery — 28 August 2026
+
+- D-018 supersedes the OSM-only catalogue direction: OpenStreetMap and the Victorian Government’s CC BY 4.0 liquor-licence data are the first approved automated contracts. The source registry, field-level provenance/freshness/conflict tables, RLS and release-safe candidate handoff are live. No closed-directory facts or third-party business imagery are permitted.
+- The Victorian source’s first read-only rehearsal produced 365 Darebin candidate rows that passed the existing data-hygiene audit. It did **not** hand off, publish or change any listing.
+- Public search now resolves recognised service intent locally before its literal/typo fallback. For example, production `pets` resolves only `pet` listings rather than an unrelated business containing “Peter”. Search input remains transient and is never retained.
+- The public home, browse cards and profiles now use category-led visual treatments and show only owner-provided or properly licensed business media. No generic or copied business imagery was added.
+- Current Worker deployment: Cloudflare version `9087630f-8bfe-4364-80a9-308261c2ea8c`; HTTP checks for `/` and `/businesses?q=pets` returned 200. Full in-app-browser visual acceptance remains to be recorded because this task did not expose an in-app-browser control surface.
+
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
 ## Production website
@@ -120,7 +128,7 @@ The safe automated discovery path is:
 
 `scripts/seed.ts` is a controlled legacy import tool, not the approved-source discovery route. It preserves publication for existing rows and sets new seed rows to unpublished pending review. Empty import fields must not erase existing stored values, and same-name businesses at different addresses must remain distinct.
 
-The weekly GitHub `Catalogue Discovery` workflow acquires/audits/merges candidate evidence, uploads its artifact, and sends approved OpenStreetMap candidates to the authenticated qualification handoff. The handoff retains private evidence for every candidate; only a candidate that passes the deterministic policy may become an unclaimed public listing. It never publishes raw, uncertain or user-submitted data.
+The weekly OpenStreetMap and monthly Victorian liquor-licence GitHub workflows acquire/audit approved-source evidence, upload their artifacts, and send versioned source-record candidates to the authenticated qualification handoff. The handoff retains private qualification plus field-level evidence for every applied fact; only a candidate that passes the deterministic policy may become an unclaimed public listing. It never publishes raw, uncertain or user-submitted data. A missing public website, phone or email alone is not a rejection rule.
 
 Current allowed sources and rules are documented in `docs/vendor-acquisition-strategy.md` and `docs/openstreetmap-acquisition.md`. Do not persist data from closed directories without a licence permitting storage and display.
 
@@ -139,7 +147,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Service | Purpose | Current status |
 | --- | --- | --- |
 | GitHub | Source, CI, scheduled safe discovery | Connected; `Verify` runs on branch pushes and pull requests |
-| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; local and remote migrations aligned through `20260805112425` |
+| Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; D-018 source-evidence and intent-search migrations applied 28 August 2026 |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth delivery only | Domain verified; password reset and the eight-digit email-code fallback are delivered from `auth@suburbmates.com.au`. No general sender, marketing mail or public inbox is enabled. |
 | HubSpot | Optional daily decision inbox | Connected through a 15-minute GitHub reconciliation. It creates or closes low-detail Tasks for genuine protected Ops decisions only; it cannot change SuburbMates data or read/write HubSpot contacts, companies, deals, marketing or billing. |
@@ -156,6 +164,8 @@ Repository-safe checks:
 npm run check
 npm run audit:test
 npm run acquire:osm:test
+npm run acquire:vic-liquor:test
+npm run catalogue:source-evidence:test
 npm run catalogue:merge:test
 npm run seed:test
 npm run public-catalogue:test
@@ -180,7 +190,7 @@ After deployment, verify the served production response—not only browser cache
 
 The released Work/Businesses/System Ops model has received real-data desktop and narrow-mobile acceptance. Repeat that acceptance after a material Ops change; it is a release check, not standing operator work.
 
-All current vendor rows are published. Historical catalogue provenance can be revisited only if a concrete new source requires an immutable evidence model beyond the existing `approved_import` record.
+Historical catalogue provenance is retained, not deleted. New approved sources must use the D-018 `catalogue_sources` contract and field-level evidence model; source disagreement becomes private conflict evidence and may not silently overwrite a public listing.
 
 Weekly outbound-website reports are background batch-improvement context. The checker follows HTTPS redirects only after public-DNS validation and never changes a listing or creates an operator task from a raw external failure. ABN evidence and owner-media workflows are protected and covered by automated boundary tests; their next live use occurs when a genuine owner case arises, not through fabricated acceptance records.
 
