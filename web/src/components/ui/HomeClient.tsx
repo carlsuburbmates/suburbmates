@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, MapPin, Phone, Search, Store } from "lucide-react";
+import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
 import { HeroSearch } from "@/components/ui/HeroSearch";
 import { createClient } from "@/utils/supabase/client";
 
@@ -17,6 +18,9 @@ interface HomeClientProps {
     suburb_slug: string | null;
     category_slug: string | null;
     description: string | null;
+    street_address: string | null;
+    phone: string | null;
+    website: string | null;
   }>;
   publishedCount: number;
 }
@@ -89,18 +93,19 @@ export function HomeClient({
   return (
     <div className="flex min-h-screen flex-col">
       <section
-        className="border-b border-slate-800 bg-slate-950 py-14 text-white sm:py-20"
+        className="relative overflow-hidden border-b border-teal-900 bg-[#073b3a] py-14 text-white sm:py-20"
         aria-label="Directory search"
       >
-        <div className="mx-auto w-full max-w-5xl px-5 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(251,191,36,0.32),transparent_24rem),radial-gradient(circle_at_8%_80%,rgba(45,212,191,0.2),transparent_25rem)]" />
+        <div className="relative mx-auto w-full max-w-5xl px-5 sm:px-6">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-100">
             Darebin business directory
           </p>
           <div className="mt-5 max-w-3xl">
             <h1 className="text-4xl font-black leading-[0.95] tracking-tight sm:text-6xl md:text-7xl">
               Local businesses. Zero noise.
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-teal-50 sm:text-lg">
               Find a local business, view its public profile, then contact it
               directly. No sign-ups. No middlemen.
             </p>
@@ -108,7 +113,7 @@ export function HomeClient({
           <div className="mt-8 sm:mt-10">
             <HeroSearch categories={categories} suburbs={suburbs} />
           </div>
-          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-300">
+          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-teal-50">
             <span className="font-semibold text-white">
               {publishedCount.toLocaleString("en-AU")} published local listings
             </span>
@@ -154,7 +159,7 @@ export function HomeClient({
                 Browse all businesses
               </Link>
             </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {featuredVendors.map((vendor) => {
                 const suburbName = vendor.suburb_slug
                   ? suburbNames.get(vendor.suburb_slug)
@@ -166,14 +171,16 @@ export function HomeClient({
                 return (
                   <article
                     key={vendor.id}
-                    className="flex min-h-56 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                    className="group flex min-h-72 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
                   >
+                    <DirectoryCategoryVisual categorySlug={vendor.category_slug} label={categoryName ?? "Local business"} className="h-24" />
+                    <div className="flex flex-1 flex-col p-5">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="text-xl font-black leading-tight tracking-tight text-slate-950">
                         {vendor.business_name}
                       </h3>
                       {categoryName && (
-                        <span className="badge badge-muted max-w-32 truncate">
+                        <span className="max-w-32 truncate rounded-full bg-teal-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-teal-900">
                           {categoryName}
                         </span>
                       )}
@@ -189,13 +196,17 @@ export function HomeClient({
                         {detail}
                       </p>
                     )}
+                    {!detail && vendor.street_address && (
+                      <p className="mt-4 text-sm leading-6 text-slate-600">{vendor.street_address}</p>
+                    )}
                     <Link
                       href={`/vendor/${vendor.slug}`}
-                      className="btn btn-primary mt-auto w-full sm:w-auto sm:self-start"
+                      className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-teal-900 px-4 py-3 text-xs font-black uppercase tracking-wide text-white transition hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-900 focus-visible:ring-offset-2 sm:mt-auto sm:w-auto sm:self-start"
                       aria-label={`View profile for ${vendor.business_name}`}
                     >
                       View profile <ArrowRight size={16} aria-hidden="true" />
                     </Link>
+                    </div>
                   </article>
                 );
               })}
@@ -233,7 +244,7 @@ export function HomeClient({
       </section>
 
       <section
-        className="bg-slate-950 py-14 text-white sm:py-20"
+        className="bg-[#0d3142] py-14 text-white sm:py-20"
         aria-label="Business owner options"
       >
         <div className="mx-auto max-w-4xl px-5 text-center sm:px-6">

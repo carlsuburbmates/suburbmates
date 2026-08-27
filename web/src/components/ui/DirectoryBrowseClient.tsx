@@ -19,6 +19,7 @@ import {
   X,
   Building2,
 } from "lucide-react";
+import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
 
 type DirectoryVendor = {
   id: string;
@@ -363,6 +364,13 @@ export function DirectoryBrowseClient({
                   key={vendor.id}
                   className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-400 transition-all overflow-hidden flex flex-col justify-between"
                 >
+                  {viewMode === "grid" && (
+                    <DirectoryCategoryVisual
+                      categorySlug={vendor.category_slug}
+                      label={catName}
+                      className="h-20"
+                    />
+                  )}
                   {/* Card Header & Compact Info */}
                   <div className="p-5 sm:p-6 flex-1">
                     <div className="flex items-start justify-between gap-3 mb-2">

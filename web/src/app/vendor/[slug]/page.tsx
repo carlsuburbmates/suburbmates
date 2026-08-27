@@ -14,6 +14,7 @@ import {
 import { resolvePublicVendorRoute } from "@/lib/public-vendor-route";
 import { DirectoryProfileView } from "@/components/observability/DirectoryObservabilityObserver";
 import { PublicDirectoryShell } from "@/components/ui/PublicDirectoryShell";
+import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -131,8 +132,8 @@ export default async function VendorWebsite({ params }: PageProps) {
           __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
         }}
       />
-      <article className="bg-slate-50 text-slate-950">
-        <section className="border-b border-slate-200 bg-white py-12 sm:py-16">
+      <article className="bg-[#f6f7f3] text-slate-950">
+        <section className="border-b border-teal-900/10 bg-[linear-gradient(135deg,#e6f5ef_0%,#fff7e7_54%,#edf6fa_100%)] py-12 sm:py-16">
           <div className="mx-auto max-w-6xl px-5 sm:px-6">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
               <div>
@@ -140,12 +141,11 @@ export default async function VendorWebsite({ params }: PageProps) {
                   {categoryName} · {suburbName}
                 </p>
                 <div className="mt-5 flex items-start gap-4">
-                  <div
-                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-2xl font-black text-white"
-                    aria-hidden="true"
-                  >
-                    {vendor.business_name.charAt(0)}
-                  </div>
+                  <DirectoryCategoryVisual
+                    categorySlug={vendor.category_slug}
+                    label={categoryName}
+                    className="h-16 w-16 shrink-0 rounded-2xl"
+                  />
                   <div>
                     <h1 className="text-4xl font-black leading-tight tracking-tight sm:text-6xl">
                       {vendor.business_name}
@@ -171,7 +171,7 @@ export default async function VendorWebsite({ params }: PageProps) {
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="min-w-0">
             <PublicMediaGallery media={media} />
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <h2 className="text-2xl font-black tracking-tight">
                 About this business
               </h2>
@@ -187,7 +187,7 @@ export default async function VendorWebsite({ params }: PageProps) {
             </section>
           </div>
           <aside className="space-y-4">
-            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-lg font-black">Listing details</h2>
               <dl className="mt-5 space-y-4 text-sm">
                 <div>
@@ -209,7 +209,7 @@ export default async function VendorWebsite({ params }: PageProps) {
               </dl>
             </section>
             {vendor.is_claimed === false && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-6">
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-black">Is this your business?</h2>
                 <p className="mt-3 text-sm leading-6 text-slate-600">
                   Claiming is reviewed and does not change this profile
@@ -225,7 +225,7 @@ export default async function VendorWebsite({ params }: PageProps) {
             )}
             <Link
               href={`/contact?topic=listing_correction&business=${encodeURIComponent(vendor.business_name)}`}
-              className="block rounded-2xl border border-slate-200 bg-white p-5 text-sm font-bold underline underline-offset-4 hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              className="block rounded-3xl border border-slate-200 bg-white p-5 text-sm font-bold underline underline-offset-4 shadow-sm hover:border-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
             >
               Report a problem with this listing
             </Link>
@@ -309,8 +309,11 @@ function PublicMediaGallery({
 }) {
   if (media.length === 0) return null;
   return (
-    <section className="mb-8">
-      <h2 className="sr-only">Business photos</h2>
+    <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 px-1">
+        <h2 className="text-lg font-black tracking-tight">Business photos</h2>
+        <p className="text-xs font-semibold text-slate-500">Provided by the business owner or a licensed source</p>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {media.map((item) => (
           <Image

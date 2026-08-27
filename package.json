@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run audit:test && npm run acquire:osm:test && npm run acquire:vic-liquor:test && npm run catalogue:source-evidence:test && npm run catalogue:merge:test && npm run seed:test && npm run candidate-qualification:test && npm run candidate-handoff:test && npm run candidate-automation-ingest:test && npm run existing-catalogue-requalification:test && npm run abn-check:test && npm run abn-evidence:test && npm run transactional-communications:test && npm run owner-media:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run resident-journey:test && npm run contact-intake:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test && npm run claim-evidence-handoff:test && npm run cross-device-email-code:test && npm run password-login:test && npm run private-business-submission-status:test && npm run submitter-owner-identity:test && npm run owner-submitted-business-candidate:test && npm run ops-system:test && npm run ops-action-queue:test && npm run hubspot-decision-inbox:test && npm run directory-observability:test",
+    "check": "npm run audit:test && npm run acquire:osm:test && npm run acquire:vic-liquor:test && npm run catalogue:source-evidence:test && npm run catalogue:merge:test && npm run seed:test && npm run candidate-qualification:test && npm run candidate-handoff:test && npm run candidate-automation-ingest:test && npm run existing-catalogue-requalification:test && npm run abn-check:test && npm run abn-evidence:test && npm run transactional-communications:test && npm run owner-media:test && npm run public-catalogue:test && npm run directory-ranking:test && npm run directory-intent-search:test && npm run resident-journey:test && npm run contact-intake:test && npm run edge-functions:test && npm run vendor-slug:test && npm run website-safety:test && npm run owner-status:test && npm run claim-evidence-handoff:test && npm run cross-device-email-code:test && npm run password-login:test && npm run private-business-submission-status:test && npm run submitter-owner-identity:test && npm run owner-submitted-business-candidate:test && npm run ops-system:test && npm run ops-action-queue:test && npm run hubspot-decision-inbox:test && npm run directory-observability:test",
     "dev": "npm --prefix web run dev",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "seed:test": "tsx --env-file-if-exists=.env.local scripts/test-seed-policy.ts",
@@ -35,6 +35,7 @@
     "catalogue:report": "tsx scripts/report-catalogue-coverage.ts",
     "public-catalogue:test": "tsx scripts/test-public-catalogue-pagination.ts",
     "directory-ranking:test": "tsx scripts/test-directory-ranking-policy.ts",
+    "directory-intent-search:test": "tsx scripts/test-directory-intent-search-policy.ts",
     "resident-journey:test": "tsx scripts/test-resident-journey-policy.ts",
     "edge-functions:test": "tsx scripts/test-disabled-edge-functions.ts",
     "vendor-slug:test": "tsx scripts/test-vendor-slug-policy.ts",
