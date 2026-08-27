@@ -25,8 +25,6 @@ export type Qualification = {
   normalized: { businessName: string; streetAddress: string; phone: string; website: string };
 };
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export function qualifyCandidate(candidate: CandidateInput, options: { allowedSources: ReadonlySet<string>; allowedSuburbs: ReadonlySet<string>; allowedCategories: ReadonlySet<string>; existingListings: readonly ExistingListing[] }): Qualification {
   const normalized = { businessName: normalizeText(candidate.businessName), streetAddress: normalizeText(candidate.streetAddress), phone: normalizePhone(candidate.phone), website: normalizeWebsite(candidate.website) };
   const reasons: string[] = [];
@@ -37,7 +35,6 @@ export function qualifyCandidate(candidate: CandidateInput, options: { allowedSo
   if (!normalized.businessName || normalized.businessName.length < 2) reasons.push("invalid_business_name");
   if (!options.allowedSuburbs.has(suburb)) reasons.push("outside_geographic_scope");
   if (!options.allowedCategories.has(category)) reasons.push("unsupported_category");
-  if (!hasReachableContact(candidate, normalized)) reasons.push("missing_reachable_contact");
   if (candidate.website && !normalized.website) reasons.push("unsafe_or_invalid_website");
   if (candidate.websiteSafety === "unsafe") reasons.push("unsafe_or_broken_destination");
   const duplicate = findStrongDuplicate(normalized, options.existingListings);
@@ -45,9 +42,6 @@ export function qualifyCandidate(candidate: CandidateInput, options: { allowedSo
   return { outcome: reasons.length === 0 ? "qualified" : "exception", reasons, duplicateVendorId: duplicate?.id ?? null, normalized };
 }
 
-function hasReachableContact(candidate: CandidateInput, normalized: Qualification["normalized"]) {
-  return emailPattern.test(candidate.contactEmail?.trim().toLowerCase() ?? "") || normalized.phone.length >= 8 || Boolean(normalized.website);
-}
 function findStrongDuplicate(normalized: Qualification["normalized"], listings: readonly ExistingListing[]) {
   return listings.find((listing) => {
     const website = normalizeWebsite(listing.website); const phone = normalizePhone(listing.phone); const name = normalizeText(listing.businessName); const address = normalizeText(listing.streetAddress);

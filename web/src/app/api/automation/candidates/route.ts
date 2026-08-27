@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { qualifyCandidate, type CandidateInput, type ExistingListing } from "@/lib/automation/candidate-qualification";
-import { hasOpenStreetMapSourceContract, OPENSTREETMAP_SOURCE, OPENSTREETMAP_SOURCE_CONTRACT_VERSION, OPENSTREETMAP_SOURCE_HOST } from "@/lib/automation/openstreetmap-source-contract";
+import { CATALOGUE_SOURCE_CONTRACTS, getCatalogueSourceContract, hasCatalogueSourceContract, isAllowedCatalogueSourceUrl, type CatalogueSourceContract } from "@/lib/automation/catalogue-source-contract";
 import { runtimeEnv } from "@/lib/runtime-env";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 const MAX_CANDIDATES = 100;
-const allowedSource = OPENSTREETMAP_SOURCE;
 // The Worker request cannot legitimately outlive this window. Treat a longer
 // processing record as interrupted, close its job and resume idempotently.
 const STALE_PROCESSING_MS = 30 * 1000;
 
 type IncomingCandidate = CandidateInput & {
+  sourceRecordKey: string;
   sourceUrl: string;
   sourceCheckedOn?: string;
+  tradingHours?: string;
   notes?: string;
 };
 
@@ -31,26 +32,27 @@ export async function POST(request: NextRequest) {
     const source = asText(body.source);
     const artifactSha256 = asText(body.artifactSha256);
     const artifactUrl = optionalHttpsUrl(body.artifactUrl);
-    if (source !== allowedSource) {
+    const sourceContract = getCatalogueSourceContract(source);
+    if (!sourceContract) {
       return NextResponse.json({ error: "Invalid approved-source candidate batch" }, { status: 400 });
     }
 
     const admin = createAdminClient();
-    if (!hasOpenStreetMapSourceContract(asText(body.sourceContractVersion))) {
-      await holdOpenStreetMapSourceContract(admin);
-      return NextResponse.json({ error: "OpenStreetMap source contract changed; candidate processing is held" }, { status: 400 });
+    if (!hasCatalogueSourceContract(source, asText(body.sourceContractVersion))) {
+      await holdCatalogueSourceContract(admin, sourceContract);
+      return NextResponse.json({ error: `${sourceContract.displayName} source contract changed; candidate processing is held` }, { status: 400 });
     }
 
-    const candidates = Array.isArray(body.candidates) ? body.candidates.map(readCandidate) : null;
+    const candidates = Array.isArray(body.candidates) ? body.candidates.map((candidate: unknown) => readCandidate(candidate, sourceContract)) : null;
     if (!/^[0-9a-f]{64}$/.test(artifactSha256) || !candidates || candidates.length < 1 || candidates.length > MAX_CANDIDATES) {
       return NextResponse.json({ error: "Invalid approved-source candidate batch" }, { status: 400 });
     }
-    await markOpenStreetMapSourceContractHealthy(admin);
+    await markCatalogueSourceContractHealthy(admin, sourceContract);
     // A singleton retry is the durable recovery path for a batch that exceeded
     // Worker resources. Reuse conclusive private evidence already retained by
     // an earlier batch instead of creating duplicate exception records.
     if (candidates.length === 1) {
-      const sourceRecordKey = `${source}:${candidates[0].sourceUrl}`;
+      const sourceRecordKey = `${source}:${candidates[0].sourceRecordKey}`;
       const existingRecord = await admin.from("candidate_handoff_records")
         .select("qualification_outcome, vendor_id")
         .eq("source_record_key", sourceRecordKey).order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
       }
     }
     let { data: run, error: runError } = await admin.from("candidate_handoff_runs")
-      .insert({ source, artifact_sha256: artifactSha256, artifact_url: artifactUrl, status: "processing", input_count: candidates.length })
+      .insert({ source, source_contract_version: sourceContract.version, artifact_sha256: artifactSha256, artifact_url: artifactUrl, status: "processing", input_count: candidates.length })
       .select("id, correlation_id")
       .single();
     if (runError?.code === "23505") {
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
           if (staleJobs.error) throw new Error("Could not close the stale candidate handoff job.");
         }
         const resumed = await admin.from("candidate_handoff_runs")
-          .update({ status: "processing", input_count: candidates.length, qualified_count: 0, exception_count: 0, error_message: null, completed_at: null, received_at: new Date().toISOString() })
+          .update({ source_contract_version: sourceContract.version, status: "processing", input_count: candidates.length, qualified_count: 0, exception_count: 0, error_message: null, completed_at: null, received_at: new Date().toISOString() })
           .eq("id", existingRun.id).select("id, correlation_id").single();
         if (resumed.error || !resumed.data) throw new Error("Could not resume the failed or stale candidate handoff run.");
         run = resumed.data;
@@ -114,7 +116,7 @@ export async function POST(request: NextRequest) {
       let qualifiedCount = 0;
       let exceptionCount = 0;
       for (const candidate of candidates) {
-        const sourceRecordKey = `${source}:${candidate.sourceUrl}`;
+        const sourceRecordKey = `${source}:${candidate.sourceRecordKey}`;
         let recoveredRecordId: string | null = null;
         const { data: existingRecord, error: existingRecordError } = await admin.from("candidate_handoff_records")
           .select("id, qualification_outcome, qualification_reasons, vendor_id").eq("run_id", run.id).eq("source_record_key", sourceRecordKey).maybeSingle();
@@ -134,7 +136,7 @@ export async function POST(request: NextRequest) {
           if (recoveredVendor) {
             await ensureQualifiedListingProof(admin, {
               vendorId: recoveredVendor.id, candidate, runId: run.id, correlationId: run.correlation_id,
-              sourceRecordKey, artifactSha256, qualificationReasons: existingRecord.qualification_reasons,
+              sourceRecordKey, sourceContract, artifactSha256, qualificationReasons: existingRecord.qualification_reasons,
             });
             const linked = await admin.from("candidate_handoff_records").update({ vendor_id: recoveredVendor.id }).eq("id", existingRecord.id);
             if (linked.error) throw new Error("Could not recover the candidate-to-listing link.");
@@ -145,7 +147,7 @@ export async function POST(request: NextRequest) {
           recoveredRecordId = existingRecord.id;
         }
         const qualification = qualifyCandidate(candidate, {
-          allowedSources: new Set([allowedSource, "operator", "community"]),
+          allowedSources: new Set(Object.keys(CATALOGUE_SOURCE_CONTRACTS)),
           allowedSuburbs: suburbs,
           allowedCategories: categories,
           existingListings: listings,
@@ -178,13 +180,13 @@ export async function POST(request: NextRequest) {
           business_name: candidate.businessName.trim(), category_slug: candidate.categorySlug.trim().toLowerCase(), suburb_slug: candidate.suburbSlug.trim().toLowerCase(),
           street_address: nullable(candidate.streetAddress), contact_email: nullable(candidate.contactEmail?.toLowerCase()), phone: nullable(candidate.phone), website: nullable(candidate.website),
           source_key: sourceKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10),
-          source_notes: candidate.notes ?? "Approved OpenStreetMap candidate handoff.", verification_status: "unverified",
+          source_notes: candidate.notes ?? sourceContract.defaultSourceNotes, verification_status: "unverified",
           listing_status: "published", listing_source: "approved_import", ownership_status: "unclaimed", is_published: true, is_claimed: false, tier: "free",
         }).select("id").single();
         if (vendorError || !vendor) throw new Error("Could not create qualified listing.");
         await ensureQualifiedListingProof(admin, {
           vendorId: vendor.id, candidate, runId: run.id, correlationId: run.correlation_id,
-          sourceRecordKey, artifactSha256, qualificationReasons: qualification.reasons,
+          sourceRecordKey, sourceContract, artifactSha256, qualificationReasons: qualification.reasons,
         });
         const link = await admin.from("candidate_handoff_records").update({ vendor_id: vendor.id }).eq("id", recordId);
         if (link.error) throw new Error("Could not link qualification evidence to listing.");
@@ -215,43 +217,49 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function readCandidate(value: unknown): IncomingCandidate {
+function readCandidate(value: unknown, sourceContract: CatalogueSourceContract): IncomingCandidate {
   if (!value || typeof value !== "object") throw new Error("Invalid candidate.");
   const item = value as Record<string, unknown>;
   const sourceUrl = optionalHttpsUrl(item.sourceUrl);
-  if (!sourceUrl || new URL(sourceUrl).hostname !== OPENSTREETMAP_SOURCE_HOST) throw new Error("Candidate source URL must be an OpenStreetMap record.");
+  if (!sourceUrl || !isAllowedCatalogueSourceUrl(sourceContract, sourceUrl)) throw new Error("Candidate source URL is not allowed by the approved source contract.");
   const candidateSource = asText(item.source);
-  if (candidateSource && candidateSource !== allowedSource) throw new Error("Candidate source must match the approved source batch.");
+  if (candidateSource && candidateSource !== sourceContract.key) throw new Error("Candidate source must match the approved source batch.");
+  const sourceRecordKey = optionalText(item.sourceRecordKey) ?? sourceUrl;
+  if (sourceRecordKey.length > 500) throw new Error("Candidate source record key is too long.");
   return {
-    source: allowedSource, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug: asText(item.suburbSlug),
+    source: sourceContract.key, sourceRecordKey, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug: asText(item.suburbSlug),
     streetAddress: optionalText(item.streetAddress), contactEmail: optionalText(item.contactEmail), phone: optionalText(item.phone), website: optionalText(item.website),
     websiteSafety: item.websiteSafety === "safe" || item.websiteSafety === "unsafe" ? item.websiteSafety : "unknown",
-    sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), notes: optionalText(item.notes),
+    sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), tradingHours: optionalText(item.tradingHours), notes: optionalText(item.notes),
   };
 }
 
-async function holdOpenStreetMapSourceContract(admin: ReturnType<typeof createAdminClient>) {
-  const now = new Date().toISOString();
-  const health = await admin.from("integration_health").upsert({
-    integration_name: "openstreetmap_source",
-    status: "failed",
-    last_failure_at: now,
-    last_error: "The expected OpenStreetMap source contract was not received. Candidate processing was held; no listing changed.",
-    metadata: { action: "source_contract_held" },
-  }, { onConflict: "integration_name" });
-  if (health.error) throw new Error("Could not record the OpenStreetMap source contract hold.");
+function integrationName(source: CatalogueSourceContract) {
+  return source.key === "openstreetmap" ? "openstreetmap_source" : `${source.key}_source`;
 }
 
-async function markOpenStreetMapSourceContractHealthy(admin: ReturnType<typeof createAdminClient>) {
+async function holdCatalogueSourceContract(admin: ReturnType<typeof createAdminClient>, source: CatalogueSourceContract) {
   const now = new Date().toISOString();
   const health = await admin.from("integration_health").upsert({
-    integration_name: "openstreetmap_source",
+    integration_name: integrationName(source),
+    status: "failed",
+    last_failure_at: now,
+    last_error: `The expected ${source.displayName} source contract was not received. Candidate processing was held; no listing changed.`,
+    metadata: { action: "source_contract_held", source: source.key },
+  }, { onConflict: "integration_name" });
+  if (health.error) throw new Error("Could not record the catalogue source contract hold.");
+}
+
+async function markCatalogueSourceContractHealthy(admin: ReturnType<typeof createAdminClient>, source: CatalogueSourceContract) {
+  const now = new Date().toISOString();
+  const health = await admin.from("integration_health").upsert({
+    integration_name: integrationName(source),
     status: "healthy",
     last_success_at: now,
     last_error: null,
-    metadata: { source_contract: OPENSTREETMAP_SOURCE_CONTRACT_VERSION },
+    metadata: { source_contract: source.version, source: source.key },
   }, { onConflict: "integration_name" });
-  if (health.error) throw new Error("Could not record the OpenStreetMap source contract check.");
+  if (health.error) throw new Error("Could not record the catalogue source contract check.");
 }
 
 async function loadListings(admin: ReturnType<typeof createAdminClient>): Promise<ExistingListing[]> {
@@ -272,7 +280,7 @@ async function loadSlugs(admin: ReturnType<typeof createAdminClient>, table: "ca
 
 async function ensureQualifiedListingProof(admin: ReturnType<typeof createAdminClient>, input: {
   vendorId: string; candidate: IncomingCandidate; runId: string; correlationId: string;
-  sourceRecordKey: string; artifactSha256: string; qualificationReasons: string[];
+  sourceRecordKey: string; sourceContract: CatalogueSourceContract; artifactSha256: string; qualificationReasons: string[];
 }) {
   const evidenceQuery = await admin.from("listing_evidence").select("id")
     .eq("vendor_id", input.vendorId).eq("evidence_type", "automation_qualification")
@@ -286,6 +294,7 @@ async function ensureQualifiedListingProof(admin: ReturnType<typeof createAdminC
     });
     if (evidence.error) throw new Error("Could not retain listing qualification evidence.");
   }
+  await recordListingFieldEvidence(admin, input);
 
   const auditQuery = await admin.from("audit_events").select("id")
     .eq("action", "qualified_candidate_listing_created").eq("entity_type", "vendor").eq("entity_id", input.vendorId)
@@ -300,7 +309,38 @@ async function ensureQualifiedListingProof(admin: ReturnType<typeof createAdminC
   }
 }
 
-function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, notes: candidate.notes ?? null }; }
+async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminClient>, input: {
+  vendorId: string; candidate: IncomingCandidate; sourceRecordKey: string; sourceContract: CatalogueSourceContract;
+}) {
+  const observedAt = `${input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
+  const fields: Array<[string, string | null | undefined]> = [
+    ["business_name", input.candidate.businessName],
+    ["category_slug", input.candidate.categorySlug],
+    ["suburb_slug", input.candidate.suburbSlug],
+    ["street_address", input.candidate.streetAddress],
+    ["contact_email", input.candidate.contactEmail],
+    ["phone", input.candidate.phone],
+    ["website", input.candidate.website],
+    ["trading_hours", input.candidate.tradingHours],
+  ];
+  const records = fields.flatMap(([fieldName, rawValue]) => {
+    const valueText = rawValue?.trim();
+    return valueText ? [{
+      vendor_id: input.vendorId, field_name: fieldName, value_text: valueText,
+      source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
+      source_url: input.candidate.sourceUrl, observed_at: observedAt, confidence: 85,
+      evidence_state: "active", application_state: fieldName === "trading_hours" ? "observed" : "applied",
+      applied_at: fieldName === "trading_hours" ? null : new Date().toISOString(),
+    }] : [];
+  });
+  if (!records.length) return;
+  const result = await admin.from("listing_field_evidence").upsert(records, {
+    onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true,
+  });
+  if (result.error) throw new Error("Could not record field-level listing evidence.");
+}
+
+function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, notes: candidate.notes ?? null }; }
 function asText(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function optionalText(value: unknown) { const text = asText(value); return text || undefined; }
 function nullable(value: string | null | undefined) { return value?.trim() || null; }

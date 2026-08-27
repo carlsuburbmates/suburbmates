@@ -1,0 +1,46 @@
+name: Victorian liquor-licence catalogue discovery
+
+on:
+  schedule:
+    - cron: "23 19 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalogue-victorian-liquor-licences
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run acquire:vic-liquor
+      - run: npm run audit -- data/vendor-candidates-victorian-liquor-licences.csv
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: victorian-liquor-licence-candidates-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: data/vendor-candidates-victorian-liquor-licences.csv
+
+      - name: Send licensed candidates to the private qualification handoff
+        run: npm run candidate:handoff -- data/vendor-candidates-victorian-liquor-licences.csv
+        env:
+          CATALOGUE_SOURCE: victorian_liquor_licences
+          CANDIDATE_HANDOFF_URL: https://suburbmates.com.au/api/automation/candidates
+          AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
+
+      - name: Confirm publication boundary
+        run: echo "Licensed candidate facts entered the authenticated qualification handoff. Private evidence is retained; only deterministic qualification can create an unclaimed public listing."

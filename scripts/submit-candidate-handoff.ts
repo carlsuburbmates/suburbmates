@@ -2,11 +2,13 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parse } from "csv-parse/sync";
-import { OPENSTREETMAP_SOURCE, OPENSTREETMAP_SOURCE_CONTRACT_VERSION } from "../web/src/lib/automation/openstreetmap-source-contract";
+import { getCatalogueSourceContract } from "../web/src/lib/automation/catalogue-source-contract";
 
 const endpoint = process.env.CANDIDATE_HANDOFF_URL;
 const token = process.env.AUTOMATION_INGEST_TOKEN;
 const csvPath = process.argv[2];
+const source = process.env.CATALOGUE_SOURCE ?? "openstreetmap";
+const sourceContract = getCatalogueSourceContract(source);
 // Each request performs qualification, evidence retention and audit writes. Keep
 // the workload deliberately small so the Worker remains within its resource
 // budget during a large discovery run.
@@ -16,6 +18,7 @@ const MAX_CONCURRENT_BATCHES = 2;
 const MAX_ATTEMPTS = 9;
 const RETRY_DELAY_MS = 2_000;
 if (!endpoint || !token || !csvPath) throw new Error("CANDIDATE_HANDOFF_URL, AUTOMATION_INGEST_TOKEN and a CSV path are required.");
+if (!sourceContract) throw new Error("CATALOGUE_SOURCE must name an approved automated source.");
 
 const rows = parse(fs.readFileSync(path.resolve(csvPath), "utf8"), { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
 const artifactUrl = process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
@@ -25,16 +28,17 @@ const artifactUrl = process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITO
 const batches = Array.from({ length: Math.ceil(rows.length / BATCH_SIZE) }, (_, batchIndex) => ({
   batchIndex,
   candidates: rows.slice(batchIndex * BATCH_SIZE, (batchIndex + 1) * BATCH_SIZE).map((row) => ({
-    source: OPENSTREETMAP_SOURCE, businessName: row.business_name, categorySlug: row.category_slug, suburbSlug: row.suburb_slug,
+    source: sourceContract.key, sourceRecordKey: row.source_record_key || row.source_url,
+    businessName: row.business_name, categorySlug: row.category_slug, suburbSlug: row.suburb_slug,
     streetAddress: row.address || undefined, contactEmail: row.contact_email || undefined, phone: row.phone || undefined,
-    website: row.website || undefined, sourceUrl: row.source_url, sourceCheckedOn: row.source_checked_on || undefined, notes: row.notes || undefined,
+    website: row.website || undefined, tradingHours: row.trading_hours || undefined, sourceUrl: row.source_url, sourceCheckedOn: row.source_checked_on || undefined, notes: row.notes || undefined,
   })),
 }));
 
 await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, candidates }) => {
   const artifactSha256 = createHash("sha256").update(JSON.stringify(candidates)).digest("hex");
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const response = await fetch(endpoint, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ source: OPENSTREETMAP_SOURCE, sourceContractVersion: OPENSTREETMAP_SOURCE_CONTRACT_VERSION, artifactSha256, artifactUrl, candidates }) });
+    const response = await fetch(endpoint, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ source: sourceContract.key, sourceContractVersion: sourceContract.version, artifactSha256, artifactUrl, candidates }) });
     const result = await readResponse(response);
     if (response.ok && response.status !== 202) {
       console.log(`Candidate handoff batch ${batchIndex + 1}: ${result.idempotent ? "already received" : `${result.qualifiedCount ?? 0} qualified, ${result.exceptionCount ?? 0} exceptions`}.`);
