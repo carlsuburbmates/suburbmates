@@ -4,14 +4,15 @@
 
 Build the broadest defensible directory of active public-facing businesses in the City of Darebin, starting with Northcote, without inventing records or relying on a prohibited directory scrape.
 
-This is an acquisition pipeline, not a one-time CSV exercise. Every record must retain its source URL, source date, source state, and stable import identity. Raw or incomplete records remain private until they pass the approved deterministic source, scope, contact, duplicate and safety policy; public listings can later be claimed or enriched by the business owner.
+This is an acquisition pipeline, not a one-time CSV exercise. Every record must retain its source URL, source date, source state, stable import identity, field-level provenance and freshness. Raw or incomplete records remain private until they pass the approved deterministic source, scope, identity, duplicate and safety policy; a missing website, phone or email alone is not a rejection rule. Public listings can later be claimed or enriched by the business owner.
 
 ## Source order
 
-1. **OpenStreetMap commercial features** for bulk geographic discovery across the whole Darebin catchment. The existing Overpass acquisition is the baseline and must retain OSM attribution.
-2. **Darebin-linked business associations** for local precinct coverage and better names, addresses, phones, emails, and websites. Current sources include Northcote Rise, Preston Central, and Fairfield Village. Reservoir currently has no equivalent public directory linked from Council.
-3. **Business-owned websites** linked by those sources for field enrichment only. Do not crawl beyond the public pages needed to confirm the business identity and contact details.
-4. **ABN Lookup or an appropriately licensed business dataset** for identity validation and coverage measurement. ABN data is not treated as a complete shopfront directory because it does not reliably provide the public address, phone, or category needed by the product.
+1. **OpenStreetMap commercial features** are an active, attributed bulk-discovery contract across Darebin.
+2. **Victorian liquor licences by location** are an active first-party CC BY 4.0 contract, refreshed monthly and mapped only to approved public categories.
+3. **Darebin-linked business associations** are prospective coverage sources only. They may not be ingested until their reuse licence, field permissions, stable identity and refresh path have been documented in a versioned source contract.
+4. **Business-owned websites** are not an automated enrichment source. Owner-provided content may be proposed through protected owner journeys and is subject to review; the automation does not crawl business websites or copy their images.
+5. **ABN Lookup or a separately licensed business dataset** may support identity validation and coverage measurement after a dedicated approval. ABN data is not treated as a complete shopfront directory because it does not reliably provide the public address, phone, or category needed by the product.
 
 ## Sources excluded
 
@@ -26,7 +27,8 @@ If a paid provider is later selected as the primary coverage source, it must pro
 - Use phone and canonical website domain as supporting identity signals.
 - Same name at different addresses remains separate listings.
 - Never merge solely because two businesses share a name in the same suburb.
-- Merge fields only when the incoming source is authoritative for that field and retain provenance.
+- Retain field-level provenance, observation time, freshness and conflicts for every source fact.
+- A later approved-source observation re-observes evidence and freshness. It may fill only an empty contact field on an unclaimed listing; it never silently overwrites a public or owner-confirmed field.
 - A new approved-source record may become public only after the deterministic qualification policy passes and evidence is retained. Claim state never decides publication.
 - Never generate a phone, email, address, website, or business record from inference.
 
@@ -36,7 +38,7 @@ If a paid provider is later selected as the primary coverage source, it must pro
 2. Audit required fields and source provenance.
 3. Normalize names, addresses, phone numbers, emails, websites, categories, and suburb slugs.
 4. Produce a duplicate report before writing to Supabase.
-5. Send permitted source rows through the versioned candidate handoff; it records qualification, provenance and exceptions before any public listing can exist.
+5. Send permitted source rows through the versioned candidate handoff; it records qualification, provenance, freshness, conflicts and exceptions before any public listing can exist.
 6. Preserve owner-entered fields and keep publication independent from ownership, ABN and commercial state.
 7. Report additions, enrichments, possible duplicates, stale records, and missing-field coverage without inventing facts or merging a live record by similarity alone.
 
