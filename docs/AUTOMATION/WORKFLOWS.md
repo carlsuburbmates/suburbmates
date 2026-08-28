@@ -85,10 +85,10 @@ Verified sequence:
 6. Audit `data/vendor-candidates-merged.csv`.
 7. Print coverage information in the workflow log.
 8. Upload the OSM and merged CSVs as 30-day GitHub artifacts.
-9. Send the OSM candidate rows to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare. The handoff includes the versioned `openstreetmap-candidate-v1` contract; a missing or changed version safely holds the source before any candidate or listing record is created. Single-candidate retry is used to recover safely from an interrupted request.
+9. Send the OSM candidate rows to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare. The handoff includes the versioned `openstreetmap-candidate-v1` contract; a missing or changed version safely holds the source before any candidate or listing record is created. Exact source/artifact retries are idempotent; a changed later observation is processed as a freshness refresh.
 10. Persist an idempotent handoff run, the candidate facts, normalised facts, qualification outcome, reasons, correlation and immutable audit evidence. Qualifying candidates may become unclaimed listings; exceptions remain private in `/ops/candidates`.
 
-The endpoint accepts only versioned source contracts in the private `catalogue_sources` registry, bounded payloads and a valid private token. Current automated contracts are OpenStreetMap and the licensed Victorian liquor-licence source. It does not accept Google or closed-directory data, does not make ownership or claim decisions, and cannot change the global public-release setting. Every applied public field receives a private source-record, observed-date and freshness evidence row; contradictory future evidence must enter the conflict lifecycle rather than overwrite the listing. Interrupted single-candidate retries reuse conclusive evidence already retained for that source record rather than duplicating it.
+The endpoint accepts only versioned source contracts in the private `catalogue_sources` registry, bounded payloads and a valid private token. Current automated contracts are OpenStreetMap and the licensed Victorian liquor-licence source. It does not accept Google or closed-directory data, does not make ownership or claim decisions, and cannot change the global public-release setting. Every applied public field receives a private source-record, observed-date and freshness evidence row. Exact source/artifact retries reuse their existing run; a later source observation requalifies against the known listing, re-observes the evidence and freshness, fills only an empty unclaimed contact field, and routes any disagreement into the conflict lifecycle rather than overwriting the listing.
 
 ### 3. Website-safety evidence
 
@@ -125,7 +125,7 @@ This is intentionally narrower than general data pruning. It deletes only privat
 | Area | Actual implementation state | Consequence |
 | --- | --- | --- |
 | Candidate artifact to Ops review queue | Implemented; full manual verification accepted | Every approved-source row has private receipt/qualification evidence. Exceptions remain available for normal protected Ops review. |
-| Job execution and retry | Candidate handoff produces a persisted run and job record; recovery retries a single candidate and reuses conclusive source evidence | An interrupted request cannot falsely report success or duplicate a conclusive exception/qualification record. |
+| Job execution and retry | Candidate handoff produces a persisted source/artifact run and job record; exact retries reuse that run, while a later source observation safely refreshes prior qualified evidence | An interrupted request cannot falsely report success or duplicate evidence; an actual later source observation cannot leave the catalogue falsely fresh or silently overwrite it. |
 | Stripe billing | Webhook returns `501` | No payment or subscription automation exists |
 | Bulk ABR/ABN lookup | Disabled | No ABN automation exists |
 | AI publication | Disabled | AI cannot create public facts or publish listings |

@@ -48,27 +48,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid approved-source candidate batch" }, { status: 400 });
     }
     await markCatalogueSourceContractHealthy(admin, sourceContract);
-    // A singleton retry is the durable recovery path for a batch that exceeded
-    // Worker resources. Reuse conclusive private evidence already retained by
-    // an earlier batch instead of creating duplicate exception records.
-    if (candidates.length === 1) {
-      const sourceRecordKey = `${source}:${candidates[0].sourceRecordKey}`;
-      const existingRecord = await admin.from("candidate_handoff_records")
-        .select("qualification_outcome, qualification_reasons, vendor_id")
-        .eq("source_record_key", sourceRecordKey).order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (existingRecord.error) throw new Error("Could not read existing candidate qualification evidence.");
-      const needsSourceRequalification = existingRecord.data?.qualification_outcome === "exception"
-        && Array.isArray(existingRecord.data.qualification_reasons)
-        && existingRecord.data.qualification_reasons.includes("unapproved_source");
-      if (existingRecord.data && !needsSourceRequalification && (existingRecord.data.qualification_outcome === "exception" || existingRecord.data.vendor_id)) {
-        return NextResponse.json({
-          received: true,
-          idempotent: true,
-          qualifiedCount: existingRecord.data.qualification_outcome === "qualified" ? 1 : 0,
-          exceptionCount: existingRecord.data.qualification_outcome === "exception" ? 1 : 0,
-        }, { status: 200 });
-      }
-    }
+    // Exact input retries remain idempotent through the source/artifact run
+    // identity below. A later source observation must continue instead: it
+    // refreshes private evidence and detects conflicts without rewriting the
+    // existing public listing.
     let { data: run, error: runError } = await admin.from("candidate_handoff_runs")
       .insert({ source, source_contract_version: sourceContract.version, artifact_sha256: artifactSha256, artifact_url: artifactUrl, status: "processing", input_count: candidates.length })
       .select("id, correlation_id")
@@ -124,6 +107,16 @@ export async function POST(request: NextRequest) {
         const { data: existingRecord, error: existingRecordError } = await admin.from("candidate_handoff_records")
           .select("id, qualification_outcome, qualification_reasons, vendor_id").eq("run_id", run.id).eq("source_record_key", sourceRecordKey).maybeSingle();
         if (existingRecordError) throw new Error("Could not read existing candidate qualification evidence.");
+        const priorQualified = await admin.from("candidate_handoff_records")
+          .select("vendor_id")
+          .eq("source_record_key", sourceRecordKey)
+          .eq("qualification_outcome", "qualified")
+          .not("vendor_id", "is", null)
+          .neq("run_id", run.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (priorQualified.error) throw new Error("Could not read the prior approved-source listing record.");
         if (existingRecord) {
           if (existingRecord.qualification_outcome === "exception") {
             exceptionCount++;
@@ -137,10 +130,16 @@ export async function POST(request: NextRequest) {
             .eq("source_key", `automation:${sourceRecordKey}`).maybeSingle();
           if (recoveredVendorError) throw new Error("Could not recover the partially completed qualified listing.");
           if (recoveredVendor) {
-            await ensureQualifiedListingProof(admin, {
-              vendorId: recoveredVendor.id, candidate, runId: run.id, correlationId: run.correlation_id,
-              sourceRecordKey, sourceContract, artifactSha256, qualificationReasons: existingRecord.qualification_reasons,
-            });
+            if (priorQualified.data?.vendor_id === recoveredVendor.id) {
+              await refreshQualifiedSourceListing(admin, {
+                vendorId: recoveredVendor.id, candidate, sourceRecordKey, sourceContract, correlationId: run.correlation_id,
+              });
+            } else {
+              await ensureQualifiedListingProof(admin, {
+                vendorId: recoveredVendor.id, candidate, runId: run.id, correlationId: run.correlation_id,
+                sourceRecordKey, sourceContract, artifactSha256, qualificationReasons: existingRecord.qualification_reasons,
+              });
+            }
             const linked = await admin.from("candidate_handoff_records").update({ vendor_id: recoveredVendor.id }).eq("id", existingRecord.id);
             if (linked.error) throw new Error("Could not recover the candidate-to-listing link.");
             qualifiedCount++;
@@ -148,7 +147,8 @@ export async function POST(request: NextRequest) {
           }
           recoveredRecordId = existingRecord.id;
         }
-        const existingListings = await loadCandidateDuplicateCandidates(admin, candidate);
+        const existingListings = (await loadCandidateDuplicateCandidates(admin, candidate))
+          .filter((listing) => listing.id !== priorQualified.data?.vendor_id);
         const qualification = qualifyCandidate(candidate, {
           allowedSources: new Set(Object.keys(CATALOGUE_SOURCE_CONTRACTS)),
           allowedSuburbs: suburbs,
@@ -167,6 +167,20 @@ export async function POST(request: NextRequest) {
         }).select("id").single();
         if (createdRecord.error || !createdRecord.data) throw new Error("Could not record candidate qualification evidence.");
         const recordId = createdRecord.data.id;
+
+        if (priorQualified.data?.vendor_id && qualification.outcome === "qualified") {
+          await refreshQualifiedSourceListing(admin, {
+            vendorId: priorQualified.data.vendor_id,
+            candidate,
+            sourceRecordKey,
+            sourceContract,
+            correlationId: run.correlation_id,
+          });
+          const link = await admin.from("candidate_handoff_records").update({ vendor_id: priorQualified.data.vendor_id }).eq("id", recordId);
+          if (link.error) throw new Error("Could not link refreshed source evidence to its listing.");
+          qualifiedCount++;
+          continue;
+        }
 
         if (qualification.outcome === "exception") {
           let enrichment: ExistingListingEnrichment | null = null;
@@ -382,6 +396,78 @@ async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminCl
   if (result.error) throw new Error("Could not record field-level listing evidence.");
 }
 
+async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdminClient>, input: {
+  vendorId: string; candidate: IncomingCandidate; sourceRecordKey: string;
+  sourceContract: CatalogueSourceContract; correlationId: string;
+}) {
+  const { data: vendor, error: vendorError } = await admin.from("vendors")
+    .select("id, ownership_status, business_name, category_slug, suburb_slug, street_address, contact_email, phone, website")
+    .eq("id", input.vendorId).maybeSingle();
+  if (vendorError || !vendor) throw new Error("Could not load the prior qualified listing for source refresh.");
+
+  const observedAt = `${input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
+  const fields: Array<[string, string | null | undefined, string | null | undefined]> = [
+    ["business_name", input.candidate.businessName, vendor.business_name],
+    ["category_slug", input.candidate.categorySlug, vendor.category_slug],
+    ["suburb_slug", input.candidate.suburbSlug, vendor.suburb_slug],
+    ["street_address", input.candidate.streetAddress, vendor.street_address],
+    ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
+    ["phone", input.candidate.phone, vendor.phone],
+    ["website", input.candidate.website, vendor.website],
+    ["trading_hours", input.candidate.tradingHours, null],
+  ];
+  const observedFields: string[] = [];
+  const conflictFields: string[] = [];
+  const appliedFields: string[] = [];
+  const updates: Record<string, string> = {};
+
+  for (const [fieldName, incomingValue, currentValue] of fields) {
+    const valueText = incomingValue?.trim();
+    if (!valueText) continue;
+    const currentText = currentValue?.trim() ?? "";
+    const isSameValue = fieldName === "trading_hours" || comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
+    const canApply = ["contact_email", "phone", "website"].includes(fieldName)
+      && vendor.ownership_status === "unclaimed" && !currentText;
+    const applicationState = canApply ? "applied" : isSameValue ? "observed" : "conflict";
+    const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").upsert({
+      vendor_id: vendor.id, field_name: fieldName, value_text: valueText,
+      source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
+      source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
+      evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
+    }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true }).select("id").maybeSingle();
+    if (evidenceError) throw new Error("Could not retain refreshed approved-source evidence.");
+    if (!evidence) {
+      if (applicationState === "observed") observedFields.push(fieldName);
+      continue;
+    }
+    if (canApply) {
+      updates[fieldName] = valueText;
+      appliedFields.push(fieldName);
+    } else if (applicationState === "conflict") {
+      const conflict = await admin.from("catalogue_field_conflicts").upsert({
+        vendor_id: vendor.id, field_name: fieldName, incoming_evidence_id: evidence.id, current_value: currentText,
+      }, { onConflict: "incoming_evidence_id", ignoreDuplicates: true });
+      if (conflict.error) throw new Error("Could not retain the approved-source refresh conflict.");
+      conflictFields.push(fieldName);
+    } else {
+      observedFields.push(fieldName);
+    }
+  }
+
+  const checkedOn = input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10);
+  const sourceCheck = await admin.from("vendors")
+    .update({ ...updates, source_checked_on: checkedOn, updated_at: new Date().toISOString() })
+    .eq("id", vendor.id);
+  if (sourceCheck.error) throw new Error("Could not update the approved-source observation date.");
+  const audit = await admin.from("audit_events").insert({
+    actor_type: "service", action: "approved_source_listing_refreshed", entity_type: "vendor", entity_id: vendor.id,
+    reason: "A prior qualified source record was re-observed; public fields were not overwritten.",
+    after_data: { public_field_changes: appliedFields, observed_fields: observedFields, conflict_fields: conflictFields, owner_control_preserved: true },
+    correlation_id: input.correlationId,
+  });
+  if (audit.error) throw new Error("Could not audit the approved-source listing refresh.");
+}
+
 type ExistingListingEnrichment = { appliedFields: string[]; conflictFields: string[] };
 
 async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>, input: {
@@ -442,13 +528,13 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
   return { appliedFields, conflictFields };
 }
 
-function comparableFieldValue(fieldName: "contact_email" | "phone" | "website", value: string) {
+function comparableFieldValue(fieldName: string, value: string) {
   if (fieldName === "phone") return value.replace(/\D/g, "").replace(/^61(?=\d{9,10}$)/, "0");
   if (fieldName === "website") {
     try { const url = new URL(value); return `${url.hostname.toLowerCase().replace(/^www\./, "")}${url.pathname.replace(/\/$/, "")}`; }
     catch { return value.toLowerCase(); }
   }
-  return value.toLowerCase();
+  return value.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 function freshnessDueAt(observedAt: string, source: CatalogueSourceContract) {
