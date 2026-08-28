@@ -17,7 +17,7 @@ const BATCH_SIZE = 1;
 // A single, gently paced handoff prevents an automation burst from exhausting
 // its request resource budget; prior singleton results are idempotent.
 const MAX_CONCURRENT_BATCHES = 1;
-const REQUEST_SETTLE_DELAY_MS = 750;
+const REQUEST_SETTLE_DELAY_MS = 250;
 // The cumulative backoff exceeds the one-minute server recovery window.
 const MAX_ATTEMPTS = 9;
 const RETRY_DELAY_MS = 2_000;

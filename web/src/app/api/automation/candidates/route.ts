@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     if (job.error || !job.data) throw new Error("Could not create the candidate handoff job record.");
 
     try {
-      const [listings, categories, suburbs] = await Promise.all([loadListings(admin), loadSlugs(admin, "categories"), loadSlugs(admin, "suburbs")]);
+      const [categories, suburbs] = await Promise.all([loadSlugs(admin, "categories"), loadSlugs(admin, "suburbs")]);
       let qualifiedCount = 0;
       let exceptionCount = 0;
       for (const candidate of candidates) {
@@ -143,17 +143,17 @@ export async function POST(request: NextRequest) {
             });
             const linked = await admin.from("candidate_handoff_records").update({ vendor_id: recoveredVendor.id }).eq("id", existingRecord.id);
             if (linked.error) throw new Error("Could not recover the candidate-to-listing link.");
-            listings.push({ id: recoveredVendor.id, businessName: recoveredVendor.business_name, streetAddress: recoveredVendor.street_address, phone: recoveredVendor.phone, website: recoveredVendor.website });
             qualifiedCount++;
             continue;
           }
           recoveredRecordId = existingRecord.id;
         }
+        const existingListings = await loadCandidateDuplicateCandidates(admin, candidate);
         const qualification = qualifyCandidate(candidate, {
           allowedSources: new Set(Object.keys(CATALOGUE_SOURCE_CONTRACTS)),
           allowedSuburbs: suburbs,
           allowedCategories: categories,
-          existingListings: listings,
+          existingListings,
         });
         const candidateData = toCandidateData(candidate);
         const createdRecord = recoveredRecordId ? { data: { id: recoveredRecordId }, error: null } : await admin.from("candidate_handoff_records").insert({
@@ -208,7 +208,6 @@ export async function POST(request: NextRequest) {
         });
         const link = await admin.from("candidate_handoff_records").update({ vendor_id: vendor.id }).eq("id", recordId);
         if (link.error) throw new Error("Could not link qualification evidence to listing.");
-        listings.push({ id: vendor.id, businessName: candidate.businessName, streetAddress: candidate.streetAddress, phone: candidate.phone, website: candidate.website });
         qualifiedCount++;
       }
       const completedAt = new Date().toISOString();
@@ -280,14 +279,39 @@ async function markCatalogueSourceContractHealthy(admin: ReturnType<typeof creat
   if (health.error) throw new Error("Could not record the catalogue source contract check.");
 }
 
-async function loadListings(admin: ReturnType<typeof createAdminClient>): Promise<ExistingListing[]> {
-  const listings: ExistingListing[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await admin.from("vendors").select("id, business_name, street_address, phone, website").range(from, from + 999);
-    if (error) throw new Error("Could not load existing listings for duplicate checks.");
-    listings.push(...data.map((item) => ({ id: item.id, businessName: item.business_name, streetAddress: item.street_address, phone: item.phone, website: item.website })));
-    if (data.length < 1000) return listings;
+async function loadCandidateDuplicateCandidates(admin: ReturnType<typeof createAdminClient>, candidate: IncomingCandidate): Promise<ExistingListing[]> {
+  // Loading every listing for every singleton handoff made a 365-row official
+  // source run exceed GitHub Actions' job window. Retrieve only plausible
+  // exact-identifier matches, then retain the existing normalized duplicate
+  // decision in qualifyCandidate as the final authority.
+  const matches = new Map<string, ExistingListing>();
+  const add = (rows: Array<{ id: string; business_name: string; street_address: string | null; phone: string | null; website: string | null }> | null) => {
+    for (const row of rows ?? []) matches.set(row.id, { id: row.id, businessName: row.business_name, streetAddress: row.street_address, phone: row.phone, website: row.website });
+  };
+  const select = "id, business_name, street_address, phone, website";
+  if (candidate.businessName.trim()) {
+    const byName = await admin.from("vendors").select(select).ilike("business_name", candidate.businessName.trim()).limit(100);
+    if (byName.error) throw new Error("Could not look up candidate name duplicates.");
+    add(byName.data);
   }
+  const websiteHost = candidate.website ? safeHost(candidate.website) : null;
+  if (websiteHost) {
+    const byWebsite = await admin.from("vendors").select(select).ilike("website", `%${websiteHost}%`).limit(100);
+    if (byWebsite.error) throw new Error("Could not look up candidate website duplicates.");
+    add(byWebsite.data);
+  }
+  const phoneTail = candidate.phone?.replace(/\D/g, "").slice(-8);
+  if (phoneTail) {
+    const byPhone = await admin.from("vendors").select(select).ilike("phone", `%${phoneTail}%`).limit(100);
+    if (byPhone.error) throw new Error("Could not look up candidate phone duplicates.");
+    add(byPhone.data);
+  }
+  return [...matches.values()];
+}
+
+function safeHost(value: string) {
+  try { return new URL(value).hostname.toLowerCase().replace(/^www\./, ""); }
+  catch { return null; }
 }
 
 async function loadSlugs(admin: ReturnType<typeof createAdminClient>, table: "categories" | "suburbs") {
