@@ -104,6 +104,13 @@ export default async function VendorWebsite({ params }: PageProps) {
   const suburbName = vendor.suburbs?.name ?? vendor.suburb_slug;
   const categoryName = vendor.categories?.name ?? vendor.category_slug;
   const profileDescription = vendor.description?.trim() || null;
+  const profileSummary = describeKnownProfile({
+    businessName: vendor.business_name,
+    categoryName,
+    suburbName,
+    streetAddress: vendor.street_address,
+    hasDirectContact: Boolean(vendor.phone || vendor.contact_email || vendor.website),
+  });
   const canonicalUrl = `https://suburbmates.com.au/vendor/${route.currentSlug}`;
   const structuredData = {
     "@context": "https://schema.org",
@@ -185,9 +192,9 @@ export default async function VendorWebsite({ params }: PageProps) {
                   {profileDescription}
                 </p>
               ) : (
-                <div className="mt-5 rounded-2xl border border-dashed border-teal-900/20 bg-teal-50/60 p-5 text-sm leading-6 text-slate-700">
-                  <p className="font-bold text-slate-900">This profile is getting started.</p>
-                  <p className="mt-1">A business owner can add a clear description, useful contact details and authorised images after a reviewed claim.</p>
+                <div className="mt-5 rounded-2xl border border-teal-900/10 bg-teal-50/60 p-5 text-sm leading-6 text-slate-700">
+                  <p className="font-bold text-slate-900">Known local details</p>
+                  <p className="mt-1">{profileSummary}</p>
                 </div>
               )}
             </section>
@@ -242,6 +249,28 @@ export default async function VendorWebsite({ params }: PageProps) {
       </article>
     </PublicDirectoryShell>
   );
+}
+
+function describeKnownProfile({
+  businessName,
+  categoryName,
+  suburbName,
+  streetAddress,
+  hasDirectContact,
+}: {
+  businessName: string;
+  categoryName: string;
+  suburbName: string;
+  streetAddress: string | null;
+  hasDirectContact: boolean;
+}) {
+  const location = streetAddress
+    ? ` The recorded address is ${streetAddress}, ${suburbName}.`
+    : ` The recorded local area is ${suburbName}.`;
+  const contact = hasDirectContact
+    ? " Use the direct contact options above to take the next step."
+    : " Direct contact details have not yet been added to this profile.";
+  return `${businessName} is listed as ${categoryName.toLocaleLowerCase()} in the local directory.${location}${contact}`;
 }
 
 function ContactActions({

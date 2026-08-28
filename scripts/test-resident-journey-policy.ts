@@ -202,6 +202,16 @@ async function run() {
     /Email business/,
     "profiles must describe email as direct business contact, not a quote request",
   );
+  assert.match(
+    profile,
+    /Known local details/,
+    "thin profiles must describe their recorded public facts instead of presenting an empty placeholder",
+  );
+  assert.match(
+    profile,
+    /describeKnownProfile/,
+    "thin-profile copy must remain derived from existing public listing fields",
+  );
   assert.doesNotMatch(
     profile,
     /Request Quote/,

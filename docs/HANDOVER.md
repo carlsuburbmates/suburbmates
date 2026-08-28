@@ -21,7 +21,17 @@ The launch model is directory-first with deterministic safeguards:
 
 ## Current hosted state
 
-Reverified on 6 August 2026 (Australia/Melbourne):
+### Latest verified live state — 29 August 2026 (Australia/Melbourne)
+
+- the public anonymous projection and a freshly loaded in-app-browser directory page both return **1,955 published listings**; the earlier 1,602 figure below is a historical release snapshot, not a current catalogue count;
+- the current Cloudflare Worker deployment is `55658935-64bb-48ff-97c7-7b2fdbf8ee9d` from commit `16a250b`; the public browse page was checked in the in-app browser after deployment;
+- the browse page now keeps keyword search primary, uses an optional service typeahead and popular-service shortcuts, and keeps suburb as a secondary filter; it does not expose the full category list by default;
+- profile depth remains the material public-product constraint: 2 of 1,955 current public listings have a description; 1,327 have an address, 529 a phone, 95 an email and 594 a website; there are no owner-media proposals yet. These are observed data facts, not a publication or access-control failure;
+- OSM discovery is scheduled weekly and the licensed Victorian liquor source monthly. Both use the authenticated, evidence-preserving candidate handoff. Victorian field evidence was refreshed on 29 August and is due for re-observation from 28 September. The deployed later-observation refresh handler awaits a genuine future source observation; do not manufacture one for acceptance.
+
+### Historical release snapshot — 6 August 2026
+
+The following dated release evidence is retained for audit history. Its counts and integrations must not be treated as current without a new verification:
 
 - 1,602 vendor rows total, all published;
 - no unpublished vendor rows at this verification point;
@@ -45,7 +55,7 @@ Reverified on 6 August 2026 (Australia/Melbourne):
 - A later approved-source observation of an already qualified source record now refreshes its private field-level evidence and freshness. It may fill an empty contact field only on an unclaimed listing; a changed public fact is retained as private conflict evidence and never silently overwrites the listing.
 - Public search now resolves recognised service intent locally before its literal/typo fallback. Its bounded resident-language map covers food, hospitality, personal care, pets, home/trade, vehicle, retail, technology and professional services; for example, `mechanic`, `takeaway`, `nails` and `grocery` resolve to their existing relevant categories. It preserves taxonomy distinctions where they remain unresolved (for example, chemist/pharmacy). Search input remains transient and is never retained.
 - The public home, browse cards and profiles now use category-led visual treatments and show only owner-provided or properly licensed business media. An approved logo is now the profile identity mark; approved listing images appear separately as a labelled gallery. No generic or copied business imagery was added.
-- Current Worker deployment: Cloudflare version `7c4f2c9d-2bfc-4dc5-9b38-55abb8a84d81`; HTTP checks for `/`, `/businesses?q=mechanic` and `/vendor/the-thornbury-theatre` returned 200 on 29 August 2026. Full in-app-browser visual acceptance remains to be recorded because this task did not expose an in-app-browser control surface.
+- Current Worker deployment: Cloudflare version `55658935-64bb-48ff-97c7-7b2fdbf8ee9d` from commit `16a250b`; the in-app browser confirmed the served browse page shows 1,955 listings, service-first search, popular-service shortcuts and the secondary suburb control on 29 August 2026. This is desktop browse acceptance only; it is not evidence that every public template, mobile viewport or owner journey has been accepted.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
