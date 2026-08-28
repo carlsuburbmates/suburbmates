@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -62,14 +62,40 @@ export function DirectoryBrowseClient({
   const [q, setQ] = useState(initialQ);
   const [suburb, setSuburb] = useState(initialSuburb);
   const [category, setCategory] = useState(initialCategory);
+  const [service, setService] = useState(
+    () => categories.find((item) => item.slug === initialCategory)?.name ?? "",
+  );
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isPending, startTransition] = useTransition();
+  const categoryByName = useMemo(
+    () =>
+      new Map(
+        categories.map((item) => [item.name.trim().toLocaleLowerCase(), item]),
+      ),
+    [categories],
+  );
+  const popularCategories = categories.filter((item) =>
+    ["cafe", "restaurant", "electrician", "plumber", "hairdresser"].includes(
+      item.slug,
+    ),
+  );
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     updateUrl(1, q, suburb, category);
+  };
+
+  const setServiceFilter = (value: string) => {
+    setService(value);
+    setCategory(categoryByName.get(value.trim().toLocaleLowerCase())?.slug ?? "");
+  };
+
+  const chooseCategory = (nextCategory: { name: string; slug: string }) => {
+    setService(nextCategory.name);
+    setCategory(nextCategory.slug);
+    updateUrl(1, q, suburb, nextCategory.slug);
   };
 
   const updateUrl = (
@@ -179,58 +205,28 @@ export function DirectoryBrowseClient({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 lg:w-[480px]">
-              <div className="relative">
-                <label className="sr-only" htmlFor="directory-category">
-                  Filter by category
-                </label>
-                <select
-                  id="directory-category"
-                  value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value);
-                    updateUrl(1, q, suburb, e.target.value);
-                  }}
-                  className="min-h-11 w-full pl-4 pr-9 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium text-xs sm:text-sm appearance-none cursor-pointer truncate"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((c) => (
-                    <option key={c.slug} value={c.slug}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                />
-              </div>
-
-              <div className="relative">
-                <label className="sr-only" htmlFor="directory-suburb">
-                  Filter by suburb
-                </label>
-                <select
-                  id="directory-suburb"
-                  value={suburb}
-                  onChange={(e) => {
-                    setSuburb(e.target.value);
-                    updateUrl(1, q, e.target.value, category);
-                  }}
-                  className="min-h-11 w-full pl-4 pr-9 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-black font-medium text-xs sm:text-sm appearance-none cursor-pointer truncate"
-                >
-                  <option value="">All Suburbs</option>
-                  {suburbs.map((s) => (
-                    <option key={s.slug} value={s.slug}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                />
-              </div>
+            <div className="min-w-0 lg:w-72">
+              <label className="sr-only" htmlFor="directory-service">
+                Optional service
+              </label>
+              <input
+                id="directory-service"
+                type="text"
+                list="directory-service-options"
+                value={service}
+                onChange={(event) => setServiceFilter(event.target.value)}
+                placeholder="Optional service"
+                className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-black transition-all placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                aria-describedby="directory-service-help"
+              />
+              <datalist id="directory-service-options">
+                {categories.map((item) => (
+                  <option key={item.slug} value={item.name} />
+                ))}
+              </datalist>
+              <span id="directory-service-help" className="sr-only">
+                Start typing to narrow the directory by service.
+              </span>
             </div>
 
             <div className="flex gap-2">
@@ -238,7 +234,7 @@ export function DirectoryBrowseClient({
                 type="submit"
                 className="btn btn-primary min-h-11 flex-1 lg:flex-initial rounded-xl px-6 text-xs font-bold uppercase tracking-wider bg-black text-white hover:bg-slate-800 transition-all shadow-md active:scale-95"
               >
-                Filter
+                Search
               </button>
 
               {activeFiltersCount > 0 && (
@@ -254,6 +250,52 @@ export function DirectoryBrowseClient({
               )}
             </div>
           </form>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              Popular services
+            </span>
+            {popularCategories.map((item) => (
+              <button
+                key={item.slug}
+                type="button"
+                onClick={() => chooseCategory(item)}
+                className="min-h-11 rounded-full border border-slate-200 px-3 text-xs font-bold text-slate-700 transition hover:border-slate-950 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+              >
+                {item.name}
+              </button>
+            ))}
+            <details className="relative ml-auto text-sm">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl px-3 font-bold text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 [&::-webkit-details-marker]:hidden">
+                <MapPin size={15} aria-hidden="true" />
+                {suburb
+                  ? `Suburb: ${suburbs.find((item) => item.slug === suburb)?.name ?? suburb}`
+                  : "Add a suburb"}
+                <ChevronDown size={15} aria-hidden="true" />
+              </summary>
+              <div className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+                <label className="sr-only" htmlFor="directory-suburb">
+                  Filter by suburb
+                </label>
+                <select
+                  id="directory-suburb"
+                  value={suburb}
+                  onChange={(event) => setSuburb(event.target.value)}
+                  className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-black focus:outline-none focus:ring-2 focus:ring-black"
+                >
+                  <option value="">Any suburb</option>
+                  {suburbs.map((item) => (
+                    <option key={item.slug} value={item.slug}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Choose a suburb, then search to apply it.
+                </p>
+              </div>
+            </details>
+          </div>
 
           <p className="sr-only" role="status" aria-live="polite">
             {isPending

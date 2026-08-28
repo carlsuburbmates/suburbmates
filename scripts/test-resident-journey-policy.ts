@@ -156,6 +156,21 @@ async function run() {
     /tier === "premium"/,
     "public browse must not present an unapproved premium tier",
   );
+  assert.match(
+    directoryBrowse,
+    /directory-service-options/,
+    "browse must offer a compact service typeahead instead of exposing the full category list",
+  );
+  assert.match(
+    directoryBrowse,
+    /Popular services/,
+    "browse must offer fast, low-noise paths for common services",
+  );
+  assert.match(
+    directoryBrowse,
+    /Add a suburb/,
+    "browse must keep the optional suburb filter secondary to keyword search",
+  );
   assert.doesNotMatch(
     taxonomy,
     /tier === "premium"/,
