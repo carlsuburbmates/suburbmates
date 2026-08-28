@@ -40,10 +40,11 @@ Reverified on 6 August 2026 (Australia/Melbourne):
 ### Modern directory delivery — 28 August 2026
 
 - D-018 supersedes the OSM-only catalogue direction: OpenStreetMap and the Victorian Government’s CC BY 4.0 liquor-licence data are the first approved automated contracts. The source registry, field-level provenance/freshness/conflict tables, RLS and release-safe candidate handoff are live. No closed-directory facts or third-party business imagery are permitted.
-- The Victorian source’s first read-only rehearsal produced 365 Darebin candidate rows that passed the existing data-hygiene audit. It did **not** hand off, publish or change any listing.
+- The Victorian source’s first completed live handoff, [GitHub Actions run 33180747485](https://github.com/carlsuburbmates/suburbmates/actions/runs/33180747485), processed all 365 licensed Darebin rows in 7m34s: 349 qualified unclaimed listings were created, 15 strong duplicates remained private evidence, and one out-of-scope row remained private. The directory therefore contained 1,955 published listings when rechecked. It did not use closed-directory facts, scrape business websites, or acquire business images.
+- Every Victorian field-evidence row was rechecked for a private 31-day freshness horizon on 29 August 2026. This changes neither public field content nor listing state.
 - Public search now resolves recognised service intent locally before its literal/typo fallback. For example, production `pets` resolves only `pet` listings rather than an unrelated business containing “Peter”. Search input remains transient and is never retained.
 - The public home, browse cards and profiles now use category-led visual treatments and show only owner-provided or properly licensed business media. No generic or copied business imagery was added.
-- Current Worker deployment: Cloudflare version `9087630f-8bfe-4364-80a9-308261c2ea8c`; HTTP checks for `/` and `/businesses?q=pets` returned 200. Full in-app-browser visual acceptance remains to be recorded because this task did not expose an in-app-browser control surface.
+- Current Worker deployment: Cloudflare version `6febed6f-cf46-45f0-bf63-2235dcb85bbd`; HTTP checks for `/` and `/businesses?q=bekary` returned 200. Full in-app-browser visual acceptance remains to be recorded because this task did not expose an in-app-browser control surface.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
