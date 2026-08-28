@@ -53,7 +53,7 @@ await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, c
     const result = await readResponse(response);
     if (response.ok && response.status !== 202) {
       console.log(`Candidate handoff batch ${batchIndex + 1}: ${result.idempotent ? "already received" : `${result.qualifiedCount ?? 0} qualified, ${result.exceptionCount ?? 0} exceptions`}.`);
-      await delay(REQUEST_SETTLE_DELAY_MS);
+      if (!result.idempotent) await delay(REQUEST_SETTLE_DELAY_MS);
       return;
     }
     const retryable = response.status === 202 || [429, 500, 502, 503, 504].includes(response.status);

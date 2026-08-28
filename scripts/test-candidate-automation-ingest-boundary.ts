@@ -56,6 +56,7 @@ const sourceContract = fs.readFileSync("web/src/lib/automation/catalogue-source-
 assert.match(handoff, /const BATCH_SIZE = 1/);
 assert.match(handoff, /const MAX_CONCURRENT_BATCHES = 1/);
 assert.match(handoff, /const REQUEST_SETTLE_DELAY_MS = 250/);
+assert.match(handoff, /if \(!result\.idempotent\) await delay\(REQUEST_SETTLE_DELAY_MS\)/);
 assert.match(handoff, /const MAX_ATTEMPTS = 9/);
 assert.match(handoff, /\[429, 500, 502, 503, 504\]/);
 assert.match(handoff, /response\.status === 202/);
