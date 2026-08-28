@@ -346,7 +346,7 @@ async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminCl
     return valueText ? [{
       vendor_id: input.vendorId, field_name: fieldName, value_text: valueText,
       source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
-      source_url: input.candidate.sourceUrl, observed_at: observedAt, confidence: 85,
+      source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
       evidence_state: "active", application_state: fieldName === "trading_hours" ? "observed" : "applied",
       applied_at: fieldName === "trading_hours" ? null : new Date().toISOString(),
     }] : [];
@@ -388,7 +388,7 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
     const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").insert({
       vendor_id: vendor.id, field_name: fieldName, value_text: valueText,
       source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
-      source_url: input.candidate.sourceUrl, observed_at: observedAt, confidence: 85,
+      source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
       applied_at: canApply ? new Date().toISOString() : null,
     }).select("id").single();
@@ -425,6 +425,12 @@ function comparableFieldValue(fieldName: "contact_email" | "phone" | "website", 
     catch { return value.toLowerCase(); }
   }
   return value.toLowerCase();
+}
+
+function freshnessDueAt(observedAt: string, source: CatalogueSourceContract) {
+  const due = new Date(observedAt);
+  due.setUTCDate(due.getUTCDate() + source.refreshIntervalDays);
+  return due.toISOString();
 }
 
 function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, notes: candidate.notes ?? null }; }

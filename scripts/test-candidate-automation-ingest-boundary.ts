@@ -37,6 +37,8 @@ assert.match(route, /vendor\.ownership_status === "unclaimed" && !currentText/);
 assert.match(route, /catalogue_field_conflicts/);
 assert.match(route, /recordListingFieldEvidence/);
 assert.match(route, /listing_field_evidence/);
+assert.match(route, /freshness_due_at: freshnessDueAt/);
+assert.match(route, /source\.refreshIntervalDays/);
 assert.match(route, /application_state: fieldName === "trading_hours" \? "observed" : "applied"/);
 assert.match(route, /tradingHours: optionalText\(item\.tradingHours\)/);
 assert.doesNotMatch(route, /stripe/i);
@@ -58,6 +60,8 @@ assert.match(handoff, /sourceContractVersion: sourceContract\.version,\n\s*candi
 assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /await response\.text\(\)/);
 assert.match(sourceContract, /openstreetmap-candidate-v1/);
 assert.match(sourceContract, /victorian-liquor-licences-v2/);
+assert.match(sourceContract, /refreshIntervalDays: 7/);
+assert.match(sourceContract, /refreshIntervalDays: 31/);
 const openStreetMap = getCatalogueSourceContract("openstreetmap");
 assert(openStreetMap);
 assert.equal(hasCatalogueSourceContract("openstreetmap", openStreetMap.version), true);

@@ -5,6 +5,7 @@ export type CatalogueSourceContract = {
   displayName: string;
   version: string;
   allowedHosts: readonly string[];
+  refreshIntervalDays: number;
   defaultSourceNotes: string;
 };
 
@@ -14,6 +15,7 @@ export const CATALOGUE_SOURCE_CONTRACTS: Record<CatalogueSourceKey, CatalogueSou
     displayName: "OpenStreetMap",
     version: "openstreetmap-candidate-v1",
     allowedHosts: ["www.openstreetmap.org"],
+    refreshIntervalDays: 7,
     defaultSourceNotes: "Approved OpenStreetMap candidate handoff.",
   },
   victorian_liquor_licences: {
@@ -21,6 +23,7 @@ export const CATALOGUE_SOURCE_CONTRACTS: Record<CatalogueSourceKey, CatalogueSou
     displayName: "Victorian liquor licences by location",
     version: "victorian-liquor-licences-v2",
     allowedHosts: ["www.vic.gov.au", "discover.data.vic.gov.au"],
+    refreshIntervalDays: 31,
     defaultSourceNotes: "Approved Victorian liquor-licence candidate handoff.",
   },
 };
