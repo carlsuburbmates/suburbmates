@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowUpRight,
+  Camera,
   Globe,
   Mail,
   MapPin,
@@ -180,9 +181,10 @@ export default async function VendorWebsite({ params }: PageProps) {
                   {profileDescription}
                 </p>
               ) : (
-                <p className="mt-5 text-base leading-7 text-slate-600">
-                  No public business description has been added.
-                </p>
+                <div className="mt-5 rounded-2xl border border-dashed border-teal-900/20 bg-teal-50/60 p-5 text-sm leading-6 text-slate-700">
+                  <p className="font-bold text-slate-900">This profile is getting started.</p>
+                  <p className="mt-1">A business owner can add a clear description, useful contact details and authorised images after a reviewed claim.</p>
+                </div>
               )}
             </section>
           </div>
@@ -212,14 +214,16 @@ export default async function VendorWebsite({ params }: PageProps) {
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-black">Is this your business?</h2>
                 <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Claiming is reviewed and does not change this profile
-                  automatically.
+                  Claim it to propose a better description, direct contact details
+                  and owner-authorised images. Every change is reviewed before it
+                  appears publicly.
                 </p>
                 <Link
                   href={`/claim?listing=${encodeURIComponent(vendor.id)}`}
                   className="btn btn-outline mt-5 w-full"
                 >
-                  Request ownership
+                  <Camera size={16} aria-hidden="true" />
+                  Claim and improve profile
                 </Link>
               </section>
             )}
