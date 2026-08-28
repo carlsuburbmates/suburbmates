@@ -36,7 +36,14 @@ const batches = Array.from({ length: Math.ceil(rows.length / BATCH_SIZE) }, (_, 
 }));
 
 await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, candidates }) => {
-  const artifactSha256 = createHash("sha256").update(JSON.stringify(candidates)).digest("hex");
+  // Contract version is part of the immutable input identity. A corrected
+  // source contract may legitimately requalify prior private exceptions while
+  // retaining the earlier audit record unchanged.
+  const artifactSha256 = createHash("sha256").update(JSON.stringify({
+    source: sourceContract.key,
+    sourceContractVersion: sourceContract.version,
+    candidates,
+  })).digest("hex");
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const response = await fetch(endpoint, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ source: sourceContract.key, sourceContractVersion: sourceContract.version, artifactSha256, artifactUrl, candidates }) });
     const result = await readResponse(response);

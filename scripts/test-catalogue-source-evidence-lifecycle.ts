@@ -6,6 +6,9 @@ const migration = fs.readFileSync("supabase/migrations/20260827141339_catalogue_
 assert.match(migration, /CREATE TABLE public\.catalogue_sources/);
 assert.match(migration, /openstreetmap-candidate-v1/);
 assert.match(migration, /victorian-liquor-licences-v1/);
+const correction = fs.readFileSync("supabase/migrations/20260828015545_revise_victorian_liquor_source_contract.sql", "utf8");
+assert.match(correction, /victorian-liquor-licences-v2/);
+assert.match(correction, /unapproved_source/);
 assert.match(migration, /Creative Commons Attribution 4\.0 International/);
 assert.match(migration, /source_contract_version TEXT/);
 assert.match(migration, /CREATE TABLE public\.listing_field_evidence/);

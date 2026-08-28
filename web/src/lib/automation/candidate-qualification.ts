@@ -31,7 +31,7 @@ export function qualifyCandidate(candidate: CandidateInput, options: { allowedSo
   const source = normalizeText(candidate.source);
   const suburb = normalizeText(candidate.suburbSlug);
   const category = normalizeText(candidate.categorySlug);
-  if (!options.allowedSources.has(source)) reasons.push("unapproved_source");
+  if (![...options.allowedSources].some((allowedSource) => normalizeText(allowedSource) === source)) reasons.push("unapproved_source");
   if (!normalized.businessName || normalized.businessName.length < 2) reasons.push("invalid_business_name");
   if (!options.allowedSuburbs.has(suburb)) reasons.push("outside_geographic_scope");
   if (!options.allowedCategories.has(category)) reasons.push("unsupported_category");

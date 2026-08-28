@@ -54,10 +54,13 @@ export async function POST(request: NextRequest) {
     if (candidates.length === 1) {
       const sourceRecordKey = `${source}:${candidates[0].sourceRecordKey}`;
       const existingRecord = await admin.from("candidate_handoff_records")
-        .select("qualification_outcome, vendor_id")
+        .select("qualification_outcome, qualification_reasons, vendor_id")
         .eq("source_record_key", sourceRecordKey).order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (existingRecord.error) throw new Error("Could not read existing candidate qualification evidence.");
-      if (existingRecord.data && (existingRecord.data.qualification_outcome === "exception" || existingRecord.data.vendor_id)) {
+      const needsSourceRequalification = existingRecord.data?.qualification_outcome === "exception"
+        && Array.isArray(existingRecord.data.qualification_reasons)
+        && existingRecord.data.qualification_reasons.includes("unapproved_source");
+      if (existingRecord.data && !needsSourceRequalification && (existingRecord.data.qualification_outcome === "exception" || existingRecord.data.vendor_id)) {
         return NextResponse.json({
           received: true,
           idempotent: true,

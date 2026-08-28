@@ -11,6 +11,7 @@ const options = {
 const valid = { source: "openstreetmap", businessName: "Northcote Plumbing", categorySlug: "plumber", suburbSlug: "northcote", streetAddress: "20 High Street", phone: "03 8111 2222", website: "https://northcote-plumbing.example" };
 
 assert.equal(qualifyCandidate(valid, options).outcome, "qualified");
+assert.equal(qualifyCandidate({ ...valid, source: "victorian_liquor_licences" }, { ...options, allowedSources: new Set(["victorian_liquor_licences"]) }).outcome, "qualified", "Approved source keys with separators must not become unapproved after normalization.");
 assert.deepEqual(qualifyCandidate({ ...valid, phone: "03 9000 0000" }, options).reasons, ["strong_duplicate"]);
 assert.equal(qualifyCandidate({ ...valid, businessName: "Acme Plumbing", streetAddress: "99 Elsewhere Road", phone: "03 8111 2222", website: "https://different.example" }, options).outcome, "qualified");
 assert.equal(qualifyCandidate({ ...valid, businessName: "Different Business", streetAddress: "1 High Street" }, options).outcome, "qualified");

@@ -19,7 +19,7 @@ export const CATALOGUE_SOURCE_CONTRACTS: Record<CatalogueSourceKey, CatalogueSou
   victorian_liquor_licences: {
     key: "victorian_liquor_licences",
     displayName: "Victorian liquor licences by location",
-    version: "victorian-liquor-licences-v1",
+    version: "victorian-liquor-licences-v2",
     allowedHosts: ["www.vic.gov.au", "discover.data.vic.gov.au"],
     defaultSourceNotes: "Approved Victorian liquor-licence candidate handoff.",
   },
