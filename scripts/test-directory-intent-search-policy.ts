@@ -3,6 +3,7 @@ import fs from "node:fs";
 
 const migration = fs.readFileSync("supabase/migrations/20260827142810_public_directory_intent_search.sql", "utf8");
 const refinement = fs.readFileSync("supabase/migrations/20260827143425_refine_resolved_directory_intent.sql", "utf8");
+const expansion = fs.readFileSync("supabase/migrations/20260828145153_expand_directory_intent_language.sql", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
 assert.match(migration, /FROM public\.published_vendors AS vendor/);
@@ -20,4 +21,14 @@ assert.match(refinement, /FROM public\.published_vendors AS vendor/);
 assert.match(refinement, /WHERE vendor\.category_slug IN \(SELECT target_category_slug FROM resolved_categories\)/);
 assert.match(refinement, /WHERE NOT EXISTS \(SELECT 1 FROM resolved_categories\)/);
 assert.match(refinement, /REVOKE ALL ON FUNCTION public\.search_published_vendors_literal_fallback/);
+assert.match(expansion, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
+assert.match(expansion, /FROM public\.published_vendors AS vendor/);
+assert.doesNotMatch(expansion, /FROM public\.vendors\b/);
+assert.match(expansion, /SECURITY INVOKER/);
+assert.match(expansion, /\('mechanic', 'car-repair'\)/);
+assert.match(expansion, /\('grocery', 'supermarket'\)/);
+assert.match(expansion, /\('nails', 'beauty'\)/);
+assert.match(expansion, /\('takeaway', 'fast-food'\)/);
+assert.match(expansion, /Query text is never retained/);
+assert.match(expansion, /REVOKE ALL ON FUNCTION public\.search_published_vendors/);
 console.log("Directory intent-search policy checks passed.");
