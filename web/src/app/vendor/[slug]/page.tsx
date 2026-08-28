@@ -24,6 +24,12 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+type PublicMedia = {
+  media_id: string;
+  media_kind: string;
+  alt_text: string;
+};
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
@@ -92,11 +98,9 @@ export default async function VendorWebsite({ params }: PageProps) {
   ]);
   const vendor = vendorResult.data;
   if (vendorResult.error || !vendor) notFound();
-  const media = (mediaResult.data ?? []) as {
-    media_id: string;
-    media_kind: string;
-    alt_text: string;
-  }[];
+  const media = (mediaResult.data ?? []) as PublicMedia[];
+  const logo = media.find((item) => item.media_kind === "logo") ?? null;
+  const photos = media.filter((item) => item.media_kind === "listing_image");
   const suburbName = vendor.suburbs?.name ?? vendor.suburb_slug;
   const categoryName = vendor.categories?.name ?? vendor.category_slug;
   const profileDescription = vendor.description?.trim() || null;
@@ -142,10 +146,10 @@ export default async function VendorWebsite({ params }: PageProps) {
                   {categoryName} · {suburbName}
                 </p>
                 <div className="mt-5 flex items-start gap-4">
-                  <DirectoryCategoryVisual
+                  <ProfileIdentityVisual
+                    logo={logo}
                     categorySlug={vendor.category_slug}
-                    label={categoryName}
-                    className="h-16 w-16 shrink-0 rounded-2xl"
+                    categoryName={categoryName}
                   />
                   <div>
                     <h1 className="text-4xl font-black leading-tight tracking-tight sm:text-6xl">
@@ -171,7 +175,7 @@ export default async function VendorWebsite({ params }: PageProps) {
         </section>
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="min-w-0">
-            <PublicMediaGallery media={media} />
+            <PublicMediaGallery media={photos} />
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <h2 className="text-2xl font-black tracking-tight">
                 About this business
@@ -306,17 +310,46 @@ function ContactActions({
   );
 }
 
-function PublicMediaGallery({
-  media,
+function ProfileIdentityVisual({
+  logo,
+  categorySlug,
+  categoryName,
 }: {
-  media: { media_id: string; media_kind: string; alt_text: string }[];
+  logo: PublicMedia | null;
+  categorySlug: string;
+  categoryName: string;
 }) {
+  if (!logo) {
+    return (
+      <DirectoryCategoryVisual
+        categorySlug={categorySlug}
+        label={categoryName}
+        className="h-16 w-16 shrink-0 rounded-2xl"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/80 bg-white p-2 shadow-sm sm:h-24 sm:w-24">
+      <Image
+        src={`/api/media/${logo.media_id}`}
+        alt={logo.alt_text}
+        width={192}
+        height={192}
+        sizes="(max-width: 640px) 80px, 96px"
+        className="h-full w-full object-contain"
+      />
+    </div>
+  );
+}
+
+function PublicMediaGallery({ media }: { media: PublicMedia[] }) {
   if (media.length === 0) return null;
   return (
     <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 px-1">
-        <h2 className="text-lg font-black tracking-tight">Business photos</h2>
-        <p className="text-xs font-semibold text-slate-500">Provided by the business owner or a licensed source</p>
+        <h2 className="text-lg font-black tracking-tight">From the business</h2>
+        <p className="text-xs font-semibold text-slate-500">Owner-provided or licensed imagery, reviewed before publication</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {media.map((item) => (
