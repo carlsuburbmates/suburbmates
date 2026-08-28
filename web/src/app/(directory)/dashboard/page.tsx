@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { ExternalLink } from 'lucide-react'
+import { BadgeCheck, Camera, ExternalLink, FileText, Phone, Sparkles } from 'lucide-react'
 import ProfileEditor from './ProfileEditor'
 import ClaimRequests from './ClaimRequests'
 import MediaProposalForm from './MediaProposalForm'
@@ -81,14 +81,20 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 p-8">
+    <div className="min-h-screen bg-[#f5f7f3] text-slate-900 p-5 sm:p-8">
       <div className="max-w-4xl mx-auto space-y-12">
         
-        <header className="flex items-center justify-between border-b border-slate-200 pb-6">
-          <h1 className="text-4xl font-black tracking-tight">Dashboard</h1>
-          <form action="/auth/signout" method="post">
-            <button className="text-sm font-medium underline text-slate-600 hover:text-black">Sign Out</button>
-          </form>
+        <header className="overflow-hidden rounded-3xl bg-[#073b3a] px-6 py-8 text-white shadow-sm sm:px-9 sm:py-10">
+          <div className="flex items-start justify-between gap-5">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-100">SuburbMates for owners</p>
+              <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Build a useful local profile.</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-teal-50 sm:text-base">Keep your details accurate, add the story behind your business and propose owner-authorised imagery. Every public change stays reviewed.</p>
+            </div>
+            <form action="/auth/signout" method="post" className="shrink-0">
+              <button className="min-h-11 rounded-xl border border-white/30 px-4 text-sm font-bold text-white transition hover:bg-white hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Sign out</button>
+            </form>
+          </div>
         </header>
 
         {ownerRequestStatuses.length > 0 && (
@@ -135,7 +141,7 @@ export default async function DashboardPage() {
           ) : (
             <div className="grid gap-6">
               {ownedVendors.map((vendor) => (
-                <div key={vendor.id} className="bg-white p-6 rounded-2xl border shadow-sm flex flex-col gap-4">
+                <div key={vendor.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-5 sm:p-8">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
@@ -157,8 +163,13 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                   
-                  <ProfileEditor vendor={vendor} latestChange={latestChangeByVendor.get(vendor.id) ?? null} />
-                  <MediaProposalForm vendorId={vendor.id} />
+                  <ProfileReadiness vendor={vendor} mediaProposalCount={mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).length} />
+                  <div id={`profile-editor-${vendor.id}`}>
+                    <ProfileEditor vendor={vendor} latestChange={latestChangeByVendor.get(vendor.id) ?? null} />
+                  </div>
+                  <div id={`media-${vendor.id}`}>
+                    <MediaProposalForm vendorId={vendor.id} />
+                  </div>
                   {mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).length > 0 && <div className="border-t border-slate-100 pt-5"><h4 className="font-bold">Image review status</h4><div className="mt-3 space-y-2">{mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).map((proposal) => <div key={proposal.proposal_id} className="rounded-lg bg-slate-50 p-3 text-sm"><span className="font-semibold">{proposal.media_kind === 'logo' ? 'Logo' : 'Listing image'}:</span> {proposal.proposal_status.replaceAll('_', ' ')}{proposal.operator_reason && <p className="mt-1 text-slate-600">{proposal.operator_reason}</p>}</div>)}</div></div>}
                 </div>
               ))}
@@ -169,6 +180,19 @@ export default async function DashboardPage() {
       </div>
     </div>
   )
+}
+
+function ProfileReadiness({ vendor, mediaProposalCount }: { vendor: OwnerVendor; mediaProposalCount: number }) {
+  const hasDirectContact = Boolean(vendor.phone || vendor.contact_email || vendor.website)
+  const cards = [
+    { href: `#profile-editor-${vendor.id}`, Icon: Phone, title: "Direct contact", detail: hasDirectContact ? "A way for locals to contact you is on file." : "Add a phone number, email or website.", complete: hasDirectContact },
+    { href: `#profile-editor-${vendor.id}`, Icon: FileText, title: "Business story", detail: vendor.description?.trim() ? "Your public description is ready for review." : "Explain what you do and what makes you useful locally.", complete: Boolean(vendor.description?.trim()) },
+    { href: `#media-${vendor.id}`, Icon: Camera, title: "Photos and logo", detail: mediaProposalCount > 0 ? "Your media proposal is visible in its review status below." : "Propose a logo or real business image you are allowed to use.", complete: mediaProposalCount > 0 },
+  ]
+  return <section className="rounded-2xl border border-teal-900/10 bg-teal-50/70 p-5 sm:p-6" aria-label={`Profile readiness for ${vendor.business_name}`}>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-teal-900"><Sparkles size={15} aria-hidden="true" /> Make this profile more useful</p><p className="mt-2 text-sm leading-6 text-slate-700">These are practical improvements, not paid placement. They help locals decide whether to contact you.</p></div><span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-teal-900 shadow-sm">{cards.filter((card) => card.complete).length} of {cards.length} ready</span></div>
+    <div className="mt-5 grid gap-3 sm:grid-cols-3">{cards.map(({ href, Icon, title, detail, complete }) => <a key={title} href={href} className="group min-h-28 rounded-2xl border border-white bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"><div className="flex items-center justify-between gap-3"><Icon size={20} className="text-teal-900" aria-hidden="true" />{complete && <BadgeCheck size={18} className="text-emerald-700" aria-label="Ready" />}</div><h4 className="mt-3 font-black text-slate-950 group-hover:text-teal-900">{title}</h4><p className="mt-1 text-xs leading-5 text-slate-600">{detail}</p></a>)}</div>
+  </section>
 }
 
 function submissionNextStep(request: BusinessSubmissionStatus) {
