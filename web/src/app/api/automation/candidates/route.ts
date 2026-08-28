@@ -169,10 +169,25 @@ export async function POST(request: NextRequest) {
         const recordId = createdRecord.data.id;
 
         if (qualification.outcome === "exception") {
+          let enrichment: ExistingListingEnrichment | null = null;
+          if (qualification.reasons.length === 1 && qualification.reasons[0] === "strong_duplicate" && qualification.duplicateVendorId) {
+            enrichment = await enrichMatchingListing(admin, {
+              vendorId: qualification.duplicateVendorId,
+              candidate,
+              sourceRecordKey,
+              sourceContract,
+              correlationId: run.correlation_id,
+            });
+          }
           exceptionCount++;
           const { error } = await admin.from("audit_events").insert({
             actor_type: "service", action: "candidate_handoff_exception_created", entity_type: "candidate_handoff_record", entity_id: recordId,
-            reason: qualification.reasons.join(", "), after_data: { qualification_outcome: "exception", publication_unchanged: true }, correlation_id: run.correlation_id,
+            reason: qualification.reasons.join(", "), after_data: {
+              qualification_outcome: "exception",
+              listing_status_unchanged: true,
+              public_field_changes: enrichment?.appliedFields ?? [],
+              existing_listing_enrichment: enrichment ? { applied_fields: enrichment.appliedFields, conflicts: enrichment.conflictFields } : null,
+            }, correlation_id: run.correlation_id,
           });
           if (error) throw new Error("Could not audit candidate exception.");
           continue;
@@ -341,6 +356,75 @@ async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminCl
     onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true,
   });
   if (result.error) throw new Error("Could not record field-level listing evidence.");
+}
+
+type ExistingListingEnrichment = { appliedFields: string[]; conflictFields: string[] };
+
+async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>, input: {
+  vendorId: string; candidate: IncomingCandidate; sourceRecordKey: string; sourceContract: CatalogueSourceContract; correlationId: string;
+}): Promise<ExistingListingEnrichment> {
+  const { data: vendor, error: vendorError } = await admin.from("vendors")
+    .select("id, ownership_status, contact_email, phone, website")
+    .eq("id", input.vendorId).maybeSingle();
+  if (vendorError || !vendor) throw new Error("Could not load the matching listing for safe enrichment.");
+
+  const observedAt = `${input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
+  const fields: Array<["contact_email" | "phone" | "website", string | null | undefined, string | null]> = [
+    ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
+    ["phone", input.candidate.phone, vendor.phone],
+    ["website", input.candidate.website, vendor.website],
+  ];
+  const appliedFields: string[] = [];
+  const conflictFields: string[] = [];
+  const updates: Record<string, string> = {};
+
+  for (const [fieldName, incomingValue, currentValue] of fields) {
+    const valueText = incomingValue?.trim();
+    if (!valueText) continue;
+    const currentText = currentValue?.trim() ?? "";
+    const sameValue = comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
+    const canApply = vendor.ownership_status === "unclaimed" && !currentText;
+    const applicationState = canApply ? "applied" : currentText && !sameValue ? "conflict" : "observed";
+    const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").insert({
+      vendor_id: vendor.id, field_name: fieldName, value_text: valueText,
+      source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
+      source_url: input.candidate.sourceUrl, observed_at: observedAt, confidence: 85,
+      evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
+      applied_at: canApply ? new Date().toISOString() : null,
+    }).select("id").single();
+    if (evidenceError || !evidence) throw new Error("Could not retain matching-listing field evidence.");
+    if (canApply) {
+      updates[fieldName] = valueText;
+      appliedFields.push(fieldName);
+    } else if (applicationState === "conflict") {
+      const { error: conflictError } = await admin.from("catalogue_field_conflicts").upsert({
+        vendor_id: vendor.id, field_name: fieldName, incoming_evidence_id: evidence.id, current_value: currentText,
+      }, { onConflict: "incoming_evidence_id", ignoreDuplicates: true });
+      if (conflictError) throw new Error("Could not retain matching-listing field conflict.");
+      conflictFields.push(fieldName);
+    }
+  }
+
+  if (Object.keys(updates).length > 0) {
+    const { error: updateError } = await admin.from("vendors").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", vendor.id);
+    if (updateError) throw new Error("Could not apply safe matching-listing enrichment.");
+    const { error: auditError } = await admin.from("audit_events").insert({
+      actor_type: "service", action: "approved_source_empty_field_enriched", entity_type: "vendor", entity_id: vendor.id,
+      reason: "Approved source filled empty unclaimed listing fields without overwriting existing information.",
+      after_data: { applied_fields: appliedFields, owner_control_preserved: true }, correlation_id: input.correlationId,
+    });
+    if (auditError) throw new Error("Could not audit safe matching-listing enrichment.");
+  }
+  return { appliedFields, conflictFields };
+}
+
+function comparableFieldValue(fieldName: "contact_email" | "phone" | "website", value: string) {
+  if (fieldName === "phone") return value.replace(/\D/g, "").replace(/^61(?=\d{9,10}$)/, "0");
+  if (fieldName === "website") {
+    try { const url = new URL(value); return `${url.hostname.toLowerCase().replace(/^www\./, "")}${url.pathname.replace(/\/$/, "")}`; }
+    catch { return value.toLowerCase(); }
+  }
+  return value.toLowerCase();
 }
 
 function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, notes: candidate.notes ?? null }; }

@@ -13,7 +13,11 @@ const sourceContract = getCatalogueSourceContract(source);
 // the workload deliberately small so the Worker remains within its resource
 // budget during a large discovery run.
 const BATCH_SIZE = 1;
-const MAX_CONCURRENT_BATCHES = 2;
+// The public Worker performs provenance and audit writes for each candidate.
+// A single, gently paced handoff prevents an automation burst from exhausting
+// its request resource budget; prior singleton results are idempotent.
+const MAX_CONCURRENT_BATCHES = 1;
+const REQUEST_SETTLE_DELAY_MS = 750;
 // The cumulative backoff exceeds the one-minute server recovery window.
 const MAX_ATTEMPTS = 9;
 const RETRY_DELAY_MS = 2_000;
@@ -49,6 +53,7 @@ await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, c
     const result = await readResponse(response);
     if (response.ok && response.status !== 202) {
       console.log(`Candidate handoff batch ${batchIndex + 1}: ${result.idempotent ? "already received" : `${result.qualifiedCount ?? 0} qualified, ${result.exceptionCount ?? 0} exceptions`}.`);
+      await delay(REQUEST_SETTLE_DELAY_MS);
       return;
     }
     const retryable = response.status === 202 || [429, 500, 502, 503, 504].includes(response.status);
