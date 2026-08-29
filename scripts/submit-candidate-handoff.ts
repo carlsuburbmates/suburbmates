@@ -24,7 +24,16 @@ const RETRY_DELAY_MS = 2_000;
 if (!endpoint || !token || !csvPath) throw new Error("CANDIDATE_HANDOFF_URL, AUTOMATION_INGEST_TOKEN and a CSV path are required.");
 if (!sourceContract) throw new Error("CATALOGUE_SOURCE must name an approved automated source.");
 
-const rows = parse(fs.readFileSync(path.resolve(csvPath), "utf8"), { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
+const shardIndex = readShardFlag("--shard-index", 0);
+const shardCount = readShardFlag("--shard-count", 1);
+if (shardIndex >= shardCount) throw new Error("--shard-index must be less than --shard-count.");
+
+const allRows = parse(fs.readFileSync(path.resolve(csvPath), "utf8"), { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
+// A full OSM file has more records than one sequential Worker run can finish
+// before an occasional resource retry. Sharding preserves every singleton
+// payload identity, so retries still reuse their exact private run evidence.
+const rows = allRows.filter((_, index) => index % shardCount === shardIndex);
+console.log(`Candidate handoff shard ${shardIndex + 1}/${shardCount}: ${rows.length} of ${allRows.length} records.`);
 const artifactUrl = process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
   ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
   : undefined;
@@ -72,6 +81,14 @@ async function readResponse(response: Response): Promise<{ qualifiedCount?: numb
 }
 
 function delay(milliseconds: number) { return new Promise((resolve) => setTimeout(resolve, milliseconds)); }
+
+function readShardFlag(flag: string, fallback: number) {
+  const valueIndex = process.argv.indexOf(flag);
+  if (valueIndex === -1) return fallback;
+  const value = Number(process.argv[valueIndex + 1]);
+  if (!Number.isInteger(value) || value < 0) throw new Error(`${flag} must be a non-negative integer.`);
+  return value;
+}
 
 async function runWithConcurrency<T>(items: readonly T[], concurrency: number, worker: (item: T) => Promise<void>) {
   let nextIndex = 0;

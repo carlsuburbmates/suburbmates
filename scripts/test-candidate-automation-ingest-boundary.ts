@@ -5,6 +5,7 @@ import { getCatalogueSourceContract, hasCatalogueSourceContract } from "../web/s
 const route = fs.readFileSync("web/src/app/api/automation/candidates/route.ts", "utf8");
 const workflow = fs.readFileSync(".github/workflows/catalogue-discovery.yml", "utf8");
 const liquorWorkflow = fs.readFileSync(".github/workflows/catalogue-victorian-liquor-licences.yml", "utf8");
+const outcomeRoute = fs.readFileSync("web/src/app/api/automation/catalogue-run-status/route.ts", "utf8");
 
 assert.match(route, /AUTOMATION_INGEST_TOKEN/);
 assert.match(route, /MAX_CANDIDATES = 100/);
@@ -65,6 +66,10 @@ assert.match(route, /sameHosts\(registry\.allowed_hosts, source\.allowedHosts\)/
 assert.doesNotMatch(route, /stripe/i);
 assert.match(workflow, /candidate:handoff/);
 assert.match(workflow, /AUTOMATION_INGEST_TOKEN/);
+assert.match(workflow, /max-parallel: 2/);
+assert.match(workflow, /shard_index: \[0, 1, 2, 3\]/);
+assert.match(workflow, /record-handoff-outcome/);
+assert.match(workflow, /catalogue-run-status/);
 assert.match(liquorWorkflow, /npm run acquire:vic-liquor/);
 assert.match(liquorWorkflow, /CATALOGUE_SOURCE: victorian_liquor_licences/);
 assert.match(liquorWorkflow, /AUTOMATION_INGEST_TOKEN/);
@@ -72,6 +77,10 @@ const handoff = fs.readFileSync("scripts/submit-candidate-handoff.ts", "utf8");
 const sourceContract = fs.readFileSync("web/src/lib/automation/catalogue-source-contract.ts", "utf8");
 assert.match(handoff, /const BATCH_SIZE = 1/);
 assert.match(handoff, /const MAX_CONCURRENT_BATCHES = 1/);
+assert.match(handoff, /--shard-index/);
+assert.match(handoff, /--shard-count/);
+assert.match(handoff, /index % shardCount === shardIndex/);
+assert.match(handoff, /Sharding preserves every singleton/);
 assert.match(handoff, /const REQUEST_SETTLE_DELAY_MS = 250/);
 assert.match(handoff, /if \(!result\.idempotent\) await delay\(REQUEST_SETTLE_DELAY_MS\)/);
 assert.match(handoff, /const MAX_ATTEMPTS = 9/);
@@ -89,5 +98,10 @@ assert(openStreetMap);
 assert.equal(hasCatalogueSourceContract("openstreetmap", openStreetMap.version), true);
 assert.equal(hasCatalogueSourceContract("openstreetmap", "openstreetmap-candidate-v0"), false);
 assert.equal(getCatalogueSourceContract("unapproved-source"), null);
+assert.match(outcomeRoute, /AUTOMATION_INGEST_TOKEN/);
+assert.match(outcomeRoute, /getCatalogueSourceContract/);
+assert.match(outcomeRoute, /catalogue_source_handoff_failed/);
+assert.match(outcomeRoute, /listing_state_changed_by_status_callback: false/);
+assert.match(outcomeRoute, /integration_health/);
 
 console.log("Candidate automation ingestion boundary checks passed.");

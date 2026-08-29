@@ -13,11 +13,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  discover:
+  acquire:
     runs-on: ubuntu-latest
-    # Small, retried handoff batches prioritise a reliable private record over
-    # fast bulk processing. Leave enough time for the full approved-source run.
-    timeout-minutes: 40
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -42,11 +40,69 @@ jobs:
             data/vendor-candidates-osm.csv
             data/vendor-candidates-merged.csv
 
+      - uses: actions/upload-artifact@v6
+        with:
+          name: catalogue-osm-handoff-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: data/vendor-candidates-osm.csv
+
+  handoff:
+    needs: acquire
+    runs-on: ubuntu-latest
+    # Each source row still has a singleton, idempotent audit path. Two bounded
+    # shards keep the Worker below its resource limit while allowing the full
+    # weekly source file to complete rather than stopping part-way through.
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        shard_index: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: catalogue-osm-handoff-${{ github.run_id }}
+          path: data
+
       - name: Send approved-source candidates to the private qualification handoff
-        run: npm run candidate:handoff -- data/vendor-candidates-osm.csv
+        run: npm run candidate:handoff -- data/vendor-candidates-osm.csv --shard-index ${{ matrix.shard_index }} --shard-count 4
         env:
           CANDIDATE_HANDOFF_URL: https://suburbmates.com.au/api/automation/candidates
           AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
 
       - name: Confirm publication boundary
         run: echo "Candidates entered the authenticated qualification handoff. Only a deterministic qualifying result can create an unclaimed listing; exceptions remain private in Ops."
+
+  record-handoff-outcome:
+    if: always()
+    needs: [acquire, handoff]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record the aggregate source-run outcome
+        env:
+          AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
+          HANDOFF_RESULT: ${{ needs.handoff.result }}
+        run: |
+          if [ "$HANDOFF_RESULT" = "success" ]; then
+            outcome=completed
+          else
+            outcome=failed
+          fi
+          curl --fail-with-body --retry 3 --retry-all-errors --request POST \
+            --header "authorization: Bearer $AUTOMATION_INGEST_TOKEN" \
+            --header "content-type: application/json" \
+            --data "{\"source\":\"openstreetmap\",\"outcome\":\"$outcome\",\"workflowRunId\":\"${{ github.run_id }}\"}" \
+            https://suburbmates.com.au/api/automation/catalogue-run-status
+          if [ "$outcome" != "completed" ]; then
+            exit 1
+          fi
