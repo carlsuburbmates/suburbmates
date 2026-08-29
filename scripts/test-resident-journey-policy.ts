@@ -223,6 +223,11 @@ async function run() {
     "profiles must preserve the selected listing when owners start a claim",
   );
   assert.match(
+    profile,
+    /Own this business\? Claim and improve this profile/,
+    "unclaimed profiles must make the owner improvement journey discoverable without competing with direct contact",
+  );
+  assert.match(
     locality,
     /published local business listings in \$\{name\}/,
     "locality metadata must not claim that listings serve an area without evidence",

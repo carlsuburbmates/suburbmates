@@ -171,12 +171,23 @@ export default async function VendorWebsite({ params }: PageProps) {
                   </div>
                 </div>
               </div>
-              <ContactActions
-                phone={vendor.phone}
-                email={vendor.contact_email}
-                website={vendor.website}
-                directionsUrl={directionsUrl}
-              />
+              <div className="lg:justify-self-end">
+                <ContactActions
+                  phone={vendor.phone}
+                  email={vendor.contact_email}
+                  website={vendor.website}
+                  directionsUrl={directionsUrl}
+                />
+                {vendor.is_claimed === false && (
+                  <Link
+                    href={`/claim?listing=${encodeURIComponent(vendor.id)}`}
+                    className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold text-slate-700 underline decoration-teal-800/40 underline-offset-4 transition hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
+                  >
+                    <Camera size={16} aria-hidden="true" />
+                    Own this business? Claim and improve this profile
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </section>
