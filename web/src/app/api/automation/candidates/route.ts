@@ -98,17 +98,6 @@ export async function POST(request: NextRequest) {
     }
     if (runError || !run) throw new Error("Could not create the candidate handoff run.");
 
-    const job = await admin.from("automation_jobs").insert({
-      job_type: "candidate_handoff",
-      status: "running",
-      attempt_count: 1,
-      max_attempts: 3,
-      correlation_id: run.correlation_id,
-      payload: { source, candidate_count: candidates.length, artifact_sha256: artifactSha256 },
-      started_at: new Date().toISOString(),
-    }).select("id").single();
-    if (job.error || !job.data) throw new Error("Could not create the candidate handoff job record.");
-
     try {
       const [categories, suburbs] = await Promise.all([loadSlugs(admin, "categories"), loadSlugs(admin, "suburbs")]);
       let qualifiedCount = 0;
@@ -246,20 +235,20 @@ export async function POST(request: NextRequest) {
         qualifiedCount++;
       }
       const completedAt = new Date().toISOString();
-      await admin.from("candidate_handoff_runs").update({ status: "completed", qualified_count: qualifiedCount, exception_count: exceptionCount, completed_at: completedAt }).eq("id", run.id);
-      await admin.from("automation_jobs").update({ status: "succeeded", result: { qualified_count: qualifiedCount, exception_count: exceptionCount }, completed_at: completedAt }).eq("id", job.data.id);
-      await admin.from("automation_jobs")
-        .update({ status: "cancelled", error_message: "Safely superseded by a resumed candidate handoff attempt.", result: { recovered: true, recovered_by_job_id: job.data.id }, completed_at: completedAt })
-        .eq("correlation_id", run.correlation_id)
-        .eq("status", "failed")
-        .eq("error_message", "Candidate handoff exceeded the processing window and was safely resumed.");
-      await admin.from("integration_health").upsert({ integration_name: "candidate_handoff", status: "healthy", last_success_at: completedAt, metadata: { last_run_id: run.id, qualified_count: qualifiedCount, exception_count: exceptionCount } }, { onConflict: "integration_name" });
+      // Each handoff is one source candidate. Close its durable, idempotent run
+      // before updating optional aggregate health so a Worker interruption after
+      // the listing/evidence link never leaves a completed candidate processing.
+      const completion = await admin.from("candidate_handoff_runs")
+        .update({ status: "completed", qualified_count: qualifiedCount, exception_count: exceptionCount, completed_at: completedAt })
+        .eq("id", run.id);
+      if (completion.error) throw new Error("Could not complete the candidate handoff run.");
+      const health = await admin.from("integration_health").upsert({ integration_name: "candidate_handoff", status: "healthy", last_success_at: completedAt, metadata: { last_run_id: run.id, qualified_count: qualifiedCount, exception_count: exceptionCount } }, { onConflict: "integration_name" });
+      if (health.error) throw new Error("Could not record candidate handoff health.");
       return NextResponse.json({ received: true, idempotent: false, runId: run.id, qualifiedCount, exceptionCount });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Candidate handoff failed.";
       const now = new Date().toISOString();
       await admin.from("candidate_handoff_runs").update({ status: "failed", error_message: message, completed_at: now }).eq("id", run.id);
-      await admin.from("automation_jobs").update({ status: "failed", error_message: message, completed_at: now }).eq("id", job.data.id);
       await admin.from("integration_health").upsert({ integration_name: "candidate_handoff", status: "failed", last_failure_at: now, last_error: message, metadata: { last_run_id: run.id } }, { onConflict: "integration_name" });
       throw error;
     }
