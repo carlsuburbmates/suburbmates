@@ -18,7 +18,8 @@ assert.match(work, /possible_duplicate/);
 assert.match(work, /not a Business/);
 assert.match(work, /later_review/);
 assert.match(catalogue, /Open this listing and make a listing decision/);
-assert.match(candidateRoute, /Safely superseded by a resumed candidate handoff attempt/);
-assert.match(candidateRoute, /recovered_by_job_id/);
+assert.match(candidateRoute, /Could not complete the candidate handoff run/);
+assert.match(candidateRoute, /Close its durable, idempotent run/);
+assert.doesNotMatch(candidateRoute, /job_type: "candidate_handoff"/);
 
 console.log("Ops action queue boundary checks passed.");
