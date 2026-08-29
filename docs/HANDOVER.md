@@ -21,12 +21,13 @@ The launch model is directory-first with deterministic safeguards:
 
 ## Current hosted state
 
-### Latest verified live state — 29 August 2026 (Australia/Melbourne)
+### Latest verified live state — 30 August 2026 (Australia/Melbourne)
 
 - the public anonymous projection and a freshly loaded in-app-browser directory page both return **1,955 published listings**; the earlier 1,602 figure below is a historical release snapshot, not a current catalogue count;
-- the current Cloudflare Worker deployment is `55658935-64bb-48ff-97c7-7b2fdbf8ee9d` from commit `16a250b`; the public browse page was checked in the in-app browser after deployment;
+- the current Cloudflare Worker deployment is `d2155b71-ea0d-46af-9938-06b9175b2a06` from commit `386207c`; it serves the fail-closed source-registry guard, and the unauthenticated candidate endpoint still returns `401` without reading or changing any candidate data;
 - the browse page now keeps keyword search primary, uses an optional service typeahead and popular-service shortcuts, and keeps suburb as a secondary filter; it does not expose the full category list by default;
 - profile depth remains the material public-product constraint: 2 of 1,955 current public listings have a description; 1,327 have an address, 529 a phone, 95 an email and 594 a website; there are no owner-media proposals yet. These are observed data facts, not a publication or access-control failure;
+- unclaimed profiles now place the owner path beside direct contact: **“Own this business? Claim and improve this profile”** links to the preselected claim route. The served HTML confirmed the new call to action and the removal of the former thin-profile placeholder; in-app-browser visual verification remains pending because its tab detached during this check;
 - OSM discovery is scheduled weekly and the licensed Victorian liquor source monthly. Both use the authenticated, evidence-preserving candidate handoff. Victorian field evidence was refreshed on 29 August and is due for re-observation from 28 September. The deployed later-observation refresh handler awaits a genuine future source observation; do not manufacture one for acceptance.
 
 ### Historical release snapshot — 6 August 2026
@@ -55,7 +56,7 @@ The following dated release evidence is retained for audit history. Its counts a
 - A later approved-source observation of an already qualified source record now refreshes its private field-level evidence and freshness. It may fill an empty contact field only on an unclaimed listing; a changed public fact is retained as private conflict evidence and never silently overwrites the listing.
 - Public search now resolves recognised service intent locally before its literal/typo fallback. Its bounded resident-language map covers food, hospitality, personal care, pets, home/trade, vehicle, retail, technology and professional services; for example, `mechanic`, `takeaway`, `nails` and `grocery` resolve to their existing relevant categories. It preserves taxonomy distinctions where they remain unresolved (for example, chemist/pharmacy). Search input remains transient and is never retained.
 - The public home, browse cards and profiles now use category-led visual treatments and show only owner-provided or properly licensed business media. An approved logo is now the profile identity mark; approved listing images appear separately as a labelled gallery. No generic or copied business imagery was added.
-- Current Worker deployment: Cloudflare version `55658935-64bb-48ff-97c7-7b2fdbf8ee9d` from commit `16a250b`; the in-app browser confirmed the served browse page shows 1,955 listings, service-first search, popular-service shortcuts and the secondary suburb control on 29 August 2026. This is desktop browse acceptance only; it is not evidence that every public template, mobile viewport or owner journey has been accepted.
+- Current Worker deployment: Cloudflare version `d2155b71-ea0d-46af-9938-06b9175b2a06` from commit `386207c`; the in-app browser confirmed the served browse page shows 1,955 listings, service-first search, popular-service shortcuts and the secondary suburb control on 29 August 2026. The served profile HTML confirms the newer owner-improvement call to action. This is not evidence that every public template, mobile viewport or owner journey has been accepted.
 
 Never infer the reason for a legacy row’s state. Recheck hosted counts before and after any migration, import, or lifecycle action.
 
@@ -135,12 +136,12 @@ The safe automated discovery path is:
 1. acquire approved-source candidates;
 2. normalise, audit and deduplicate them;
 3. retain an evidence artefact and private handoff record;
-4. deterministically qualify each candidate against source, scope, contact, duplicate and safety rules; and
+4. deterministically qualify each candidate against source, scope, category, duplicate and safety rules; and
 5. create an unclaimed published listing only for a qualifying approved-source candidate while the public-release gate is enabled. Exceptions remain private; raw or uncertain records are never published.
 
 `scripts/seed.ts` is a controlled legacy import tool, not the approved-source discovery route. It preserves publication for existing rows and sets new seed rows to unpublished pending review. Empty import fields must not erase existing stored values, and same-name businesses at different addresses must remain distinct.
 
-The weekly OpenStreetMap and monthly Victorian liquor-licence GitHub workflows acquire/audit approved-source evidence, upload their artifacts, and send versioned source-record candidates to the authenticated qualification handoff. Exact source/artifact retries are idempotent; a later observation of an existing qualified record re-observes provenance/freshness and enters a private conflict rather than overwriting a public fact. Only a candidate that passes the deterministic policy may become an unclaimed public listing. It never publishes raw, uncertain or user-submitted data. A missing public website, phone or email alone is not a rejection rule.
+The weekly OpenStreetMap and monthly Victorian liquor-licence GitHub workflows acquire/audit approved-source evidence, upload their artifacts, and send versioned source-record candidates to the authenticated qualification handoff. The endpoint accepts a run only when its executable contract and the private `catalogue_sources` approval agree on version, exact hosts, automated/enabled state and `store_and_display` permission; otherwise it holds the run before reading candidates. Exact source/artifact retries are idempotent; a later observation of an existing qualified record re-observes provenance/freshness and enters a private conflict rather than overwriting a public fact. Only a candidate that passes the deterministic policy may become an unclaimed public listing. It never publishes raw, uncertain or user-submitted data. A missing public website, phone or email alone is not a rejection rule.
 
 Current allowed sources and rules are documented in `docs/vendor-acquisition-strategy.md` and `docs/openstreetmap-acquisition.md`. Do not persist data from closed directories without a licence permitting storage and display.
 
