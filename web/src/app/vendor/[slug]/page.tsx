@@ -31,6 +31,13 @@ type PublicMedia = {
   alt_text: string;
 };
 
+type PublicSourceSummary = {
+  source_key: string;
+  source_name: string;
+  observed_on: string;
+  supported_fields: string[];
+};
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
@@ -89,17 +96,19 @@ export default async function VendorWebsite({ params }: PageProps) {
   const route = await resolvePublicVendorRoute(supabase, slug);
   if (!route) notFound();
   if (route.redirectRequired) permanentRedirect(`/vendor/${route.currentSlug}`);
-  const [vendorResult, mediaResult] = await Promise.all([
+  const [vendorResult, mediaResult, sourceSummaryResult] = await Promise.all([
     supabase
       .from("published_vendors")
       .select("*, suburbs(name), categories(name)")
       .eq("id", route.vendorId)
       .single(),
     supabase.rpc("list_public_vendor_media", { p_vendor_id: route.vendorId }),
+    supabase.rpc("list_public_vendor_source_summaries", { p_vendor_id: route.vendorId }),
   ]);
   const vendor = vendorResult.data;
   if (vendorResult.error || !vendor) notFound();
   const media = (mediaResult.data ?? []) as PublicMedia[];
+  const sourceSummaries = (sourceSummaryResult.data ?? []) as PublicSourceSummary[];
   const logo = media.find((item) => item.media_kind === "logo") ?? null;
   const photos = media.filter((item) => item.media_kind === "listing_image");
   const suburbName = vendor.suburbs?.name ?? vendor.suburb_slug;
@@ -246,6 +255,7 @@ export default async function VendorWebsite({ params }: PageProps) {
                 )}
               </dl>
             </section>
+            <PublicSourceSummaries summaries={sourceSummaries} />
             {vendor.is_claimed === false && (
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-black">Is this your business?</h2>
@@ -420,4 +430,52 @@ function PublicMediaGallery({ media }: { media: PublicMedia[] }) {
       </div>
     </section>
   );
+}
+
+const sourceFieldLabels: Record<string, string> = {
+  business_name: "business name",
+  category_slug: "category",
+  suburb_slug: "suburb",
+  street_address: "address",
+  contact_email: "email",
+  phone: "phone",
+  website: "website",
+  description: "business details",
+  trading_hours: "hours",
+};
+
+function PublicSourceSummaries({ summaries }: { summaries: PublicSourceSummary[] }) {
+  if (summaries.length === 0) return null;
+  return (
+    <section className="rounded-3xl border border-teal-900/10 bg-teal-50/60 p-6 shadow-sm">
+      <h2 className="text-lg font-black">Information sources</h2>
+      <p className="mt-3 text-sm leading-6 text-slate-600">
+        Selected public details on this profile are backed by a public source.
+        Source observations can change; owners can submit corrections for review.
+      </p>
+      <ul className="mt-5 space-y-4">
+        {summaries.map((summary) => {
+          const fields = summary.supported_fields
+            .map((field) => sourceFieldLabels[field])
+            .filter((field): field is string => Boolean(field));
+          return (
+            <li key={summary.source_key} className="border-t border-teal-900/10 pt-4 first:border-t-0 first:pt-0">
+              <p className="font-bold text-slate-900">{summary.source_name}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">
+                {fields.length > 0 && <>Supports {fields.join(", ")}. </>}
+                Last source observation <time dateTime={summary.observed_on}>{formatSourceDate(summary.observed_on)}</time>.
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function formatSourceDate(value: string) {
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(date.valueOf())
+    ? value
+    : new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(date);
 }
