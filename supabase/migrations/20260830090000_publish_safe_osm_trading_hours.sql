@@ -1,6 +1,10 @@
 -- D-019: an exact, source-supplied opening-hours expression may be public only
 -- after the ingestion policy has accepted it. The projection remains narrow:
 -- it does not expose source, owner, moderation, payment or audit fields.
+ALTER TABLE public.vendors
+  ADD COLUMN IF NOT EXISTS trading_hours TEXT
+  CHECK (trading_hours IS NULL OR length(trim(trading_hours)) BETWEEN 3 AND 300);
+
 CREATE OR REPLACE VIEW public.published_vendors
 WITH (security_barrier = true, security_invoker = false)
 AS
