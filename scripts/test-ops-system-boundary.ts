@@ -22,6 +22,8 @@ assert.match(page, /Technical details and recent checks/);
 assert.match(page, /Bulk ABN checks/);
 assert.match(page, /OpenStreetMap source/);
 assert.match(page, /Candidate processing is safely held; no listing changed/);
+assert.match(page, /catalogueSourceName/);
+assert.match(page, /Victorian liquor-licence/);
 assert.doesNotMatch(page, /metadata\.provider_error/);
 assert.match(abnHealthCorrection, /UPDATE public\.integration_health/);
 assert.match(abnHealthCorrection, /'abr_lookup'/);
