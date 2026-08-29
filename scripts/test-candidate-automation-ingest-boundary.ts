@@ -46,6 +46,9 @@ assert.match(route, /comparableFieldValue\(fieldName, currentText\) === comparab
 assert.match(route, /\["contact_email", "phone", "website", "description", "trading_hours"\]\.includes\(fieldName\)/);
 assert.match(route, /enrichMatchingListing/);
 assert.match(route, /approved_source_empty_field_enriched/);
+assert.match(route, /duplicate_vendor_id/);
+assert.match(route, /Could not recover matching-listing field evidence/);
+assert.match(route, /ignoreDuplicates: true/);
 assert.match(route, /owner_control_preserved: true/);
 assert.match(route, /vendor\.ownership_status === "unclaimed" && !currentText/);
 assert.match(route, /catalogue_field_conflicts/);

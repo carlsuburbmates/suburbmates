@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         const sourceRecordKey = `${source}:${candidate.sourceRecordKey}`;
         let recoveredRecordId: string | null = null;
         const { data: existingRecord, error: existingRecordError } = await admin.from("candidate_handoff_records")
-          .select("id, qualification_outcome, qualification_reasons, vendor_id").eq("run_id", run.id).eq("source_record_key", sourceRecordKey).maybeSingle();
+          .select("id, qualification_outcome, qualification_reasons, duplicate_vendor_id, vendor_id").eq("run_id", run.id).eq("source_record_key", sourceRecordKey).maybeSingle();
         if (existingRecordError) throw new Error("Could not read existing candidate qualification evidence.");
         const priorQualified = await admin.from("candidate_handoff_records")
           .select("vendor_id")
@@ -128,6 +128,15 @@ export async function POST(request: NextRequest) {
         if (priorQualified.error) throw new Error("Could not read the prior approved-source listing record.");
         if (existingRecord) {
           if (existingRecord.qualification_outcome === "exception") {
+            if (existingRecord.qualification_reasons.length === 1 && existingRecord.qualification_reasons[0] === "strong_duplicate" && existingRecord.duplicate_vendor_id) {
+              await enrichMatchingListing(admin, {
+                vendorId: existingRecord.duplicate_vendor_id,
+                candidate,
+                sourceRecordKey,
+                sourceContract,
+                correlationId: run.correlation_id,
+              });
+            }
             exceptionCount++;
             continue;
           }
@@ -541,20 +550,24 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
     const sameValue = comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
     const canApply = vendor.ownership_status === "unclaimed" && !currentText;
     const applicationState = canApply ? "applied" : currentText && !sameValue ? "conflict" : "observed";
-    const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").insert({
+    const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").upsert({
       vendor_id: vendor.id, field_name: fieldName, value_text: valueText,
       source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
       source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
       applied_at: canApply ? new Date().toISOString() : null,
-    }).select("id").single();
-    if (evidenceError || !evidence) throw new Error("Could not retain matching-listing field evidence.");
+    }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true }).select("id").maybeSingle();
+    if (evidenceError) throw new Error("Could not retain matching-listing field evidence.");
+    const evidenceId = evidence?.id ?? (await admin.from("listing_field_evidence").select("id")
+      .eq("vendor_id", vendor.id).eq("field_name", fieldName).eq("source_key", input.sourceContract.key)
+      .eq("source_record_key", input.sourceRecordKey).eq("value_text", valueText).eq("observed_at", observedAt).maybeSingle()).data?.id;
+    if (!evidenceId) throw new Error("Could not recover matching-listing field evidence.");
     if (canApply) {
       updates[fieldName] = valueText;
       appliedFields.push(fieldName);
     } else if (applicationState === "conflict") {
       const { error: conflictError } = await admin.from("catalogue_field_conflicts").upsert({
-        vendor_id: vendor.id, field_name: fieldName, incoming_evidence_id: evidence.id, current_value: currentText,
+        vendor_id: vendor.id, field_name: fieldName, incoming_evidence_id: evidenceId, current_value: currentText,
       }, { onConflict: "incoming_evidence_id", ignoreDuplicates: true });
       if (conflictError) throw new Error("Could not retain matching-listing field conflict.");
       conflictFields.push(fieldName);
