@@ -60,6 +60,31 @@ export function cuisineProfileDetail(value: unknown, categorySlug: string): stri
   return cuisines.length ? `Cuisine: ${cuisines.join(', ')}.` : '';
 }
 
+// These are direct renderings of bounded, structured OSM tags. They are not
+// inferences about a business and only enrich a blank unclaimed description.
+export function osmProfileDetail(tags: Record<string, unknown>, categorySlug: string): string {
+  if (!CUISINE_PROFILE_CATEGORIES.has(categorySlug)) return '';
+  const details = [cuisineProfileDetail(tags.cuisine, categorySlug)];
+  if (isAffirmativeOsmValue(tags.takeaway)) details.push('Takeaway available.');
+  if (isAffirmativeOsmValue(tags.delivery)) details.push('Delivery available.');
+  if (isAffirmativeOsmValue(tags.outdoor_seating)) details.push('Outdoor seating.');
+  if (isAffirmativeOsmValue(tags['diet:vegan'])) {
+    details.push(normalizeOsmValue(tags['diet:vegan']) === 'only' ? 'Vegan menu.' : 'Vegan options.');
+  }
+  if (isAffirmativeOsmValue(tags['diet:vegetarian'])) {
+    details.push(normalizeOsmValue(tags['diet:vegetarian']) === 'only' ? 'Vegetarian menu.' : 'Vegetarian options.');
+  }
+  return details.filter(Boolean).join(' ');
+}
+
+function normalizeOsmValue(value: unknown): string {
+  return typeof value === 'string' ? value.trim().toLocaleLowerCase() : '';
+}
+
+function isAffirmativeOsmValue(value: unknown): boolean {
+  return ['yes', 'only'].includes(normalizeOsmValue(value));
+}
+
 export function firstListedPhone(value: unknown): string {
   if (typeof value !== 'string') return '';
   return value.split(/[;,]/)[0]?.trim() ?? '';
@@ -191,7 +216,7 @@ export function filterAndProcessElements(elements: any[], catchments: string[]):
       address: streetAddress,
       category_slug: categorySlug,
       suburb_slug: suburbSlug,
-      description: cuisineProfileDetail(el.tags.cuisine, categorySlug),
+      description: osmProfileDetail(el.tags, categorySlug),
       contact_email: email,
       phone,
       website,
