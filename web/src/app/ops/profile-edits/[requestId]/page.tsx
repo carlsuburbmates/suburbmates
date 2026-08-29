@@ -11,6 +11,7 @@ const fieldLabels: Record<string, string> = {
   phone: "Phone",
   website: "Website",
   description: "Description",
+  trading_hours: "Opening hours",
 };
 
 type ProfileChange = {
@@ -52,7 +53,7 @@ export default async function OpsProfileEditDetailPage({
   const changedFields = Object.keys(request.proposed_changes).filter(
     (key) => request.proposed_changes[key] !== request.base_values[key],
   );
-  const isStale = Object.keys(fieldLabels).some(
+  const isStale = Object.keys(request.base_values).some(
     (field) => request.current_values[field] !== request.base_values[field],
   );
   const successfulAction = ["approve", "reject"].includes(message.success ?? "");

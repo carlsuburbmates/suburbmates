@@ -12,6 +12,7 @@ type Vendor = {
   phone: string | null;
   website: string | null;
   description: string | null;
+  trading_hours: string | null;
 };
 
 type ProfileChange = {
@@ -29,6 +30,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
   const [phone, setPhone] = useState(vendor.phone || "");
   const [website, setWebsite] = useState(vendor.website || "");
   const [description, setDescription] = useState(vendor.description || "");
+  const [tradingHours, setTradingHours] = useState(vendor.trading_hours || "");
   
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -44,7 +46,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
     setError(null);
     setSuccess(null);
 
-    const { error } = await supabase.rpc("submit_vendor_profile_change", {
+    const { error } = await supabase.rpc("submit_vendor_profile_change_with_hours", {
       p_vendor_id: vendor.id,
       p_business_name: businessName,
       p_street_address: streetAddress || null,
@@ -52,6 +54,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
       p_phone: phone || null,
       p_website: website || null,
       p_description: description || null,
+      p_trading_hours: tradingHours || null,
       p_submitter_note: null,
     });
 
@@ -154,6 +157,17 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
             onChange={(e) => setDescription(e.target.value)}
             className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" 
           />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-slate-700 mb-1">Opening hours</label>
+          <textarea
+            rows={2}
+            value={tradingHours}
+            onChange={(e) => setTradingHours(e.target.value)}
+            placeholder="For example: Mon–Fri 9:00 am–5:00 pm; Sat 9:00 am–1:00 pm"
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
+          />
+          <p className="mt-1 text-xs leading-5 text-slate-500">Hours are reviewed before publication. Include any appointment-only or holiday notes that visitors should know.</p>
         </div>
       </div>
       

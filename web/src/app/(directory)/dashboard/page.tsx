@@ -18,6 +18,7 @@ type OwnerVendor = {
   phone: string | null
   website: string | null
   description: string | null
+  trading_hours: string | null
 }
 
 type RequestStatus = {
@@ -63,7 +64,7 @@ export default async function DashboardPage() {
     redirect('/login?next=/dashboard')
   }
 
-  const { data: ownerVendorRows } = await supabase.rpc('list_current_owner_vendors')
+  const { data: ownerVendorRows } = await supabase.rpc('list_current_owner_vendors_with_hours')
   const ownedVendors = ownerVendorRows as OwnerVendor[] | null
 
   const { data: profileChanges } = await supabase.rpc('list_current_owner_profile_changes')
