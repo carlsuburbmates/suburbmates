@@ -1,4 +1,4 @@
-import { filterAndProcessElements, slugify, escapeCsv, getTodayAest, requestFromOverpassEndpoints, requestOverpass } from './acquire-openstreetmap';
+import { cuisineProfileDetail, filterAndProcessElements, firstListedPhone, slugify, escapeCsv, getTodayAest, requestFromOverpassEndpoints, requestOverpass } from './acquire-openstreetmap';
 import assert from 'node:assert';
 
 async function runTests() {
@@ -21,6 +21,10 @@ async function runTests() {
 
   const inclCommercial = filterAndProcessElements([{ type: 'node', id: '1', tags: { name: 'Cool Cafe', amenity: 'cafe' } }], catchments);
   assert.strictEqual(inclCommercial.length, 1, 'Should include commercial amenity like cafe');
+  const cuisine = filterAndProcessElements([{ type: 'node', id: '3', tags: { name: 'Pasta Place', amenity: 'restaurant', cuisine: 'italian;pizza' } }], catchments);
+  assert.strictEqual(cuisine[0].description, 'Cuisine: Italian, Pizza.', 'A structured OSM cuisine tag should become a concise sourced profile detail.');
+  assert.strictEqual(cuisineProfileDetail('italian', 'plumber'), '', 'Cuisine must not decorate non-food categories.');
+  assert.strictEqual(firstListedPhone('+61 425 306 991;+61 424 574 844'), '+61 425 306 991', 'Multiple OSM phone values must not make the full candidate run fail.');
 
   const exclEduOffice = filterAndProcessElements([{ type: 'node', id: '1', tags: { name: 'Virtual School', office: 'educational_institution' } }], catchments);
   assert.strictEqual(exclEduOffice.length, 0, 'Should exclude educational_institution even if it is an office');

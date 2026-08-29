@@ -12,6 +12,8 @@ The acquisition tool queries the OpenStreetMap Overpass API for commercial busin
 - **Catchment Mapping**: The `addr:suburb` tag is mapped to valid slugs in `data/darebin-catchment.json`. Unmapped or missing suburbs within the boundary fallback to `darebin`.
 - **Category Derivation**: Categories are mapped directly from OSM tags (e.g., `shop=bakery` -> `bakery`), and default to `other` if no exact match is found.
 - **Data Hygiene**: Website URLs are automatically sanitized to enforce the `https://` protocol as required by `scripts/audit-vendor-candidates.ts`. Invalid URLs are omitted.
+- **Useful profile detail**: For cafes, restaurants, fast food, bars, pubs and ice-cream businesses, a valid structured OSM `cuisine` tag becomes a short factual detail such as `Cuisine: Italian.` It is not generated marketing copy, retains source evidence, and can fill only an empty unclaimed profile description. `opening_hours` remains evidence-only until a separate public-hours policy is approved.
+- **Multiple contact values**: When OSM supplies several phone numbers in one tag, the candidate retains the first listed number. The normal candidate audit still rejects an invalid number rather than allowing one malformed tag to invalidate a whole source run.
 - **Source of Truth**: The target API is `https://maps.mail.ru/osm/tools/overpass/api/interpreter`, with standard Overpass fallbacks.
 - **Source Contract**: The handoff accepts only `openstreetmap-candidate-v1` records from the expected OpenStreetMap host. A missing or changed contract is held safely; no candidate or listing changes.
 

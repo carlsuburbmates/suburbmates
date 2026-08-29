@@ -34,7 +34,7 @@ const batches = Array.from({ length: Math.ceil(rows.length / BATCH_SIZE) }, (_, 
   candidates: rows.slice(batchIndex * BATCH_SIZE, (batchIndex + 1) * BATCH_SIZE).map((row) => ({
     source: sourceContract.key, sourceRecordKey: row.source_record_key || row.source_url,
     businessName: row.business_name, categorySlug: row.category_slug, suburbSlug: row.suburb_slug,
-    streetAddress: row.address || undefined, contactEmail: row.contact_email || undefined, phone: row.phone || undefined,
+    streetAddress: row.address || undefined, description: row.description || undefined, contactEmail: row.contact_email || undefined, phone: row.phone || undefined,
     website: row.website || undefined, tradingHours: row.trading_hours || undefined, sourceUrl: row.source_url, sourceCheckedOn: row.source_checked_on || undefined, notes: row.notes || undefined,
   })),
 }));

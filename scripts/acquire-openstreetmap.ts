@@ -15,6 +15,7 @@ export const NON_COMMERCIAL_TOKENS = new Set([
 ]);
 
 const OVERPASS_REQUEST_TIMEOUT_MS = 20_000;
+const CUISINE_PROFILE_CATEGORIES = new Set(['bar', 'cafe', 'fast-food', 'ice-cream', 'pub', 'restaurant']);
 
 export function slugify(text: string): string {
   if (!text) return '';
@@ -45,6 +46,23 @@ export function getTodayAest(now: Date = new Date()): string {
       .map((part) => [part.type, part.value]),
   );
   return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+// This is not generated copy. It is a compact rendering of OSM's structured
+// cuisine tag, only for food-and-drink listings where it is meaningful.
+export function cuisineProfileDetail(value: unknown, categorySlug: string): string {
+  if (!CUISINE_PROFILE_CATEGORIES.has(categorySlug) || typeof value !== 'string') return '';
+  const cuisines = [...new Set(value.split(/[;,]/)
+    .map((item) => item.trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' '))
+    .filter((item) => item.length >= 2 && item.length <= 48 && /^[\p{L}\p{N} /&+]+$/u.test(item))
+    .map((item) => item.replace(/^./u, (letter) => letter.toLocaleUpperCase())))]
+    .slice(0, 3);
+  return cuisines.length ? `Cuisine: ${cuisines.join(', ')}.` : '';
+}
+
+export function firstListedPhone(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value.split(/[;,]/)[0]?.trim() ?? '';
 }
 
 export async function requestOverpass(endpoint: string, query: string, fetchImpl: typeof fetch = fetch): Promise<{ elements: any[] }> {
@@ -141,7 +159,7 @@ export function filterAndProcessElements(elements: any[], catchments: string[]):
     seen.add(dedupKey);
     
     const email = el.tags['contact:email'] || el.tags.email || '';
-    const phone = el.tags['contact:phone'] || el.tags.phone || '';
+    const phone = firstListedPhone(el.tags['contact:phone'] || el.tags.phone);
     let website = el.tags['contact:website'] || el.tags.website || '';
     if (website) {
       if (!website.startsWith('http')) website = 'https://' + website;
@@ -173,6 +191,7 @@ export function filterAndProcessElements(elements: any[], catchments: string[]):
       address: streetAddress,
       category_slug: categorySlug,
       suburb_slug: suburbSlug,
+      description: cuisineProfileDetail(el.tags.cuisine, categorySlug),
       contact_email: email,
       phone,
       website,
@@ -218,7 +237,7 @@ out tags center;`;
 
   const outPath = path.resolve(process.cwd(), 'data/vendor-candidates-osm.csv');
   const outLines = [
-    'business_name,address,category_slug,suburb_slug,contact_email,phone,website,source_url,source_checked_on,verification_status,notes'
+    'business_name,address,category_slug,suburb_slug,description,contact_email,phone,website,source_url,source_checked_on,verification_status,notes'
   ];
 
   for (const p of processed) {
@@ -227,6 +246,7 @@ out tags center;`;
       escapeCsv(p.address),
       escapeCsv(p.category_slug),
       escapeCsv(p.suburb_slug),
+      escapeCsv(p.description),
       escapeCsv(p.contact_email),
       escapeCsv(p.phone),
       escapeCsv(p.website),

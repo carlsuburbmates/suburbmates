@@ -28,7 +28,7 @@ If a paid provider is later selected as the primary coverage source, it must pro
 - Same name at different addresses remains separate listings.
 - Never merge solely because two businesses share a name in the same suburb.
 - Retain field-level provenance, observation time, freshness and conflicts for every source fact.
-- A later approved-source observation re-observes evidence and freshness. It may fill only an empty contact field on an unclaimed listing; it never silently overwrites a public or owner-confirmed field.
+- A later approved-source observation re-observes evidence and freshness. It may fill an empty direct-contact field or a bounded, source-derived profile description on an unclaimed listing; it never silently overwrites a public or owner-confirmed field.
 - A new approved-source record may become public only after the deterministic qualification policy passes and evidence is retained. Claim state never decides publication.
 - Never generate a phone, email, address, website, or business record from inference.
 

@@ -4,6 +4,7 @@ export type CandidateInput = {
   categorySlug: string;
   suburbSlug: string;
   streetAddress?: string | null;
+  description?: string | null;
   contactEmail?: string | null;
   phone?: string | null;
   website?: string | null;

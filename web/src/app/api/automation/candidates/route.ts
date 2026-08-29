@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
         const sourceKey = `automation:${sourceRecordKey}`;
         const { data: vendor, error: vendorError } = await admin.from("vendors").insert({
           business_name: candidate.businessName.trim(), category_slug: candidate.categorySlug.trim().toLowerCase(), suburb_slug: candidate.suburbSlug.trim().toLowerCase(),
-          street_address: nullable(candidate.streetAddress), contact_email: nullable(candidate.contactEmail?.toLowerCase()), phone: nullable(candidate.phone), website: nullable(candidate.website),
+          street_address: nullable(candidate.streetAddress), description: nullable(candidate.description), contact_email: nullable(candidate.contactEmail?.toLowerCase()), phone: nullable(candidate.phone), website: nullable(candidate.website),
           source_key: sourceKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10),
           source_notes: candidate.notes ?? sourceContract.defaultSourceNotes, verification_status: "unverified",
           listing_status: "published", listing_source: "approved_import", ownership_status: "unclaimed", is_published: true, is_claimed: false, tier: "free",
@@ -268,7 +268,7 @@ function readCandidate(value: unknown, sourceContract: CatalogueSourceContract):
   if (sourceRecordKey.length > 500) throw new Error("Candidate source record key is too long.");
   return {
     source: sourceContract.key, sourceRecordKey, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug: asText(item.suburbSlug),
-    streetAddress: optionalText(item.streetAddress), contactEmail: optionalText(item.contactEmail), phone: optionalText(item.phone), website: optionalText(item.website),
+    streetAddress: optionalText(item.streetAddress), description: optionalDescription(item.description), contactEmail: optionalText(item.contactEmail), phone: optionalText(item.phone), website: optionalText(item.website),
     websiteSafety: item.websiteSafety === "safe" || item.websiteSafety === "unsafe" ? item.websiteSafety : "unknown",
     sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), tradingHours: optionalText(item.tradingHours), notes: optionalText(item.notes),
   };
@@ -416,6 +416,7 @@ async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminCl
     ["category_slug", input.candidate.categorySlug],
     ["suburb_slug", input.candidate.suburbSlug],
     ["street_address", input.candidate.streetAddress],
+    ["description", input.candidate.description],
     ["contact_email", input.candidate.contactEmail],
     ["phone", input.candidate.phone],
     ["website", input.candidate.website],
@@ -443,7 +444,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
   sourceContract: CatalogueSourceContract; correlationId: string;
 }) {
   const { data: vendor, error: vendorError } = await admin.from("vendors")
-    .select("id, ownership_status, business_name, category_slug, suburb_slug, street_address, contact_email, phone, website")
+    .select("id, ownership_status, business_name, category_slug, suburb_slug, street_address, description, contact_email, phone, website")
     .eq("id", input.vendorId).maybeSingle();
   if (vendorError || !vendor) throw new Error("Could not load the prior qualified listing for source refresh.");
 
@@ -453,6 +454,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     ["category_slug", input.candidate.categorySlug, vendor.category_slug],
     ["suburb_slug", input.candidate.suburbSlug, vendor.suburb_slug],
     ["street_address", input.candidate.streetAddress, vendor.street_address],
+    ["description", input.candidate.description, vendor.description],
     ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
     ["phone", input.candidate.phone, vendor.phone],
     ["website", input.candidate.website, vendor.website],
@@ -468,7 +470,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     if (!valueText) continue;
     const currentText = currentValue?.trim() ?? "";
     const isSameValue = fieldName === "trading_hours" || comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
-    const canApply = ["contact_email", "phone", "website"].includes(fieldName)
+    const canApply = ["contact_email", "phone", "website", "description"].includes(fieldName)
       && vendor.ownership_status === "unclaimed" && !currentText;
     const applicationState = canApply ? "applied" : isSameValue ? "observed" : "conflict";
     const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").upsert({
@@ -516,12 +518,13 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
   vendorId: string; candidate: IncomingCandidate; sourceRecordKey: string; sourceContract: CatalogueSourceContract; correlationId: string;
 }): Promise<ExistingListingEnrichment> {
   const { data: vendor, error: vendorError } = await admin.from("vendors")
-    .select("id, ownership_status, contact_email, phone, website")
+    .select("id, ownership_status, description, contact_email, phone, website")
     .eq("id", input.vendorId).maybeSingle();
   if (vendorError || !vendor) throw new Error("Could not load the matching listing for safe enrichment.");
 
   const observedAt = `${input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
-  const fields: Array<["contact_email" | "phone" | "website", string | null | undefined, string | null]> = [
+  const fields: Array<["description" | "contact_email" | "phone" | "website", string | null | undefined, string | null]> = [
+    ["description", input.candidate.description, vendor.description],
     ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
     ["phone", input.candidate.phone, vendor.phone],
     ["website", input.candidate.website, vendor.website],
@@ -585,9 +588,10 @@ function freshnessDueAt(observedAt: string, source: CatalogueSourceContract) {
   return due.toISOString();
 }
 
-function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, notes: candidate.notes ?? null }; }
+function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, description: candidate.description ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, notes: candidate.notes ?? null }; }
 function asText(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function optionalText(value: unknown) { const text = asText(value); return text || undefined; }
+function optionalDescription(value: unknown) { const description = optionalText(value); return description && description.length <= 600 ? description : undefined; }
 function nullable(value: string | null | undefined) { return value?.trim() || null; }
 function optionalDate(value: unknown) { const date = asText(value); return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined; }
 function optionalHttpsUrl(value: unknown) { const text = asText(value); if (!text) return null; try { const url = new URL(text); return url.protocol === "https:" && !url.username && !url.password ? url.toString() : null; } catch { return null; } }

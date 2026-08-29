@@ -71,7 +71,7 @@ export function validateRow(record: any, todayAest: string): string[] {
   
   // HTML entities across all fields
   const allValues = [
-    record.business_name, record.address, record.category_slug, record.suburb_slug, 
+    record.business_name, record.address, record.category_slug, record.suburb_slug, record.description,
     record.contact_email, record.phone, record.website, 
     record.source_url, record.source_checked_on, record.verification_status, record.notes
   ];
