@@ -42,6 +42,15 @@ export async function POST(request: NextRequest) {
       await holdCatalogueSourceContract(admin, sourceContract);
       return NextResponse.json({ error: `${sourceContract.displayName} source contract changed; candidate processing is held` }, { status: 400 });
     }
+    // The code contract validates the batch shape, but the private registry is
+    // the durable approval record. A deployment must fail closed when either
+    // record drifts, rather than accepting a source that was disabled or whose
+    // licence/host policy changed outside this release.
+    const sourceRegistry = await loadApprovedSourceRegistry(admin, sourceContract);
+    if (!sourceRegistryMatchesContract(sourceRegistry, sourceContract)) {
+      await holdCatalogueSourceContract(admin, sourceContract);
+      return NextResponse.json({ error: `${sourceContract.displayName} registry approval is missing or changed; candidate processing is held` }, { status: 400 });
+    }
 
     const candidates = Array.isArray(body.candidates) ? body.candidates.map((candidate: unknown) => readCandidate(candidate, sourceContract)) : null;
     if (!/^[0-9a-f]{64}$/.test(artifactSha256) || !candidates || candidates.length < 1 || candidates.length > MAX_CANDIDATES) {
@@ -267,6 +276,39 @@ function readCandidate(value: unknown, sourceContract: CatalogueSourceContract):
 
 function integrationName(source: CatalogueSourceContract) {
   return source.key === "openstreetmap" ? "openstreetmap_source" : `${source.key}_source`;
+}
+
+type ApprovedSourceRegistry = {
+  source_key: string;
+  contract_version: string;
+  allowed_hosts: string[];
+  permitted_use: string;
+  automated: boolean;
+  enabled: boolean;
+};
+
+async function loadApprovedSourceRegistry(admin: ReturnType<typeof createAdminClient>, source: CatalogueSourceContract) {
+  const { data, error } = await admin.from("catalogue_sources")
+    .select("source_key, contract_version, allowed_hosts, permitted_use, automated, enabled")
+    .eq("source_key", source.key)
+    .maybeSingle();
+  if (error) throw new Error("Could not read the approved catalogue source registry.");
+  return data as ApprovedSourceRegistry | null;
+}
+
+function sourceRegistryMatchesContract(registry: ApprovedSourceRegistry | null, source: CatalogueSourceContract) {
+  if (!registry) return false;
+  return registry.source_key === source.key
+    && registry.contract_version === source.version
+    && registry.permitted_use === "store_and_display"
+    && registry.automated === true
+    && registry.enabled === true
+    && sameHosts(registry.allowed_hosts, source.allowedHosts);
+}
+
+function sameHosts(left: readonly string[], right: readonly string[]) {
+  return left.length === right.length
+    && [...left].sort().every((host, index) => host === [...right].sort()[index]);
 }
 
 async function holdCatalogueSourceContract(admin: ReturnType<typeof createAdminClient>, source: CatalogueSourceContract) {
