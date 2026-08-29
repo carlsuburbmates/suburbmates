@@ -7,10 +7,10 @@ import { createAdminClient } from "@/utils/supabase/admin";
 const MAX_CANDIDATES = 100;
 // The Worker request cannot legitimately outlive this window. Treat a longer
 // processing record as interrupted, close its job and resume idempotently.
-// A singleton may legitimately spend several minutes recovering from a
-// transient Worker resource response. Do not start a competing recovery while
-// that authenticated request can still be completing its evidence writes.
-const STALE_PROCESSING_MS = 5 * 60 * 1000;
+// A request that has not completed in one minute has exceeded the Worker
+// recovery window. This avoids the former 30-second overlap without leaving a
+// cancelled or resource-exhausted request to block the next idempotent retry.
+const STALE_PROCESSING_MS = 60 * 1000;
 
 type IncomingCandidate = CandidateInput & {
   sourceRecordKey: string;
