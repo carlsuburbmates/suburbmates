@@ -18,6 +18,10 @@ const BATCH_SIZE = 1;
 // its request resource budget; prior singleton results are idempotent.
 const MAX_CONCURRENT_BATCHES = 1;
 const REQUEST_SETTLE_DELAY_MS = 250;
+// A deployed Worker must never leave a GitHub shard waiting on a socket without
+// a deadline. The route itself treats one minute as an interrupted run, so a
+// shorter client deadline gives the idempotent retry loop time to recover it.
+const REQUEST_TIMEOUT_MS = 45_000;
 // The cumulative backoff exceeds the one-minute server recovery window.
 const MAX_ATTEMPTS = 9;
 const RETRY_DELAY_MS = 2_000;
@@ -58,7 +62,23 @@ await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, c
     candidates,
   })).digest("hex");
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const response = await fetch(endpoint, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ source: sourceContract.key, sourceContractVersion: sourceContract.version, artifactSha256, artifactUrl, candidates }) });
+    let response: Response;
+    try {
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ source: sourceContract.key, sourceContractVersion: sourceContract.version, artifactSha256, artifactUrl, candidates }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      if (attempt === MAX_ATTEMPTS) {
+        throw new Error(`Candidate handoff batch ${batchIndex + 1} did not receive a response after ${MAX_ATTEMPTS} attempts.`);
+      }
+      const detail = error instanceof Error ? error.name : "network failure";
+      console.warn(`Candidate handoff batch ${batchIndex + 1}: ${detail}; retrying (${attempt}/${MAX_ATTEMPTS}).`);
+      await delay(RETRY_DELAY_MS * attempt);
+      continue;
+    }
     const result = await readResponse(response);
     if (response.ok && response.status !== 202) {
       console.log(`Candidate handoff batch ${batchIndex + 1}: ${result.idempotent ? "already received" : `${result.qualifiedCount ?? 0} qualified, ${result.exceptionCount ?? 0} exceptions`}.`);
