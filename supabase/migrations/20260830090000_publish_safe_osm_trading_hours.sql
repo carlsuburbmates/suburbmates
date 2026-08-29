@@ -18,7 +18,6 @@ SELECT
   vendor.phone,
   vendor.website,
   vendor.description,
-  vendor.trading_hours,
   vendor.tier,
   vendor.is_claimed,
   vendor.street_address,
@@ -39,7 +38,8 @@ SELECT
         ORDER BY latest.checked_at DESC NULLS LAST, latest.created_at DESC
         LIMIT 1
       )
-  ) AS abn_checked
+  ) AS abn_checked,
+  vendor.trading_hours
 FROM public.vendors AS vendor
 WHERE vendor.is_published = true;
 
