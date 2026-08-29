@@ -85,6 +85,17 @@ function isAffirmativeOsmValue(value: unknown): boolean {
   return ['yes', 'only'].includes(normalizeOsmValue(value));
 }
 
+// Keep the source expression intact rather than guessing a human-readable
+// schedule. A schedule needs an explicit time range (or the standard 24/7
+// value), which excludes prose such as "by appointment" and seasonal-only
+// values that would be misleading as a standing public opening time.
+export function osmTradingHours(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const hours = value.replace(/\s+/g, ' ').trim();
+  if (hours.length < 3 || hours.length > 300) return '';
+  return hours === '24/7' || /\b(?:[01]?\d|2[0-3]):[0-5]\d\b/.test(hours) ? hours : '';
+}
+
 export function firstListedPhone(value: unknown): string {
   if (typeof value !== 'string') return '';
   return value.split(/[;,]/)[0]?.trim() ?? '';
@@ -220,6 +231,7 @@ export function filterAndProcessElements(elements: any[], catchments: string[]):
       contact_email: email,
       phone,
       website,
+      trading_hours: osmTradingHours(el.tags.opening_hours),
       source_url: sourceUrl,
       source_checked_on: getTodayAest(),
       verification_status: 'pending_review',
@@ -262,7 +274,7 @@ out tags center;`;
 
   const outPath = path.resolve(process.cwd(), 'data/vendor-candidates-osm.csv');
   const outLines = [
-    'business_name,address,category_slug,suburb_slug,description,contact_email,phone,website,source_url,source_checked_on,verification_status,notes'
+    'business_name,address,category_slug,suburb_slug,description,contact_email,phone,website,trading_hours,source_url,source_checked_on,verification_status,notes'
   ];
 
   for (const p of processed) {
@@ -275,6 +287,7 @@ out tags center;`;
       escapeCsv(p.contact_email),
       escapeCsv(p.phone),
       escapeCsv(p.website),
+      escapeCsv(p.trading_hours),
       escapeCsv(p.source_url),
       escapeCsv(p.source_checked_on),
       escapeCsv(p.verification_status),

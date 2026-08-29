@@ -6,6 +6,7 @@ import Image from "next/image";
 import {
   ArrowUpRight,
   Camera,
+  Clock3,
   Globe,
   Mail,
   MapPin,
@@ -104,6 +105,7 @@ export default async function VendorWebsite({ params }: PageProps) {
   const suburbName = vendor.suburbs?.name ?? vendor.suburb_slug;
   const categoryName = vendor.categories?.name ?? vendor.category_slug;
   const profileDescription = vendor.description?.trim() || null;
+  const tradingHours = vendor.trading_hours?.trim() || null;
   const profileSummary = describeKnownProfile({
     businessName: vendor.business_name,
     categoryName,
@@ -222,6 +224,18 @@ export default async function VendorWebsite({ params }: PageProps) {
                   <dt className="font-semibold text-slate-500">Suburb</dt>
                   <dd className="mt-1 font-bold">{suburbName}</dd>
                 </div>
+                {tradingHours && (
+                  <div>
+                    <dt className="flex items-center gap-1.5 font-semibold text-slate-500">
+                      <Clock3 size={14} aria-hidden="true" />
+                      Source-reported hours
+                    </dt>
+                    <dd className="mt-1 font-bold leading-6">{tradingHours}</dd>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Hours can change. Check with the business before visiting.
+                    </p>
+                  </div>
+                )}
                 {vendor.abn_checked && (
                   <div>
                     <dt className="font-semibold text-slate-500">

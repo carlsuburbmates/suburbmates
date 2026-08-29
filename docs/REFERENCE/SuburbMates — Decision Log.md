@@ -172,6 +172,14 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Automation rule:** Automation is expected to run continuously: discover, normalise, deduplicate, enrich, refresh, detect conflicts, publish deterministic safe changes and report genuine failures. AI may assist query interpretation, controlled classification and evidence-limited drafts, but may not invent a public fact or make a discretionary publication, ownership, moderation or commercial decision.
 - **Required alignment:** Replace the single-source candidate contract, contact-required qualification assumption, one-off existing-catalogue requalification posture and thin-profile public presentation with an auditable multi-source enrichment and refresh lifecycle. Update the acquisition workflow, schema/RLS contracts, tests, `/ops` system evidence, public UI, handover and Linear work before declaring the programme complete.
 
+### D-019 — Safe public source-reported trading hours
+
+- **Date:** 30 August 2026
+- **Owner decision:** As part of the approved modern-directory direction, retire the blanket rule that structured source hours can exist only as private evidence. Exact source-supplied hours may improve an otherwise thin public profile when they pass a narrow, reproducible acceptance rule.
+- **Public rule:** A schedule is eligible only when it is `24/7` or contains an explicit time range. The stored expression is shown verbatim as **source-reported hours**, with a reminder to check with the business before visiting. Prose-only, seasonal-only, invalid or overlong values remain private evidence and never appear publicly.
+- **Safety rule:** Automation may fill only an empty `trading_hours` field on an unclaimed listing. It retains field-level source/provenance/freshness evidence, records a conflicting later observation privately, and never overwrites an owner-controlled or existing schedule. This does not create a live “open now” claim, infer holiday exceptions, alter organic ranking, or relax any claim/publication boundary.
+- **Evidence to close:** Migration/projection review, acquisition and candidate-handoff regression coverage, Cloudflare release evidence, and an in-app production check after a post-release approved-source observation has supplied an eligible schedule.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |

@@ -1,4 +1,4 @@
-import { cuisineProfileDetail, filterAndProcessElements, firstListedPhone, osmProfileDetail, slugify, escapeCsv, getTodayAest, requestFromOverpassEndpoints, requestOverpass } from './acquire-openstreetmap';
+import { cuisineProfileDetail, filterAndProcessElements, firstListedPhone, osmProfileDetail, osmTradingHours, slugify, escapeCsv, getTodayAest, requestFromOverpassEndpoints, requestOverpass } from './acquire-openstreetmap';
 import assert from 'node:assert';
 
 async function runTests() {
@@ -27,6 +27,8 @@ async function runTests() {
   const hospitalityDetails = osmProfileDetail({ cuisine: 'italian', takeaway: 'yes', outdoor_seating: 'yes', 'diet:vegan': 'only' }, 'restaurant');
   assert.strictEqual(hospitalityDetails, 'Cuisine: Italian. Takeaway available. Outdoor seating. Vegan menu.', 'Structured hospitality tags should become bounded source-derived profile facts.');
   assert.strictEqual(osmProfileDetail({ takeaway: 'no', delivery: 'no', outdoor_seating: 'yes' }, 'plumber'), '', 'Hospitality facts must not decorate unrelated categories or treat no as availability.');
+  assert.strictEqual(osmTradingHours('Mo-Fr 09:00-17:00; Sa 09:00-13:00'), 'Mo-Fr 09:00-17:00; Sa 09:00-13:00', 'An explicit OSM schedule should be retained without rewriting it.');
+  assert.strictEqual(osmTradingHours('by appointment'), '', 'A prose-only OSM hours value must not become a public schedule.');
   assert.strictEqual(firstListedPhone('+61 425 306 991;+61 424 574 844'), '+61 425 306 991', 'Multiple OSM phone values must not make the full candidate run fail.');
 
   const exclEduOffice = filterAndProcessElements([{ type: 'node', id: '1', tags: { name: 'Virtual School', office: 'educational_institution' } }], catchments);

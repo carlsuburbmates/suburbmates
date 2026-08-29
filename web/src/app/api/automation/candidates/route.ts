@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
         const sourceKey = `automation:${sourceRecordKey}`;
         const { data: vendor, error: vendorError } = await admin.from("vendors").insert({
           business_name: candidate.businessName.trim(), category_slug: candidate.categorySlug.trim().toLowerCase(), suburb_slug: candidate.suburbSlug.trim().toLowerCase(),
-          street_address: nullable(candidate.streetAddress), description: nullable(candidate.description), contact_email: nullable(candidate.contactEmail?.toLowerCase()), phone: nullable(candidate.phone), website: nullable(candidate.website),
+          street_address: nullable(candidate.streetAddress), description: nullable(candidate.description), contact_email: nullable(candidate.contactEmail?.toLowerCase()), phone: nullable(candidate.phone), website: nullable(candidate.website), trading_hours: nullable(candidate.tradingHours),
           source_key: sourceKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10),
           source_notes: candidate.notes ?? sourceContract.defaultSourceNotes, verification_status: "unverified",
           listing_status: "published", listing_source: "approved_import", ownership_status: "unclaimed", is_published: true, is_claimed: false, tier: "free",
@@ -270,7 +270,7 @@ function readCandidate(value: unknown, sourceContract: CatalogueSourceContract):
     source: sourceContract.key, sourceRecordKey, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug: asText(item.suburbSlug),
     streetAddress: optionalText(item.streetAddress), description: optionalDescription(item.description), contactEmail: optionalText(item.contactEmail), phone: optionalText(item.phone), website: optionalText(item.website),
     websiteSafety: item.websiteSafety === "safe" || item.websiteSafety === "unsafe" ? item.websiteSafety : "unknown",
-    sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), tradingHours: optionalText(item.tradingHours), notes: optionalText(item.notes),
+    sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), tradingHours: optionalTradingHours(item.tradingHours), notes: optionalText(item.notes),
   };
 }
 
@@ -428,8 +428,7 @@ async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminCl
       vendor_id: input.vendorId, field_name: fieldName, value_text: valueText,
       source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
       source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
-      evidence_state: "active", application_state: fieldName === "trading_hours" ? "observed" : "applied",
-      applied_at: fieldName === "trading_hours" ? null : new Date().toISOString(),
+      evidence_state: "active", application_state: "applied", applied_at: new Date().toISOString(),
     }] : [];
   });
   if (!records.length) return;
@@ -444,7 +443,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
   sourceContract: CatalogueSourceContract; correlationId: string;
 }) {
   const { data: vendor, error: vendorError } = await admin.from("vendors")
-    .select("id, ownership_status, business_name, category_slug, suburb_slug, street_address, description, contact_email, phone, website")
+    .select("id, ownership_status, business_name, category_slug, suburb_slug, street_address, description, contact_email, phone, website, trading_hours")
     .eq("id", input.vendorId).maybeSingle();
   if (vendorError || !vendor) throw new Error("Could not load the prior qualified listing for source refresh.");
 
@@ -458,7 +457,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
     ["phone", input.candidate.phone, vendor.phone],
     ["website", input.candidate.website, vendor.website],
-    ["trading_hours", input.candidate.tradingHours, null],
+    ["trading_hours", input.candidate.tradingHours, vendor.trading_hours],
   ];
   const observedFields: string[] = [];
   const conflictFields: string[] = [];
@@ -469,8 +468,8 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     const valueText = incomingValue?.trim();
     if (!valueText) continue;
     const currentText = currentValue?.trim() ?? "";
-    const isSameValue = fieldName === "trading_hours" || comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
-    const canApply = ["contact_email", "phone", "website", "description"].includes(fieldName)
+    const isSameValue = comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
+    const canApply = ["contact_email", "phone", "website", "description", "trading_hours"].includes(fieldName)
       && vendor.ownership_status === "unclaimed" && !currentText;
     const applicationState = canApply ? "applied" : isSameValue ? "observed" : "conflict";
     const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").upsert({
@@ -478,6 +477,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
       source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
       source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
+      applied_at: canApply ? new Date().toISOString() : null,
     }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true }).select("id").maybeSingle();
     if (evidenceError) throw new Error("Could not retain refreshed approved-source evidence.");
     if (!evidence) {
@@ -518,16 +518,17 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
   vendorId: string; candidate: IncomingCandidate; sourceRecordKey: string; sourceContract: CatalogueSourceContract; correlationId: string;
 }): Promise<ExistingListingEnrichment> {
   const { data: vendor, error: vendorError } = await admin.from("vendors")
-    .select("id, ownership_status, description, contact_email, phone, website")
+    .select("id, ownership_status, description, contact_email, phone, website, trading_hours")
     .eq("id", input.vendorId).maybeSingle();
   if (vendorError || !vendor) throw new Error("Could not load the matching listing for safe enrichment.");
 
   const observedAt = `${input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
-  const fields: Array<["description" | "contact_email" | "phone" | "website", string | null | undefined, string | null]> = [
+  const fields: Array<["description" | "contact_email" | "phone" | "website" | "trading_hours", string | null | undefined, string | null]> = [
     ["description", input.candidate.description, vendor.description],
     ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
     ["phone", input.candidate.phone, vendor.phone],
     ["website", input.candidate.website, vendor.website],
+    ["trading_hours", input.candidate.tradingHours, vendor.trading_hours],
   ];
   const appliedFields: string[] = [];
   const conflictFields: string[] = [];
@@ -592,6 +593,10 @@ function toCandidateData(candidate: IncomingCandidate) { return { business_name:
 function asText(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function optionalText(value: unknown) { const text = asText(value); return text || undefined; }
 function optionalDescription(value: unknown) { const description = optionalText(value); return description && description.length <= 600 ? description : undefined; }
+function optionalTradingHours(value: unknown) {
+  const hours = optionalText(value)?.replace(/\s+/g, " ");
+  return hours && hours.length <= 300 && (hours === "24/7" || /\b(?:[01]?\d|2[0-3]):[0-5]\d\b/.test(hours)) ? hours : undefined;
+}
 function nullable(value: string | null | undefined) { return value?.trim() || null; }
 function optionalDate(value: unknown) { const date = asText(value); return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined; }
 function optionalHttpsUrl(value: unknown) { const text = asText(value); if (!text) return null; try { const url = new URL(text); return url.protocol === "https:" && !url.username && !url.password ? url.toString() : null; } catch { return null; } }
