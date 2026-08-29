@@ -38,6 +38,13 @@ type PublicSourceSummary = {
   supported_fields: string[];
 };
 
+type RelatedVendor = {
+  id: string;
+  slug: string;
+  business_name: string;
+  street_address: string | null;
+};
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
@@ -145,6 +152,15 @@ export default async function VendorWebsite({ params }: PageProps) {
   const directionsUrl = vendor.street_address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([vendor.street_address, suburbName].filter(Boolean).join(", "))}`
     : null;
+  const relatedResult = await supabase
+    .from("published_vendors")
+    .select("id, slug, business_name, street_address")
+    .eq("category_slug", vendor.category_slug)
+    .eq("suburb_slug", vendor.suburb_slug)
+    .neq("id", vendor.id)
+    .order("business_name", { ascending: true })
+    .limit(3);
+  const relatedVendors = (relatedResult.data ?? []) as RelatedVendor[];
 
   return (
     <PublicDirectoryShell>
@@ -281,6 +297,13 @@ export default async function VendorWebsite({ params }: PageProps) {
             </Link>
           </aside>
         </div>
+        <RelatedLocalBusinesses
+          vendors={relatedVendors}
+          categoryName={categoryName}
+          categorySlug={vendor.category_slug}
+          suburbName={suburbName}
+          suburbSlug={vendor.suburb_slug}
+        />
       </article>
     </PublicDirectoryShell>
   );
@@ -469,6 +492,55 @@ function PublicSourceSummaries({ summaries }: { summaries: PublicSourceSummary[]
           );
         })}
       </ul>
+    </section>
+  );
+}
+
+function RelatedLocalBusinesses({
+  vendors,
+  categoryName,
+  categorySlug,
+  suburbName,
+  suburbSlug,
+}: {
+  vendors: RelatedVendor[];
+  categoryName: string;
+  categorySlug: string;
+  suburbName: string;
+  suburbSlug: string;
+}) {
+  if (vendors.length === 0) return null;
+  const browseHref = `/businesses?${new URLSearchParams({ category: categorySlug, suburb: suburbSlug }).toString()}`;
+  return (
+    <section className="border-t border-slate-200 bg-white py-12 sm:py-16" aria-label={`More ${categoryName} businesses in ${suburbName}`}>
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Keep exploring locally</p>
+            <h2 className="mt-2 text-3xl font-black tracking-tight">More {categoryName} in {suburbName}</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+              Browse nearby public profiles before deciding who to contact directly.
+            </p>
+          </div>
+          <Link href={browseHref} className="btn btn-outline self-start sm:self-auto">
+            View all {categoryName}
+          </Link>
+        </div>
+        <div className="mt-7 grid gap-4 sm:grid-cols-3">
+          {vendors.map((related) => (
+            <article key={related.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 transition hover:-translate-y-0.5 hover:border-teal-700 hover:bg-white hover:shadow-lg">
+              <DirectoryCategoryVisual categorySlug={categorySlug} label={categoryName} className="h-20" />
+              <div className="p-5">
+                <h3 className="text-lg font-black leading-tight tracking-tight">{related.business_name}</h3>
+                {related.street_address && <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{related.street_address}</p>}
+                <Link href={`/vendor/${related.slug}`} className="mt-5 inline-flex min-h-11 items-center text-sm font-bold text-teal-900 underline decoration-teal-800/40 underline-offset-4 transition group-hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800">
+                  View profile
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

@@ -209,6 +209,26 @@ async function run() {
   );
   assert.match(
     profile,
+    /RelatedLocalBusinesses/,
+    "profiles must provide a local exploration path without fabricating business content",
+  );
+  assert.match(
+    profile,
+    /More \{categoryName\} in \{suburbName\}/,
+    "related-profile section must state its actual local relationship",
+  );
+  assert.match(
+    profile,
+    /eq\("category_slug", vendor\.category_slug\)/,
+    "related profiles must stay within the current category",
+  );
+  assert.match(
+    profile,
+    /eq\("suburb_slug", vendor\.suburb_slug\)/,
+    "related profiles must stay within the current suburb",
+  );
+  assert.match(
+    profile,
     /describeKnownProfile/,
     "thin-profile copy must remain derived from existing public listing fields",
   );
