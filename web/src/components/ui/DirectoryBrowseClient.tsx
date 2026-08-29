@@ -81,6 +81,7 @@ export function DirectoryBrowseClient({
   );
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const hasAppliedFilters = Boolean(initialQ || initialSuburb || initialCategory);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,9 +140,8 @@ export function DirectoryBrowseClient({
                 Browse Local Businesses
               </h1>
               <p className="text-base md:text-lg max-w-2xl text-slate-300 mt-3">
-                {totalCount.toLocaleString("en-AU")} published listings. Open a
-                profile for the available public details, then contact the
-                business directly.
+                {totalCount.toLocaleString("en-AU")} {hasAppliedFilters ? "matching listings" : "published listings"}. Open a
+                profile for the available public details, then contact the business directly.
               </p>
             </div>
 
