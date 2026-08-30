@@ -95,7 +95,7 @@ assert.match(handoff, /const REQUEST_TIMEOUT_MS = 45_000/);
 assert.match(handoff, /AbortSignal\.timeout\(REQUEST_TIMEOUT_MS\)/);
 assert.match(handoff, /did not receive a response after/);
 assert.match(handoff, /if \(!result\.idempotent\) await delay\(REQUEST_SETTLE_DELAY_MS\)/);
-assert.match(handoff, /const MAX_ATTEMPTS = 9/);
+assert.match(handoff, /const MAX_ATTEMPTS = 18/);
 assert.match(handoff, /\[429, 500, 502, 503, 504\]/);
 assert.match(handoff, /response\.status === 202/);
 assert.match(handoff, /sourceContractVersion: sourceContract\.version/);

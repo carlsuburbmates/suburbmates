@@ -22,8 +22,10 @@ const REQUEST_SETTLE_DELAY_MS = 250;
 // a deadline. The route itself treats one minute as an interrupted run, so a
 // shorter client deadline gives the idempotent retry loop time to recover it.
 const REQUEST_TIMEOUT_MS = 45_000;
-// The cumulative backoff exceeds the one-minute server recovery window.
-const MAX_ATTEMPTS = 9;
+// The cumulative backoff extends beyond the one-minute server recovery window.
+// Cloudflare can reject a request before the route executes; keep retrying long
+// enough for a later request to reach the idempotent stale-run recovery path.
+const MAX_ATTEMPTS = 18;
 const RETRY_DELAY_MS = 2_000;
 if (!endpoint || !token || !csvPath) throw new Error("CANDIDATE_HANDOFF_URL, AUTOMATION_INGEST_TOKEN and a CSV path are required.");
 if (!sourceContract) throw new Error("CATALOGUE_SOURCE must name an approved automated source.");
