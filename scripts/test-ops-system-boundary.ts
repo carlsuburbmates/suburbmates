@@ -3,6 +3,7 @@ import fs from "node:fs";
 
 const migration = fs.readFileSync("supabase/migrations/20260720080458_ops_audit_evidence_projection.sql", "utf8");
 const abnHealthCorrection = fs.readFileSync("supabase/migrations/20260725210822_correct_abn_health_readiness.sql", "utf8");
+const candidateHealthCorrection = fs.readFileSync("supabase/migrations/20260830130000_ignore_superseded_candidate_jobs_in_ops_health.sql", "utf8");
 const page = fs.readFileSync("web/src/app/ops/system/page.tsx", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION private\.redact_ops_audit_state/);
@@ -28,4 +29,7 @@ assert.doesNotMatch(page, /metadata\.provider_error/);
 assert.match(abnHealthCorrection, /UPDATE public\.integration_health/);
 assert.match(abnHealthCorrection, /'abr_lookup'/);
 assert.match(abnHealthCorrection, /Bulk ABN checks are intentionally disabled/);
+assert.match(candidateHealthCorrection, /job\.job_type <> 'candidate_handoff'/);
+assert.match(candidateHealthCorrection, /candidate_handoff_health/);
+assert.match(candidateHealthCorrection, /SELECT public\.refresh_internal_operations_health\(\)/);
 console.log("Ops System explanation and audit boundary checks passed.");
