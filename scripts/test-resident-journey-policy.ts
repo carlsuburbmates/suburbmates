@@ -18,6 +18,7 @@ async function run() {
     join,
     locality,
     categoryVisual,
+    imageAttribution,
   ] = await Promise.all([
     source("web/src/app/(directory)/page.tsx"),
     source("web/src/components/ui/HomeClient.tsx"),
@@ -30,6 +31,7 @@ async function run() {
     source("web/src/app/(directory)/join/page.tsx"),
     source("web/src/app/(directory)/[suburb]/page.tsx"),
     source("web/src/components/ui/DirectoryCategoryVisual.tsx"),
+    source("web/public/images/ATTRIBUTION.md"),
   ]);
 
   assert.match(
@@ -46,6 +48,21 @@ async function run() {
     homeClient,
     /hero-bg\.jpg/,
     "the public home must not rely on unverified generic imagery",
+  );
+  assert.match(
+    homeClient,
+    /westgarth-cafes-2004\.jpg/,
+    "the home may use the documented local public-domain streetscape",
+  );
+  assert.match(
+    homeClient,
+    /Decorative local context only—not a business listing image/,
+    "the home image must not be presented as a current business fact",
+  );
+  assert.match(
+    imageAttribution,
+    /Public domain/,
+    "the local hero image must retain its recorded licence status",
   );
   assert.match(
     heroSearch,

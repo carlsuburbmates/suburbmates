@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, MapPin, Phone, Search, Store } from "lucide-react";
@@ -96,7 +97,16 @@ export function HomeClient({
         className="relative overflow-hidden border-b border-teal-900 bg-[#073b3a] py-14 text-white sm:py-20"
         aria-label="Directory search"
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(251,191,36,0.32),transparent_24rem),radial-gradient(circle_at_8%_80%,rgba(45,212,191,0.2),transparent_25rem)]" />
+        <Image
+          src="/images/westgarth-cafes-2004.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="pointer-events-none object-cover object-[62%_center] opacity-50"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(7,59,58,0.98)_0%,rgba(7,59,58,0.93)_42%,rgba(7,59,58,0.58)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(251,191,36,0.24),transparent_24rem),radial-gradient(circle_at_8%_80%,rgba(45,212,191,0.16),transparent_25rem)]" />
         <div className="relative mx-auto w-full max-w-5xl px-5 sm:px-6">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-100">
             Darebin business directory
@@ -130,6 +140,18 @@ export function HomeClient({
               Browse locations
             </Link>
           </div>
+          <p className="mt-7 max-w-xs text-xs leading-5 text-teal-100/85">
+            Historic Westgarth streetscape, 2004. Decorative local context only—not a business listing image. {" "}
+            <a
+              href="https://commons.wikimedia.org/wiki/File:Cafes_in_Westgarth_during_November_2004.jpg"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold underline underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Public domain source
+            </a>
+            .
+          </p>
         </div>
       </section>
 
