@@ -20,6 +20,15 @@ assert.deepEqual(candidates, [{
   sourceUrl: "https://data.gov.au/data/dataset/tpb-register/resource/example/download/tpb-public-register-2026.xlsx", sourceCheckedOn: "2026-08-31",
   notes: "Filtered public-register organisation record limited to organisation trading name, business address and active registration status.",
 }]);
+assert.deepEqual(selectDarebinTaxPractitionerCandidates([
+  {
+    "Trading Name (Agent) (Organisation)": "Line Break Tax",
+    City: "Northcote",
+    State: "VIC",
+    "Business Address": "1 High Street\nNorthcote VIC 3070",
+    "Public Register Status": "Registered",
+  },
+], "https://data.gov.au/data/dataset/tpb-register/resource/example/download/tpb-public-register-2026.xlsx", new Set(["northcote"]), "2026-08-31")[0]?.streetAddress, "1 High Street Northcote VIC 3070");
 assert.doesNotMatch(JSON.stringify(candidates), /Jane Personal|Personal Tax|opaque-id/);
 assert.equal(extractTaxPractitionersBoardResourceUrl('<a href="https://data.gov.au/data/dataset/tpb-register/resource/example/download/tpb-public-register-2026.xlsx">file</a>'), "https://data.gov.au/data/dataset/tpb-register/resource/example/download/tpb-public-register-2026.xlsx");
 assert.throws(() => extractTaxPractitionersBoardResourceUrl('<a href="https://example.com/tpb-public-register-2026.xlsx">file</a>'), /permitted XLSX/);

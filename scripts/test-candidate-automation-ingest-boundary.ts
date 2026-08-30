@@ -16,6 +16,8 @@ assert.match(route, /loadApprovedSourceRegistry/);
 assert.match(route, /sourceRegistryMatchesContract/);
 assert.match(route, /holdCatalogueSourceContract/);
 assert.match(route, /markCatalogueSourceContractHealthy/);
+assert.match(route, /finaliseStaleSourceRuns/);
+assert.match(route, /Candidate handoff exceeded the processing window and was safely closed before a new source observation/);
 assert.match(route, /Candidate processing was held; no listing changed/);
 assert.match(route, /isAllowedCatalogueSourceUrl/);
 assert.match(route, /Candidate source must match the approved source batch/);

@@ -114,7 +114,7 @@ function isPostalAddress(value: string) {
   return /\b(?:p\.?\s*o\.?\s*box|gpo\s*box|locked\s*bag)\b/i.test(value);
 }
 
-function text(value: string | undefined) { return value?.trim() ?? ""; }
+function text(value: string | undefined) { return value?.replace(/\s+/g, " ").trim() ?? ""; }
 function normalise(value: string | undefined) { return text(value).replace(/\s+/g, " ").toUpperCase(); }
 function slugify(value: string | undefined) { return text(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
 function decodeXml(value: string) { return value.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); }

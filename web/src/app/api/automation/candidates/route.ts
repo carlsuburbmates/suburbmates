@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `${sourceContract.displayName} registry approval is missing or changed; candidate processing is held` }, { status: 400 });
     }
 
+    await finaliseStaleSourceRuns(admin, sourceContract);
+
     const candidates = Array.isArray(body.candidates) ? body.candidates.map((candidate: unknown) => readCandidate(candidate, sourceContract)) : null;
     if (!/^[0-9a-f]{64}$/.test(artifactSha256) || !candidates || candidates.length < 1 || candidates.length > MAX_CANDIDATES) {
       return NextResponse.json({ error: "Invalid approved-source candidate batch" }, { status: 400 });
@@ -334,6 +336,32 @@ async function markCatalogueSourceContractHealthy(admin: ReturnType<typeof creat
     metadata: { source_contract: source.version, source: source.key },
   }, { onConflict: "integration_name" });
   if (health.error) throw new Error("Could not record the catalogue source contract check.");
+}
+
+async function finaliseStaleSourceRuns(admin: ReturnType<typeof createAdminClient>, source: CatalogueSourceContract) {
+  const cutoff = new Date(Date.now() - STALE_PROCESSING_MS).toISOString();
+  const { data: staleRuns, error } = await admin.from("candidate_handoff_runs")
+    .select("id, correlation_id")
+    .eq("source", source.key)
+    .eq("status", "processing")
+    .lt("received_at", cutoff)
+    .limit(MAX_CANDIDATES);
+  if (error) throw new Error("Could not inspect stale candidate handoff runs.");
+
+  const now = new Date().toISOString();
+  for (const staleRun of staleRuns ?? []) {
+    const message = "Candidate handoff exceeded the processing window and was safely closed before a new source observation.";
+    const { error: runError } = await admin.from("candidate_handoff_runs")
+      .update({ status: "failed", error_message: message, completed_at: now })
+      .eq("id", staleRun.id)
+      .eq("status", "processing");
+    if (runError) throw new Error("Could not close the stale candidate handoff run.");
+    const { error: jobError } = await admin.from("automation_jobs")
+      .update({ status: "failed", error_message: message, completed_at: now })
+      .eq("correlation_id", staleRun.correlation_id)
+      .eq("status", "running");
+    if (jobError) throw new Error("Could not close the stale candidate handoff job.");
+  }
 }
 
 async function loadCandidateDuplicateCandidates(admin: ReturnType<typeof createAdminClient>, candidate: IncomingCandidate): Promise<ExistingListing[]> {
