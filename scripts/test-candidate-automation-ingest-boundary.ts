@@ -71,6 +71,7 @@ assert.match(workflow, /candidate:handoff/);
 assert.match(workflow, /AUTOMATION_INGEST_TOKEN/);
 assert.match(workflow, /max-parallel: 2/);
 assert.match(workflow, /shard_index: \[0, 1, 2, 3, 4, 5, 6, 7\]/);
+assert.match(workflow, /--shard-count 8/);
 assert.match(workflow, /record-handoff-outcome/);
 assert.match(workflow, /catalogue-run-status/);
 assert.match(liquorWorkflow, /npm run acquire:vic-liquor/);

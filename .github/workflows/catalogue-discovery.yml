@@ -76,7 +76,7 @@ jobs:
           path: data
 
       - name: Send approved-source candidates to the private qualification handoff
-        run: npm run candidate:handoff -- data/vendor-candidates-osm.csv --shard-index ${{ matrix.shard_index }} --shard-count 4
+        run: npm run candidate:handoff -- data/vendor-candidates-osm.csv --shard-index ${{ matrix.shard_index }} --shard-count 8
         env:
           CANDIDATE_HANDOFF_URL: https://suburbmates.com.au/api/automation/candidates
           AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
