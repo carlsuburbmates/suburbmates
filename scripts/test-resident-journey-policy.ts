@@ -17,6 +17,7 @@ async function run() {
     directoryBrowse,
     join,
     locality,
+    categoryVisual,
   ] = await Promise.all([
     source("web/src/app/(directory)/page.tsx"),
     source("web/src/components/ui/HomeClient.tsx"),
@@ -28,6 +29,7 @@ async function run() {
     source("web/src/components/ui/DirectoryBrowseClient.tsx"),
     source("web/src/app/(directory)/join/page.tsx"),
     source("web/src/app/(directory)/[suburb]/page.tsx"),
+    source("web/src/components/ui/DirectoryCategoryVisual.tsx"),
   ]);
 
   assert.match(
@@ -256,6 +258,31 @@ async function run() {
     taxonomy,
     /Servicing \{suburb\.name\}/,
     "locality/category cards must not claim a listing serves an area without evidence",
+  );
+  assert.match(
+    categoryVisual,
+    /Category art is deliberately a first-party, abstract fallback/,
+    "category visual treatment must never impersonate a business image",
+  );
+  assert.match(
+    categoryVisual,
+    /\"pet-grooming\"/,
+    "pet profiles must have an intentional visual family",
+  );
+  assert.match(
+    categoryVisual,
+    /\"car-repair\"/,
+    "vehicle profiles must have an intentional visual family",
+  );
+  assert.match(
+    categoryVisual,
+    /\"financial-advisor\"/,
+    "professional-service profiles must have an intentional visual family",
+  );
+  assert.match(
+    categoryVisual,
+    /Owner-provided or licensed media still takes precedence/,
+    "category visual fallback must preserve the owner-authorised media rule",
   );
 
   assert.match(
