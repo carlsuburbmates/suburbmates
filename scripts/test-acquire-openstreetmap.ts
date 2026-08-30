@@ -21,6 +21,18 @@ async function runTests() {
 
   const inclCommercial = filterAndProcessElements([{ type: 'node', id: '1', tags: { name: 'Cool Cafe', amenity: 'cafe' } }], catchments);
   assert.strictEqual(inclCommercial.length, 1, 'Should include commercial amenity like cafe');
+  const healthcare = filterAndProcessElements([{ type: 'node', id: '2', tags: { name: 'Local Optometry', healthcare: 'optometrist' } }], catchments);
+  assert.strictEqual(healthcare[0].category_slug, 'optician', 'An explicit OSM optometrist feature should use the existing Optician category.');
+  const fitness = filterAndProcessElements([{ type: 'node', id: '4', tags: { name: 'Local Fitness', leisure: 'fitness_centre' } }], catchments);
+  assert.strictEqual(fitness[0].category_slug, 'fitness', 'An explicit OSM fitness centre should use the dedicated Fitness category.');
+  const accommodation = filterAndProcessElements([{ type: 'node', id: '5', tags: { name: 'Local Motel', tourism: 'motel' } }], catchments);
+  assert.strictEqual(accommodation[0].category_slug, 'accommodation', 'An explicit OSM motel should use the dedicated Accommodation category.');
+  const excludedPark = filterAndProcessElements([{ type: 'node', id: '6', tags: { name: 'Local Park', leisure: 'park' } }], catchments);
+  assert.strictEqual(excludedPark.length, 0, 'Parks must not enter the commercial directory feed.');
+  const excludedClinic = filterAndProcessElements([{ type: 'node', id: '7', tags: { name: 'Community Clinic', healthcare: 'clinic' } }], catchments);
+  assert.strictEqual(excludedClinic.length, 0, 'Ambiguous healthcare classifications must not enter through the expanded source scope.');
+  const excludedHostel = filterAndProcessElements([{ type: 'node', id: '8', tags: { name: 'Local Hostel', tourism: 'hostel' } }], catchments);
+  assert.strictEqual(excludedHostel.length, 0, 'Hostels must not be presumed commercial accommodation.');
   const cuisine = filterAndProcessElements([{ type: 'node', id: '3', tags: { name: 'Pasta Place', amenity: 'restaurant', cuisine: 'italian;pizza' } }], catchments);
   assert.strictEqual(cuisine[0].description, 'Cuisine: Italian, Pizza.', 'A structured OSM cuisine tag should become a concise sourced profile detail.');
   assert.strictEqual(cuisineProfileDetail('italian', 'plumber'), '', 'Cuisine must not decorate non-food categories.');

@@ -16,6 +16,23 @@ export const NON_COMMERCIAL_TOKENS = new Set([
 
 const OVERPASS_REQUEST_TIMEOUT_MS = 20_000;
 const CUISINE_PROFILE_CATEGORIES = new Set(['bar', 'cafe', 'fast-food', 'ice-cream', 'pub', 'restaurant']);
+// These are the only non-primary OSM feature classes that can enter the
+// business pipeline. They are deliberately narrow: parks, hospitals, public
+// clinics, hostels and ambiguous values remain outside the directory feed.
+const COMMERCIAL_HEALTHCARE_CATEGORIES: Record<string, string> = {
+  pharmacy: 'pharmacy',
+  dentist: 'dentist',
+  optometrist: 'optician',
+};
+const COMMERCIAL_LEISURE_CATEGORIES: Record<string, string> = {
+  fitness_centre: 'fitness',
+  dance: 'dance-studio',
+};
+const COMMERCIAL_TOURISM_CATEGORIES: Record<string, string> = {
+  hotel: 'accommodation',
+  motel: 'accommodation',
+  guest_house: 'accommodation',
+};
 
 export function slugify(text: string): string {
   if (!text) return '';
@@ -159,7 +176,7 @@ export function filterAndProcessElements(elements: any[], catchments: string[]):
     const name = el.tags.name || el.tags['name:en'];
     if (!name) continue;
     
-    const tagsVals = [el.tags.shop, el.tags.craft, el.tags.office, el.tags.amenity].filter(Boolean);
+    const tagsVals = [el.tags.shop, el.tags.craft, el.tags.office, el.tags.amenity, el.tags.healthcare, el.tags.leisure, el.tags.tourism].filter(Boolean);
     const hasNonCommercial = tagsVals.some(v => {
       const norm = v.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const tokens = norm.split('-');
@@ -180,6 +197,12 @@ export function filterAndProcessElements(elements: any[], catchments: string[]):
     else if (el.tags.amenity) {
       if (!COMMERCIAL_AMENITIES.has(el.tags.amenity)) continue;
       category = el.tags.amenity;
+    } else if (typeof el.tags.healthcare === 'string' && COMMERCIAL_HEALTHCARE_CATEGORIES[el.tags.healthcare]) {
+      category = COMMERCIAL_HEALTHCARE_CATEGORIES[el.tags.healthcare];
+    } else if (typeof el.tags.leisure === 'string' && COMMERCIAL_LEISURE_CATEGORIES[el.tags.leisure]) {
+      category = COMMERCIAL_LEISURE_CATEGORIES[el.tags.leisure];
+    } else if (typeof el.tags.tourism === 'string' && COMMERCIAL_TOURISM_CATEGORIES[el.tags.tourism]) {
+      category = COMMERCIAL_TOURISM_CATEGORIES[el.tags.tourism];
     } else {
       continue;
     }
@@ -264,6 +287,9 @@ area["name"="City of Darebin"]->.searchArea;
   nwr["craft"](area.searchArea);
   nwr["office"](area.searchArea);
   nwr["amenity"](area.searchArea);
+  nwr["healthcare"~"^(pharmacy|dentist|optometrist)$"](area.searchArea);
+  nwr["leisure"~"^(fitness_centre|dance)$"](area.searchArea);
+  nwr["tourism"~"^(hotel|motel|guest_house)$"](area.searchArea);
 );
 out tags center;`;
 

@@ -107,8 +107,12 @@ const visualFamilies: Array<{ slugs: string[]; visual: CategoryVisual }> = [
     visual: { Icon: BriefcaseBusiness, className: "from-slate-200 via-sky-50 to-blue-100 text-slate-950" },
   },
   {
-    slugs: ["bookmaker", "golf", "sports", "water-sports"],
+    slugs: ["bookmaker", "dance-studio", "fitness", "golf", "sports", "water-sports"],
     visual: { Icon: Dumbbell, className: "from-lime-100 via-cyan-50 to-sky-100 text-lime-950" },
+  },
+  {
+    slugs: ["accommodation"],
+    visual: { Icon: Home, className: "from-teal-100 via-sky-50 to-indigo-100 text-teal-950" },
   },
   {
     slugs: ["baby-goods", "gift", "kiosk", "local-business", "mall", "marketplace", "newsagent", "shopping-centre", "specialty-retail", "stationery", "toys", "variety-store", "wholesale"],

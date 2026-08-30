@@ -26,6 +26,19 @@ Observed against the live Supabase project on 26 August 2026:
 
 ## Recommended mapping decisions
 
+### Phase 0 — bounded approved-source additions
+
+These are new canonical categories for explicit OpenStreetMap feature tags, not a reclassification of existing listings. The source pipeline may create a candidate only when its tag is exact; all other leisure, tourism and healthcare values remain excluded.
+
+| OSM feature | Canonical slug | Public label | Explicit exclusions |
+| --- | --- | --- | --- |
+| `leisure=fitness_centre` | `fitness` | Fitness | Sports grounds, parks, tracks and unspecified leisure. |
+| `leisure=dance` | `dance-studio` | Dance Studios | Other leisure values. |
+| `tourism=hotel`, `motel`, `guest_house` | `accommodation` | Accommodation | Hostels, attractions, museums and information points. |
+| `healthcare=pharmacy`, `dentist`, `optometrist` | Existing `pharmacy`, `dentist`, `optician` | Existing labels | Clinics, hospitals, alternative/unknown care, and all other healthcare values. |
+
+The release adds the three canonical category rows before the scheduled source job can emit them. Existing category assignments, URLs and historical evidence are unchanged.
+
 ### Phase 1 — safe presentation corrections
 
 These change only a readable category name, not a slug, URL, listing assignment, search filter, or source contract.

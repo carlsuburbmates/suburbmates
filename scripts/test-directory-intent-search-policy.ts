@@ -5,6 +5,7 @@ const migration = fs.readFileSync("supabase/migrations/20260827142810_public_dir
 const refinement = fs.readFileSync("supabase/migrations/20260827143425_refine_resolved_directory_intent.sql", "utf8");
 const expansion = fs.readFileSync("supabase/migrations/20260828145153_expand_directory_intent_language.sql", "utf8");
 const specificity = fs.readFileSync("supabase/migrations/20260830105746_prefer_specific_directory_intent.sql", "utf8");
+const venueCoverage = fs.readFileSync("supabase/migrations/20260830143000_expand_osm_venue_coverage.sql", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
 assert.match(migration, /FROM public\.published_vendors AS vendor/);
@@ -39,4 +40,14 @@ assert.match(specificity, /SECURITY INVOKER/);
 assert.match(specificity, /FROM public\.published_vendors AS vendor/);
 assert.doesNotMatch(specificity, /FROM public\.vendors\b/);
 assert.match(specificity, /Query text is never retained/);
+assert.match(venueCoverage, /\('fitness', 'Fitness'/);
+assert.match(venueCoverage, /\('dance-studio', 'Dance Studios'/);
+assert.match(venueCoverage, /\('accommodation', 'Accommodation'/);
+assert.match(venueCoverage, /\('gym', 'fitness'\)/);
+assert.match(venueCoverage, /\('ballet', 'dance-studio'\)/);
+assert.match(venueCoverage, /\('motel', 'accommodation'\)/);
+assert.match(venueCoverage, /SECURITY INVOKER/);
+assert.match(venueCoverage, /FROM public\.published_vendors AS vendor/);
+assert.doesNotMatch(venueCoverage, /FROM public\.vendors\b/);
+assert.match(venueCoverage, /Query text is never retained/);
 console.log("Directory intent-search policy checks passed.");
