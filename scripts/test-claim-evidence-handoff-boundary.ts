@@ -4,8 +4,12 @@ import fs from "node:fs";
 const migration = fs.readFileSync("supabase/migrations/20260721235307_claim_evidence_handoff.sql", "utf8");
 const client = fs.readFileSync("web/src/app/(directory)/claim/ClaimClient.tsx", "utf8");
 const join = fs.readFileSync("web/src/app/(directory)/join/page.tsx", "utf8");
+const page = fs.readFileSync("web/src/app/(directory)/claim/page.tsx", "utf8");
 
 assert.match(join, /\/claim\?listing=/);
+assert.match(page, /Already authorised\?/);
+assert.match(page, /Need claim access\?/);
+assert.match(page, /does not create an account, change the listing or publish anything automatically/);
 assert.match(client, /selectedListingId/);
 assert.match(client, /Selected profile/);
 assert.match(client, /p_abn/);
