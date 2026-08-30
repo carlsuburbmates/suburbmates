@@ -62,18 +62,23 @@ export function cuisineProfileDetail(value: unknown, categorySlug: string): stri
 
 // These are direct renderings of bounded, structured OSM tags. They are not
 // inferences about a business and only enrich a blank unclaimed description.
+// `wheelchair=limited` deliberately remains unpublished: it is too ambiguous
+// to turn into a reliable access promise without a richer source contract.
 export function osmProfileDetail(tags: Record<string, unknown>, categorySlug: string): string {
-  if (!CUISINE_PROFILE_CATEGORIES.has(categorySlug)) return '';
-  const details = [cuisineProfileDetail(tags.cuisine, categorySlug)];
-  if (isAffirmativeOsmValue(tags.takeaway)) details.push('Takeaway available.');
-  if (isAffirmativeOsmValue(tags.delivery)) details.push('Delivery available.');
-  if (isAffirmativeOsmValue(tags.outdoor_seating)) details.push('Outdoor seating.');
-  if (isAffirmativeOsmValue(tags['diet:vegan'])) {
-    details.push(normalizeOsmValue(tags['diet:vegan']) === 'only' ? 'Vegan menu.' : 'Vegan options.');
+  const details: string[] = [];
+  if (CUISINE_PROFILE_CATEGORIES.has(categorySlug)) {
+    details.push(cuisineProfileDetail(tags.cuisine, categorySlug));
+    if (isAffirmativeOsmValue(tags.takeaway)) details.push('Takeaway available.');
+    if (isAffirmativeOsmValue(tags.delivery)) details.push('Delivery available.');
+    if (isAffirmativeOsmValue(tags.outdoor_seating)) details.push('Outdoor seating.');
+    if (isAffirmativeOsmValue(tags['diet:vegan'])) {
+      details.push(normalizeOsmValue(tags['diet:vegan']) === 'only' ? 'Vegan menu.' : 'Vegan options.');
+    }
+    if (isAffirmativeOsmValue(tags['diet:vegetarian'])) {
+      details.push(normalizeOsmValue(tags['diet:vegetarian']) === 'only' ? 'Vegetarian menu.' : 'Vegetarian options.');
+    }
   }
-  if (isAffirmativeOsmValue(tags['diet:vegetarian'])) {
-    details.push(normalizeOsmValue(tags['diet:vegetarian']) === 'only' ? 'Vegetarian menu.' : 'Vegetarian options.');
-  }
+  if (normalizeOsmValue(tags.wheelchair) === 'yes') details.push('Source-reported wheelchair access.');
   return details.filter(Boolean).join(' ');
 }
 
