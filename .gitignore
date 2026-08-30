@@ -17,3 +17,4 @@ supabase/.temp/
 web/.open-next/
 web/.wrangler/
 artifacts/
+data/vendor-candidates-tax-practitioners-board.csv

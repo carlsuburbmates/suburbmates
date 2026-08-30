@@ -1,4 +1,4 @@
-export type CatalogueSourceKey = "openstreetmap" | "victorian_liquor_licences";
+export type CatalogueSourceKey = "openstreetmap" | "victorian_liquor_licences" | "tax_practitioners_board";
 
 export type CatalogueSourceContract = {
   key: CatalogueSourceKey;
@@ -25,6 +25,14 @@ export const CATALOGUE_SOURCE_CONTRACTS: Record<CatalogueSourceKey, CatalogueSou
     allowedHosts: ["www.vic.gov.au", "discover.data.vic.gov.au"],
     refreshIntervalDays: 31,
     defaultSourceNotes: "Approved Victorian liquor-licence candidate handoff.",
+  },
+  tax_practitioners_board: {
+    key: "tax_practitioners_board",
+    displayName: "Tax Practitioners Board public register",
+    version: "tax-practitioners-board-org-v1",
+    allowedHosts: ["www.data.gov.au", "data.gov.au"],
+    refreshIntervalDays: 31,
+    defaultSourceNotes: "Approved Tax Practitioners Board organisation-only candidate handoff.",
   },
 };
 

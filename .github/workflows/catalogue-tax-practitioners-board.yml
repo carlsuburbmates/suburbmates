@@ -1,0 +1,46 @@
+name: Tax Practitioners Board catalogue discovery
+
+on:
+  schedule:
+    - cron: "17 20 3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalogue-tax-practitioners-board
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run acquire:tpb
+      - run: npm run audit -- data/vendor-candidates-tax-practitioners-board.csv
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: tax-practitioners-board-candidates-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: data/vendor-candidates-tax-practitioners-board.csv
+
+      - name: Send organisation-only candidates to the private qualification handoff
+        run: npm run candidate:handoff -- data/vendor-candidates-tax-practitioners-board.csv
+        env:
+          CATALOGUE_SOURCE: tax_practitioners_board
+          CANDIDATE_HANDOFF_URL: https://suburbmates.com.au/api/automation/candidates
+          AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
+
+      - name: Confirm privacy and publication boundary
+        run: echo "Only organisation trading-name, business-address and registration-status candidates entered the authenticated handoff. Individual-agent data never enters the CSV, artifact or public directory."

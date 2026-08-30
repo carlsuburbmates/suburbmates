@@ -10,15 +10,17 @@ This is an acquisition pipeline, not a one-time CSV exercise. Every record must 
 
 1. **OpenStreetMap commercial features** are an active, attributed bulk-discovery contract across Darebin.
 2. **Victorian liquor licences by location** are an active first-party CC BY 4.0 contract, refreshed monthly and mapped only to approved public categories.
-3. **Darebin-linked business associations** are prospective coverage sources only. They may not be ingested until their reuse licence, field permissions, stable identity and refresh path have been documented in a versioned source contract.
-4. **Business-owned websites** are not an automated enrichment source. Owner-provided content may be proposed through protected owner journeys and is subject to review; the automation does not crawl business websites or copy their images.
-5. **ABN Lookup or a separately licensed business dataset** may support identity validation and coverage measurement after a dedicated approval. ABN data is not treated as a complete shopfront directory because it does not reliably provide the public address, phone, or category needed by the product.
+3. **Tax Practitioners Board public register** is an active CC BY 4.0 organisation-only contract, refreshed monthly. It emits only active Victorian organisation trading names with a non-postal Darebin business address, maps them narrowly to Accountant, and never retains individual-agent fields, individual trading names, registration numbers or dates.
+4. **Darebin-linked business associations** are prospective coverage sources only. They may not be ingested until their reuse licence, field permissions, stable identity and refresh path have been documented in a versioned source contract.
+5. **Business-owned websites** are not an automated enrichment source. Owner-provided content may be proposed through protected owner journeys and is subject to review; the automation does not crawl business websites or copy their images.
+6. **ABN Lookup or a separately licensed business dataset** may support identity validation and coverage measurement after a dedicated approval. ABN data is not treated as a complete shopfront directory because it does not reliably provide the public address, phone, or category needed by the product.
 
 ## Candidate-source assessment — 30 August 2026
 
 - **Darebin food-business pages:** official regulatory guidance, but no machine-readable, display-permitted premises register was located. It is not an automated catalogue contract.
 - **Consumer Affairs Victoria public registers:** useful for a resident's individual compliance check, but the estate-agent register explicitly requires a written purpose request for bulk use and prohibits direct-marketing use. It may include residential-address personal data. It is therefore not a source for storage or automated public directory display.
 - **City of Melbourne business-establishments open data:** CC BY, but it covers the City of Melbourne—not Darebin—so it is out of scope.
+- **Tax Practitioners Board public register:** the full register contains personal-agent content, so wholesale ingestion is prohibited. Its current organisation-only, active-Victorian, non-postal Darebin subset is separately licensed CC BY 4.0 and contractually filtered before the candidate artifact is written. The 31 August 2026 local acquisition yielded 267 Accountant candidates across the canonical catchment; normal qualification, duplicate evidence, source freshness and conflict rules still apply before any public listing can exist.
 
 The next source must provide both a compatible licence for persistent display and an automatable, stable record/refresh path. Until then, the active contracts remain OpenStreetMap and the Victorian liquor-licence dataset.
 

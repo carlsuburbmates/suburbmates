@@ -5,6 +5,7 @@ import { getCatalogueSourceContract, hasCatalogueSourceContract } from "../web/s
 const route = fs.readFileSync("web/src/app/api/automation/candidates/route.ts", "utf8");
 const workflow = fs.readFileSync(".github/workflows/catalogue-discovery.yml", "utf8");
 const liquorWorkflow = fs.readFileSync(".github/workflows/catalogue-victorian-liquor-licences.yml", "utf8");
+const taxPractitionersBoardWorkflow = fs.readFileSync(".github/workflows/catalogue-tax-practitioners-board.yml", "utf8");
 const outcomeRoute = fs.readFileSync("web/src/app/api/automation/catalogue-run-status/route.ts", "utf8");
 
 assert.match(route, /AUTOMATION_INGEST_TOKEN/);
@@ -77,6 +78,10 @@ assert.match(workflow, /catalogue-run-status/);
 assert.match(liquorWorkflow, /npm run acquire:vic-liquor/);
 assert.match(liquorWorkflow, /CATALOGUE_SOURCE: victorian_liquor_licences/);
 assert.match(liquorWorkflow, /AUTOMATION_INGEST_TOKEN/);
+assert.match(taxPractitionersBoardWorkflow, /npm run acquire:tpb/);
+assert.match(taxPractitionersBoardWorkflow, /CATALOGUE_SOURCE: tax_practitioners_board/);
+assert.match(taxPractitionersBoardWorkflow, /Individual-agent data never enters the CSV, artifact or public directory/);
+assert.match(taxPractitionersBoardWorkflow, /AUTOMATION_INGEST_TOKEN/);
 const handoff = fs.readFileSync("scripts/submit-candidate-handoff.ts", "utf8");
 const sourceContract = fs.readFileSync("web/src/lib/automation/catalogue-source-contract.ts", "utf8");
 assert.match(handoff, /const BATCH_SIZE = 1/);
@@ -98,8 +103,12 @@ assert.match(handoff, /sourceContractVersion: sourceContract\.version,\n\s*candi
 assert.match(fs.readFileSync("scripts\/submit-candidate-handoff.ts", "utf8"), /await response\.text\(\)/);
 assert.match(sourceContract, /openstreetmap-candidate-v1/);
 assert.match(sourceContract, /victorian-liquor-licences-v2/);
+assert.match(sourceContract, /tax-practitioners-board-org-v1/);
 assert.match(sourceContract, /refreshIntervalDays: 7/);
 assert.match(sourceContract, /refreshIntervalDays: 31/);
+const taxPractitionersBoard = getCatalogueSourceContract("tax_practitioners_board");
+assert(taxPractitionersBoard);
+assert.equal(hasCatalogueSourceContract("tax_practitioners_board", taxPractitionersBoard.version), true);
 const openStreetMap = getCatalogueSourceContract("openstreetmap");
 assert(openStreetMap);
 assert.equal(hasCatalogueSourceContract("openstreetmap", openStreetMap.version), true);
