@@ -14,6 +14,14 @@ This is an acquisition pipeline, not a one-time CSV exercise. Every record must 
 4. **Business-owned websites** are not an automated enrichment source. Owner-provided content may be proposed through protected owner journeys and is subject to review; the automation does not crawl business websites or copy their images.
 5. **ABN Lookup or a separately licensed business dataset** may support identity validation and coverage measurement after a dedicated approval. ABN data is not treated as a complete shopfront directory because it does not reliably provide the public address, phone, or category needed by the product.
 
+## Candidate-source assessment — 30 August 2026
+
+- **Darebin food-business pages:** official regulatory guidance, but no machine-readable, display-permitted premises register was located. It is not an automated catalogue contract.
+- **Consumer Affairs Victoria public registers:** useful for a resident's individual compliance check, but the estate-agent register explicitly requires a written purpose request for bulk use and prohibits direct-marketing use. It may include residential-address personal data. It is therefore not a source for storage or automated public directory display.
+- **City of Melbourne business-establishments open data:** CC BY, but it covers the City of Melbourne—not Darebin—so it is out of scope.
+
+The next source must provide both a compatible licence for persistent display and an automatable, stable record/refresh path. Until then, the active contracts remain OpenStreetMap and the Victorian liquor-licence dataset.
+
 ## Sources excluded
 
 Do not scrape or bulk-rehost Yellow Pages, White Pages, Google Places, Foursquare, Facebook, or similar closed directories without a written licence that explicitly permits this product use and storage. Their current terms either prohibit automated extraction or restrict caching, bulk display, or re-hosting of place data.
