@@ -484,7 +484,7 @@ function PublicProfileHighlights({ facts }: { facts: PublicProfileFact[] }) {
         {facts.map((fact) => (
           <li key={`${fact.label}-${fact.value ?? ""}`} className="rounded-full border border-teal-900/15 bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow-sm">
             {fact.value ? <><span className="text-slate-500">{fact.label}: </span>{fact.value}</> : fact.label}
-            {fact.sourceReported && <span className="sr-only">, source-reported</span>}
+            {fact.sourceReported && <span className="ml-2 text-xs font-semibold text-slate-500">Source-reported</span>}
           </li>
         ))}
       </ul>
