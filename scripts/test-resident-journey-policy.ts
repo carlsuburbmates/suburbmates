@@ -142,6 +142,11 @@ async function run() {
   );
   assert.match(
     browse,
+    /loadDirectoryData/,
+    "directory browse must retry one transient public-read failure before rendering an error screen",
+  );
+  assert.match(
+    browse,
     /count: "exact"/,
     "directory results must retain an exact page count",
   );

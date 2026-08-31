@@ -54,12 +54,19 @@ export default async function BusinessesPage({
     p_offset: (targetPage - 1) * pageSize,
   });
 
-  // Execute suburbs, categories, and vendor query concurrently in a single parallel batch
-  const [suburbsRes, categoriesRes, vendorsRes] = await Promise.all([
+  // Execute public reads concurrently. A short retry avoids turning a single
+  // transient provider read failure into a public error screen during a busy
+  // evidence refresh; persistent failures still fail visibly and safely.
+  const loadDirectoryData = () => Promise.all([
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase.from("categories").select("name, slug").order("name"),
     searchQuery ? searchPage(requestedPage) : browsePage(requestedPage),
   ]);
+  let [suburbsRes, categoriesRes, vendorsRes] = await loadDirectoryData();
+  if (suburbsRes.error || categoriesRes.error || vendorsRes.error) {
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    [suburbsRes, categoriesRes, vendorsRes] = await loadDirectoryData();
+  }
 
   if (suburbsRes.error || categoriesRes.error || vendorsRes.error) {
     throw new Error("The directory could not be loaded.");
