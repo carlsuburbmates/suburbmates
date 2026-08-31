@@ -14,7 +14,6 @@ GitHub catalogue discovery and qualification handoff (active on main)
   -> Victorian liquor licences by location, CC BY 4.0 (monthly)
   -> candidate CSV
   -> data-hygiene audit
-  -> merge with curated CSV
   -> coverage report in job log
   -> 30-day CSV artefact
   -> token-protected SuburbMates handoff endpoint
@@ -52,7 +51,7 @@ Supabase internal health monitor (active Ops process; outside Automation lane)
 | Workflow | Trigger | Verified steps | Services / infrastructure | Output | Current status | State-changing boundary |
 | --- | --- | --- | --- | --- | --- | --- |
 | Repository verification | GitHub pull request; push to `main` or `codex/**` | Check out code; install Node 22 dependencies; run root checks; lint, build, and Cloudflare build for `web/` | GitHub Actions, Node.js, npm, Next.js, OpenNext/Cloudflare build tooling | Pass/fail GitHub check | **Active** | No hosted data write or deployment command |
-| OpenStreetMap catalogue discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; merge with curated candidates; audit again; retain CSVs; send source-record handoffs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, Cloudflare, Supabase, repository CSV files, GitHub artifacts | Two CSV artifacts retained 30 days; private run and exception records in Ops | **Active on `main`; historic manual verification succeeded on 22 July 2026.** | Only an approved-source candidate that passes deterministic source, scope, category, duplicate and safety checks may create an unclaimed listing. Missing public contact details are evidence gaps, not an automatic rejection. Exceptions stay private in Ops. |
+| OpenStreetMap catalogue discovery | Monday schedule at `18:17` UTC; manual dispatch | Acquire City of Darebin commercial candidates from Overpass; audit; report and retain the source artifact; send source-record handoffs | GitHub Actions, Node.js, npm, OpenStreetMap/Overpass, Cloudflare, Supabase, GitHub artifacts | One CSV artifact retained 30 days; private run and exception records in Ops | **Active on `main`; historic manual verification succeeded on 22 July 2026.** | Only an approved-source candidate that passes deterministic source, scope, category, duplicate and safety checks may create an unclaimed listing. Missing public contact details are evidence gaps, not an automatic rejection. Exceptions stay private in Ops. |
 | Victorian liquor-licence discovery | Monthly on day 2 at `19:23` UTC; manual dispatch | Resolve the first-party Victorian Government XLSX, verify size and ZIP structure, parse the published header, select Darebin rows with explicit category mappings, audit and hand off source-record facts | GitHub Actions, Node.js, npm, Victorian Government open-data resource, Cloudflare, Supabase, GitHub artifacts | One candidate CSV retained 30 days; private source/evidence records in Ops | **Active on `main`; [run 33180747485](https://github.com/carlsuburbmates/suburbmates/actions/runs/33180747485) completed all 365 rows in 7m34s on 28 August 2026.** | Uses only the licensed source and its stable licence number. It never fetches business websites or images, never stores contact-form text, and cannot make ownership decisions. |
 | Tax Practitioners Board catalogue discovery | Monthly on day 3 at `20:17` UTC; manual dispatch | Resolve the first-party public-register resource; retain only active Victorian organisation trading names with a non-postal Darebin business address; audit and hand off source-record facts | GitHub Actions, Node.js, npm, data.gov.au, Cloudflare, Supabase, GitHub artifacts | One candidate CSV retained 30 days; private source/evidence records in Ops | **Active on `main`; [run 33338604299](https://github.com/carlsuburbmates/suburbmates/actions/runs/33338604299) completed 268 organisation-only candidate rows on 31 August 2026.** | Individual-agent fields, individual trading names, registration numbers and dates never enter the CSV, artifact or public directory. It cannot make ownership decisions. |
 | Website-safety evidence | Monday schedule at `08:41` UTC; manual dispatch | Read `published_vendors`; validate public DNS; make DNS-pinned HTTPS `HEAD` requests; follow at most three HTTPS redirects; write a JSON report and summary | GitHub Actions, Supabase public projection, DNS, HTTPS, GitHub artifacts | JSON report retained 30 days | **Active on `main`; evidence run completed** | No listing write, automatic contact/publication decision, GitHub issue or operator task. A genuine workflow failure still fails the run. |
@@ -74,7 +73,7 @@ This is build and regression automation, not business-workflow automation. Its r
 
 ### 2. Catalogue candidate discovery
 
-Sources: `.github/workflows/catalogue-discovery.yml`, `.github/workflows/catalogue-victorian-liquor-licences.yml`, `.github/workflows/catalogue-tax-practitioners-board.yml`, `scripts/acquire-openstreetmap.ts`, `scripts/acquire-victorian-liquor-licences.ts`, `scripts/acquire-tax-practitioners-board.ts`, `scripts/audit-vendor-candidates.ts`, `scripts/merge-vendor-catalogues.ts`, and `scripts/report-catalogue-coverage.ts`.
+Sources: `.github/workflows/catalogue-discovery.yml`, `.github/workflows/catalogue-victorian-liquor-licences.yml`, `.github/workflows/catalogue-tax-practitioners-board.yml`, `scripts/acquire-openstreetmap.ts`, `scripts/acquire-victorian-liquor-licences.ts`, `scripts/acquire-tax-practitioners-board.ts`, `scripts/audit-vendor-candidates.ts`, and `scripts/report-catalogue-coverage.ts`.
 
 Verified sequence:
 
@@ -82,12 +81,10 @@ Verified sequence:
 2. Exclude non-commercial tags and normalize the accepted candidate fields.
 3. Write `data/vendor-candidates-osm.csv` with OpenStreetMap source URL, check date, `pending_review` status, and source note.
 4. Run the candidate data-hygiene audit.
-5. Merge OSM candidates with `data/vendor-candidates.csv`, retaining manual data and source notes where records deduplicate.
-6. Audit `data/vendor-candidates-merged.csv`.
-7. Print coverage information in the workflow log.
-8. Upload the OSM and merged CSVs as 30-day GitHub artifacts.
-9. Send the OSM candidate rows to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare. The handoff includes the versioned `openstreetmap-candidate-v1` contract; a missing or changed version safely holds the source before any candidate or listing record is created. Exact source/artifact retries are idempotent; a changed later observation is processed as a freshness refresh.
-10. Persist an idempotent handoff run, the candidate facts, normalised facts, qualification outcome, reasons, correlation and immutable audit evidence. Qualifying candidates may become unclaimed listings; exceptions remain private in `/ops/candidates`.
+5. Print coverage information in the workflow log.
+6. Upload the OSM source artifact for 30 days.
+7. Send the OSM candidate rows to `POST /api/automation/candidates`, authenticated by a secret held only in GitHub Actions and Cloudflare. The handoff includes the versioned `openstreetmap-candidate-v1` contract; a missing or changed version safely holds the source before any candidate or listing record is created. Exact source/artifact retries are idempotent; a changed later observation is processed as a freshness refresh.
+8. Persist an idempotent handoff run, the candidate facts, normalised facts, qualification outcome, reasons, correlation and immutable audit evidence. Qualifying candidates may become unclaimed listings; exceptions remain private in `/ops/candidates`.
 
 The Victorian liquor-licence and Tax Practitioners Board workflows follow the same authenticated source-contract handoff without reusing the OSM staging/merge sequence. Their source-specific acquisition code produces the bounded artifact described in the inventory; the Tax Practitioners Board workflow filters individual-agent data before its artifact is written.
 

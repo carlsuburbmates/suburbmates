@@ -37,7 +37,7 @@ function sourceHost(sourceUrl: string | undefined): string {
 }
 
 function run(): void {
-  const input = process.argv[2] || 'data/vendor-candidates-merged.csv';
+  const input = process.argv[2] || 'data/vendor-candidates-osm.csv';
   const inputPath = path.resolve(process.cwd(), input);
   const rows = parse(fs.readFileSync(inputPath, 'utf8'), {
     columns: true,

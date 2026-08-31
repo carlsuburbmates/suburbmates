@@ -204,7 +204,6 @@ npm run audit:test
 npm run acquire:osm:test
 npm run acquire:vic-liquor:test
 npm run catalogue:source-evidence:test
-npm run catalogue:merge:test
 npm run seed:test
 npm run public-catalogue:test
 ```

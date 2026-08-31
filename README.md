@@ -13,12 +13,12 @@ Automation workflows, triggers, integrations, and safety boundaries are mapped i
 ```bash
 npm install
 npm run check
-npm run audit -- data/vendor-candidates-merged.csv
-npm run seed -- --dry-run data/vendor-candidates-merged.csv
-npm run catalogue:report -- data/vendor-candidates-merged.csv
+npm run acquire:osm
+npm run audit -- data/vendor-candidates-osm.csv
+npm run catalogue:report -- data/vendor-candidates-osm.csv
 ```
 
-The repository root contains catalogue acquisition, audit, and import tooling. The only web runtime and deployment configuration lives in `web/`; `npm run dev` at the root safely delegates there. Run web delivery checks from that directory:
+The repository root contains source-specific acquisition, audit and evidence tooling. Routine discovery enters only the versioned approved-source handoff; it is never seeded from a tracked CSV. The only web runtime and deployment configuration lives in `web/`; `npm run dev` at the root safely delegates there. Run web delivery checks from that directory:
 
 ```bash
 npm install

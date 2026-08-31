@@ -1,27 +1,25 @@
 # Vendor Data
 
-## Canonical files
+## Active source staging
 
-- `vendor-candidates.csv`: curated candidate source.
-- `vendor-candidates-osm.csv`: OpenStreetMap acquisition output.
-- `vendor-candidates-merged.csv`: deterministic curated-plus-OSM output.
-- `vendor-candidates-northcote-rise.csv`: official Northcote Rise association supplement.
+- `vendor-candidates-osm.csv`: generated OpenStreetMap acquisition output. The scheduled workflow recreates it before audit, reporting and the versioned source handoff.
+- `vendor-candidates-northcote-rise.csv`: historic official Northcote Rise association supplement.
 - `darebin-catchment.json`: allowed City of Darebin suburb manifest.
 
-Legacy/template files remain for reference only and must not be treated as the current catalogue source.
+`vendor-candidates.csv`, `vendor-candidates-merged.csv`, `vendor-import-ready.csv` and templates are historic migration evidence only. They must not be used to seed, merge, publish or refresh the live catalogue. Current sources enter through their own approved, versioned source contract.
 
 ## Required listing fields
 
 Every real listing needs a business name, category slug, and suburb slug. Address, phone, email, website, source URL, and notes are enrichment fields. Missing enrichment must never block a real public listing.
 
-## Import safety
+## Source safety
 
-Always audit and dry-run before a live import:
+Audit an acquired source artifact before its authenticated handoff:
 
 ```bash
-npm run audit -- data/vendor-candidates-merged.csv
-npm run seed -- --dry-run data/vendor-candidates-merged.csv
-npm run seed -- data/vendor-candidates-merged.csv
+npm run acquire:osm
+npm run audit -- data/vendor-candidates-osm.csv
+npm run catalogue:report -- data/vendor-candidates-osm.csv
 ```
 
-Run the same audit and seed sequence for `vendor-candidates-northcote-rise.csv`. The importer is idempotent, preserves owner-entered fields, publishes new catalogue listings, and retains source provenance.
+The private candidate handoff is idempotent, preserves owner-entered fields, retains source provenance and only creates an unclaimed listing after its deterministic qualification passes.

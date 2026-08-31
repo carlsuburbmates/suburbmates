@@ -27,18 +27,14 @@ jobs:
       - run: npm ci
       - run: npm run acquire:osm
       - run: npm run audit -- data/vendor-candidates-osm.csv
-      - run: npm run catalogue:merge
-      - run: npm run audit -- data/vendor-candidates-merged.csv
-      - run: npm run catalogue:report -- data/vendor-candidates-merged.csv
+      - run: npm run catalogue:report -- data/vendor-candidates-osm.csv
 
       - uses: actions/upload-artifact@v6
         with:
           name: catalogue-candidates-${{ github.run_id }}
           retention-days: 30
           if-no-files-found: error
-          path: |
-            data/vendor-candidates-osm.csv
-            data/vendor-candidates-merged.csv
+          path: data/vendor-candidates-osm.csv
 
       - uses: actions/upload-artifact@v6
         with:
