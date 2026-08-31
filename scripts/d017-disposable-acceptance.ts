@@ -317,7 +317,7 @@ async function main() {
     contact_email: emails.browser, source_key: `${suffix}:browser-claim`, listing_source: "operator_added",
     is_published: true, listing_status: "published", ownership_status: "unclaimed",
   });
-  const result = { environment: new URL(url!).hostname, fixturePrefix: suffix, users: { ownerId, otherId, operatorId, submitterId, accessId, browserId }, browser: { ownerEmail: emails.browser, ownerPassword: password, operatorEmail: emails.operator, operatorPassword: password, vendor: browserVendor }, workflowIds: { profileChangeId: profileId, contactRequestId: contactId }, vendor: { id: claimVendor.id, slug: claimVendor.slug }, assertions: evidence, teardown: "The local Supabase environment is disposable; stop it without a backup after controlled acceptance evidence is captured." };
+  const result = { environment: new URL(url!).hostname, fixturePrefix: suffix, users: { ownerId, otherId, operatorId, submitterId, accessId, browserId }, browser: { ownerEmail: emails.browser, ownerPassword: password, operatorEmail: emails.operator, operatorPassword: password, vendor: browserVendor, mediaOwnerEmail: emails.owner, mediaOwnerPassword: password, mediaVendor: claimVendor }, workflowIds: { profileChangeId: profileId, contactRequestId: contactId }, vendor: { id: claimVendor.id, slug: claimVendor.slug }, assertions: evidence, teardown: "The local Supabase environment is disposable; stop it without a backup after controlled acceptance evidence is captured." };
   if (evidencePath) await writeFile(path.resolve(evidencePath), `${JSON.stringify(result, null, 2)}\n`, "utf8");
   console.log(JSON.stringify(result, null, 2));
 }
