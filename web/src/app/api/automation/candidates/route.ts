@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
     if (!/^[0-9a-f]{64}$/.test(artifactSha256) || !candidates || candidates.length < 1 || candidates.length > MAX_CANDIDATES) {
       return NextResponse.json({ error: "Invalid approved-source candidate batch" }, { status: 400 });
     }
-    await markCatalogueSourceContractHealthy(admin, sourceContract);
     // Exact input retries remain idempotent through the source/artifact run
     // identity below. A later source observation must continue instead: it
     // refreshes private evidence and detects conflicts without rewriting the
@@ -283,14 +282,22 @@ export async function POST(request: NextRequest) {
         .update({ status: "completed", qualified_count: qualifiedCount, exception_count: exceptionCount, completed_at: completedAt })
         .eq("id", run.id);
       if (completion.error) throw new Error("Could not complete the candidate handoff run.");
-      const health = await admin.from("integration_health").upsert({ integration_name: "candidate_handoff", status: "healthy", last_success_at: completedAt, metadata: { last_run_id: run.id, qualified_count: qualifiedCount, exception_count: exceptionCount } }, { onConflict: "integration_name" });
-      if (health.error) throw new Error("Could not record candidate handoff health.");
+      await recordCandidateHandoffHealth(admin, {
+        status: "healthy",
+        completedAt,
+        metadata: { last_run_id: run.id, qualified_count: qualifiedCount, exception_count: exceptionCount },
+      });
       return NextResponse.json({ received: true, idempotent: false, runId: run.id, qualifiedCount, exceptionCount });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Candidate handoff failed.";
       const now = new Date().toISOString();
       await admin.from("candidate_handoff_runs").update({ status: "failed", error_message: message, completed_at: now }).eq("id", run.id);
-      await admin.from("integration_health").upsert({ integration_name: "candidate_handoff", status: "failed", last_failure_at: now, last_error: message, metadata: { last_run_id: run.id } }, { onConflict: "integration_name" });
+      await recordCandidateHandoffHealth(admin, {
+        status: "failed",
+        completedAt: now,
+        message,
+        metadata: { last_run_id: run.id },
+      });
       throw error;
     }
   } catch (error) {
@@ -365,16 +372,30 @@ async function holdCatalogueSourceContract(admin: ReturnType<typeof createAdminC
   if (health.error) throw new Error("Could not record the catalogue source contract hold.");
 }
 
-async function markCatalogueSourceContractHealthy(admin: ReturnType<typeof createAdminClient>, source: CatalogueSourceContract) {
-  const now = new Date().toISOString();
+async function recordCandidateHandoffHealth(
+  admin: ReturnType<typeof createAdminClient>,
+  details: { status: "healthy" | "failed"; completedAt: string; message?: string; metadata: Record<string, unknown> },
+) {
+  // A serial source workflow marks its aggregate health as running before it
+  // submits its first candidate. Individual candidate completions and retries
+  // are evidence, not terminal source outcomes; overwriting that status made
+  // System say "All clear" while later shards were still active.
+  const current = await admin.from("integration_health")
+    .select("status")
+    .eq("integration_name", "candidate_handoff")
+    .maybeSingle();
+  if (current.error) throw new Error("Could not read candidate handoff health.");
+  if (current.data?.status === "running") return;
+
   const health = await admin.from("integration_health").upsert({
-    integration_name: integrationName(source),
-    status: "healthy",
-    last_success_at: now,
-    last_error: null,
-    metadata: { source_contract: source.version, source: source.key },
+    integration_name: "candidate_handoff",
+    status: details.status,
+    last_success_at: details.status === "healthy" ? details.completedAt : undefined,
+    last_failure_at: details.status === "failed" ? details.completedAt : undefined,
+    last_error: details.status === "failed" ? details.message ?? "Candidate handoff failed." : null,
+    metadata: details.metadata,
   }, { onConflict: "integration_name" });
-  if (health.error) throw new Error("Could not record the catalogue source contract check.");
+  if (health.error) throw new Error("Could not record candidate handoff health.");
 }
 
 async function finaliseStaleSourceRuns(admin: ReturnType<typeof createAdminClient>, source: CatalogueSourceContract) {
