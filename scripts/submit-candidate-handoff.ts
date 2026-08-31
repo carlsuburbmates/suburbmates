@@ -29,8 +29,10 @@ const REQUEST_TIMEOUT_MS = 45_000;
 // The cumulative backoff extends beyond the one-minute server recovery window.
 // Cloudflare can reject a request before the route executes; keep retrying long
 // enough for a later request to reach the idempotent stale-run recovery path.
-const MAX_ATTEMPTS = 18;
+const MAX_ATTEMPTS = 20;
 const RETRY_DELAY_MS = 2_000;
+const PROCESSING_RECEIPT_DELAY_MS = 65_000;
+const RESOURCE_RECOVERY_DELAY_MS = 120_000;
 if (!endpoint || !token || !csvPath) throw new Error("CANDIDATE_HANDOFF_URL, AUTOMATION_INGEST_TOKEN and a CSV path are required.");
 if (!sourceContract) throw new Error("CATALOGUE_SOURCE must name an approved automated source.");
 
@@ -82,7 +84,7 @@ await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, c
       }
       const detail = error instanceof Error ? error.name : "network failure";
       console.warn(`Candidate handoff batch ${batchIndex + 1}: ${detail}; retrying (${attempt}/${MAX_ATTEMPTS}).`);
-      await delay(RETRY_DELAY_MS * attempt);
+      await delay(retryDelayForNetworkFailure(attempt));
       continue;
     }
     const result = await readResponse(response);
@@ -95,8 +97,14 @@ await runWithConcurrency(batches, MAX_CONCURRENT_BATCHES, async ({ batchIndex, c
     if (!retryable || attempt === MAX_ATTEMPTS) {
       throw new Error(`Candidate handoff batch ${batchIndex + 1} failed with ${response.status}: ${result.detail || "No response body"}.`);
     }
-    console.warn(`Candidate handoff batch ${batchIndex + 1}: ${response.status === 202 ? "still processing" : `temporary ${response.status} response`}; retrying (${attempt}/${MAX_ATTEMPTS}).`);
-    await delay(RETRY_DELAY_MS * attempt);
+    const resourceLimited = response.status === 503 && /worker exceeded resource limits/i.test(result.detail ?? "");
+    const retryDelay = response.status === 202
+      ? PROCESSING_RECEIPT_DELAY_MS
+      : resourceLimited
+        ? resourceRecoveryDelay(attempt)
+        : RETRY_DELAY_MS * attempt;
+    console.warn(`Candidate handoff batch ${batchIndex + 1}: ${response.status === 202 ? "still processing" : resourceLimited ? "Worker resource recovery window" : `temporary ${response.status} response`}; retrying (${attempt}/${MAX_ATTEMPTS}) after ${Math.round(retryDelay / 1000)}s.`);
+    await delay(retryDelay);
   }
 });
 
@@ -107,6 +115,14 @@ async function readResponse(response: Response): Promise<{ qualifiedCount?: numb
 }
 
 function delay(milliseconds: number) { return new Promise((resolve) => setTimeout(resolve, milliseconds)); }
+
+function retryDelayForNetworkFailure(attempt: number) {
+  return attempt >= 6 ? RESOURCE_RECOVERY_DELAY_MS : RETRY_DELAY_MS * attempt;
+}
+
+function resourceRecoveryDelay(attempt: number) {
+  return attempt >= 6 ? RESOURCE_RECOVERY_DELAY_MS : RETRY_DELAY_MS * attempt;
+}
 
 function readShardFlag(flag: string, fallback: number) {
   const valueIndex = process.argv.indexOf(flag);
