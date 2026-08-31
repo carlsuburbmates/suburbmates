@@ -8,6 +8,7 @@ export type CandidateInput = {
   contactEmail?: string | null;
   phone?: string | null;
   website?: string | null;
+  sourceUrl?: string | null;
   websiteSafety?: "safe" | "unsafe" | "unknown";
 };
 
@@ -17,17 +18,24 @@ export type ExistingListing = {
   streetAddress?: string | null;
   phone?: string | null;
   website?: string | null;
+  sourceUrl?: string | null;
 };
 
 export type Qualification = {
   outcome: "qualified" | "exception";
   reasons: string[];
   duplicateVendorId: string | null;
-  normalized: { businessName: string; streetAddress: string; phone: string; website: string };
+  normalized: { businessName: string; streetAddress: string; phone: string; website: string; sourceUrl: string };
 };
 
 export function qualifyCandidate(candidate: CandidateInput, options: { allowedSources: ReadonlySet<string>; allowedSuburbs: ReadonlySet<string>; allowedCategories: ReadonlySet<string>; existingListings: readonly ExistingListing[] }): Qualification {
-  const normalized = { businessName: normalizeText(candidate.businessName), streetAddress: normalizeText(candidate.streetAddress), phone: normalizePhone(candidate.phone), website: normalizeWebsite(candidate.website) };
+  const normalized = {
+    businessName: normalizeText(candidate.businessName),
+    streetAddress: normalizeText(candidate.streetAddress),
+    phone: normalizePhone(candidate.phone),
+    website: normalizeWebsite(candidate.website),
+    sourceUrl: normalizeSourceUrl(candidate.sourceUrl),
+  };
   const reasons: string[] = [];
   const source = normalizeText(candidate.source);
   const suburb = normalizeText(candidate.suburbSlug);
@@ -45,8 +53,15 @@ export function qualifyCandidate(candidate: CandidateInput, options: { allowedSo
 
 function findStrongDuplicate(normalized: Qualification["normalized"], listings: readonly ExistingListing[]) {
   return listings.find((listing) => {
-    const website = normalizeWebsite(listing.website); const phone = normalizePhone(listing.phone); const name = normalizeText(listing.businessName); const address = normalizeText(listing.streetAddress);
-    return (normalized.website !== "" && normalized.website === website) || (normalized.phone !== "" && normalized.phone === phone) || (normalized.businessName !== "" && normalized.businessName === name && normalized.streetAddress !== "" && normalized.streetAddress === address);
+    const website = normalizeWebsite(listing.website);
+    const phone = normalizePhone(listing.phone);
+    const sourceUrl = normalizeSourceUrl(listing.sourceUrl);
+    const name = normalizeText(listing.businessName);
+    const address = normalizeText(listing.streetAddress);
+    return (normalized.sourceUrl !== "" && normalized.sourceUrl === sourceUrl)
+      || (normalized.website !== "" && normalized.website === website)
+      || (normalized.phone !== "" && normalized.phone === phone)
+      || (normalized.businessName !== "" && normalized.businessName === name && normalized.streetAddress !== "" && normalized.streetAddress === address);
   });
 }
 export function normalizeText(value: string | null | undefined) { return (value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim(); }
@@ -54,4 +69,17 @@ export function normalizePhone(value: string | null | undefined) { return (value
 export function normalizeWebsite(value: string | null | undefined) {
   const raw = value?.trim(); if (!raw) return "";
   try { const url = new URL(raw); return url.protocol === "https:" && !url.username && !url.password ? `${url.hostname.toLowerCase().replace(/^www\./, "")}${url.pathname.replace(/\/$/, "")}` : ""; } catch { return ""; }
+}
+
+function normalizeSourceUrl(value: string | null | undefined) {
+  const raw = value?.trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw);
+    return (url.protocol === "https:" || url.protocol === "http:")
+      ? url.protocol + "//" + url.hostname.toLowerCase() + url.pathname.replace(/\/$/, "")
+      : "";
+  } catch {
+    return "";
+  }
 }

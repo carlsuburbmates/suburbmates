@@ -370,14 +370,26 @@ async function loadCandidateDuplicateCandidates(admin: ReturnType<typeof createA
   // exact-identifier matches, then retain the existing normalized duplicate
   // decision in qualifyCandidate as the final authority.
   const matches = new Map<string, ExistingListing>();
-  const add = (rows: Array<{ id: string; business_name: string; street_address: string | null; phone: string | null; website: string | null }> | null) => {
-    for (const row of rows ?? []) matches.set(row.id, { id: row.id, businessName: row.business_name, streetAddress: row.street_address, phone: row.phone, website: row.website });
+  const add = (rows: Array<{ id: string; business_name: string; street_address: string | null; phone: string | null; website: string | null; source_url: string | null }> | null) => {
+    for (const row of rows ?? []) matches.set(row.id, {
+      id: row.id,
+      businessName: row.business_name,
+      streetAddress: row.street_address,
+      phone: row.phone,
+      website: row.website,
+      sourceUrl: row.source_url,
+    });
   };
-  const select = "id, business_name, street_address, phone, website";
+  const select = "id, business_name, street_address, phone, website, source_url";
   if (candidate.businessName.trim()) {
     const byName = await admin.from("vendors").select(select).ilike("business_name", candidate.businessName.trim()).limit(100);
     if (byName.error) throw new Error("Could not look up candidate name duplicates.");
     add(byName.data);
+  }
+  if (candidate.sourceUrl) {
+    const bySourceUrl = await admin.from("vendors").select(select).eq("source_url", candidate.sourceUrl).limit(100);
+    if (bySourceUrl.error) throw new Error("Could not look up candidate source-record duplicates.");
+    add(bySourceUrl.data);
   }
   const websiteHost = candidate.website ? safeHost(candidate.website) : null;
   if (websiteHost) {

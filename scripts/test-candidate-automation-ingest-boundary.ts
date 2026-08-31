@@ -34,6 +34,8 @@ assert.match(route, /staleProcessing/);
 assert.match(route, /Could not resume the failed or stale candidate handoff run/);
 assert.match(route, /Could not recover the partially completed qualified listing/);
 assert.match(route, /loadCandidateDuplicateCandidates/);
+assert.match(route, /Could not look up candidate source-record duplicates/);
+assert.match(route, /\.eq\("source_url", candidate\.sourceUrl\)/);
 assert.match(route, /Loading every listing for every singleton handoff made a 365-row official/);
 assert.doesNotMatch(route, /function loadListings/);
 assert.match(route, /qualifyCandidate as the final authority/);
