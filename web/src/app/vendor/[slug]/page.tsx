@@ -357,15 +357,17 @@ function ContactActions({
   directionsUrl: string | null;
 }) {
   const hasDirectContact = Boolean(phone || email || website);
+  const hasVisitAction = Boolean(directionsUrl);
+  const hasAction = hasDirectContact || hasVisitAction;
   return (
     <section
       className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
-      aria-label="Direct business contact"
+      aria-label="Business contact and visit options"
     >
       <h2 className="text-sm font-black uppercase tracking-[0.14em] text-slate-600">
-        Contact this business
+        Contact or visit this business
       </h2>
-      {hasDirectContact ? (
+      {hasAction ? (
         <div className="mt-4 flex flex-wrap gap-2">
           {phone && (
             <a href={`tel:${phone}`} className="btn btn-primary min-h-11">
@@ -404,7 +406,7 @@ function ContactActions({
         </div>
       ) : (
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          Direct contact details have not yet been added to this public profile.
+          Direct contact or visit details have not yet been added to this public profile.
         </p>
       )}
     </section>

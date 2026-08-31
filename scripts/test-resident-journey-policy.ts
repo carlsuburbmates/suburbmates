@@ -208,6 +208,21 @@ async function run() {
   );
   assert.match(
     profile,
+    /const hasVisitAction = Boolean\(directionsUrl\);/,
+    "an address-only profile must retain its directions action even without a contact route",
+  );
+  assert.match(
+    profile,
+    /const hasAction = hasDirectContact \|\| hasVisitAction;/,
+    "profile actions must treat visiting as useful independently of direct contact details",
+  );
+  assert.match(
+    profile,
+    /Contact or visit this business/,
+    "the profile action heading must not imply a direct contact route when only directions are known",
+  );
+  assert.match(
+    profile,
     /listing_correction/,
     "profiles must provide a safe report-problem entry point",
   );
