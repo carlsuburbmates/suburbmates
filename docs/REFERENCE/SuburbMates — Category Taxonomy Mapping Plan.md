@@ -39,9 +39,9 @@ These are new canonical categories for explicit OpenStreetMap feature tags, not 
 
 The release adds the three canonical category rows before the scheduled source job can emit them. Existing category assignments, URLs and historical evidence are unchanged.
 
-### Phase 1 — safe presentation corrections
+### Phase 1 — completed safe presentation corrections (1 September 2026)
 
-These change only a readable category name, not a slug, URL, listing assignment, search filter, or source contract.
+These change only a readable category name, not a slug, URL, listing assignment, search filter, or source contract. The three corrections are implemented by `20260901113000_correct_category_presentation_labels.sql` and protected by `category-presentation:test`.
 
 | Existing slug | Current label | Proposed public label | Reason |
 | --- | --- | --- | --- |
