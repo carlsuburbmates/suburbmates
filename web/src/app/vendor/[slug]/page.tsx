@@ -18,6 +18,10 @@ import { DirectoryProfileView } from "@/components/observability/DirectoryObserv
 import { PublicDirectoryShell } from "@/components/ui/PublicDirectoryShell";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
 import { isDirectoryCatchment } from "@/lib/directory-location";
+import {
+  extractPublicProfileFacts,
+  type PublicProfileFact,
+} from "@/lib/public-profile-facts";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -123,6 +127,7 @@ export default async function VendorWebsite({ params }: PageProps) {
   const categoryName = vendor.categories?.name ?? vendor.category_slug;
   const isCatchment = isDirectoryCatchment(vendor.suburb_slug);
   const profileDescription = vendor.description?.trim() || null;
+  const profileFacts = extractPublicProfileFacts(profileDescription);
   const tradingHours = vendor.trading_hours?.trim() || null;
   const profileSummary = describeKnownProfile({
     businessName: vendor.business_name,
@@ -224,6 +229,7 @@ export default async function VendorWebsite({ params }: PageProps) {
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="min-w-0">
             <PublicMediaGallery media={photos} />
+            <PublicProfileHighlights facts={profileFacts} />
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <h2 className="text-2xl font-black tracking-tight">
                 About this business
@@ -458,6 +464,23 @@ function PublicMediaGallery({ media }: { media: PublicMedia[] }) {
           />
         ))}
       </div>
+    </section>
+  );
+}
+
+function PublicProfileHighlights({ facts }: { facts: PublicProfileFact[] }) {
+  if (facts.length === 0) return null;
+  return (
+    <section className="mb-8 rounded-3xl border border-teal-900/10 bg-teal-50/60 p-5 shadow-sm sm:p-6" aria-label="Business highlights">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-teal-900">At a glance</p>
+      <ul className="mt-4 flex flex-wrap gap-2">
+        {facts.map((fact) => (
+          <li key={`${fact.label}-${fact.value ?? ""}`} className="rounded-full border border-teal-900/15 bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow-sm">
+            {fact.value ? <><span className="text-slate-500">{fact.label}: </span>{fact.value}</> : fact.label}
+            {fact.sourceReported && <span className="sr-only">, source-reported</span>}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
