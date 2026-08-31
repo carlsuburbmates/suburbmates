@@ -8,22 +8,22 @@ It does not override the locked product and Ops authorities in `docs/REFERENCE/`
 
 - [Workflow map and inventory](WORKFLOWS.md) — every implemented, configured, event-driven, and intentionally disabled automation.
 - `docs/HANDOVER.md` — current hosted state and release gates.
-- `docs/REFERENCE/SuburbMates — Corrected Master Architecture and Execution Plan.md` — product and safety authority.
-- `docs/REFERENCE/SuburbMates — Unified Operations Specification.md` — required Ops outcomes.
+- `docs/REFERENCE/SuburbMates — Decision Log.md` — locked owner decisions.
+- `docs/REFERENCE/SuburbMates — Target State and Operating Authority.md` — active product and safety authority.
 
 ## Automation boundary
 
-Automation may collect evidence, produce artefacts, and report exceptions. The sole narrow publication path is the token-protected OpenStreetMap candidate handoff: a new candidate may become an unclaimed listing only after it passes the deterministic source, scope, contact, duplicate and safety policy and its evidence is persisted. Automation must never approve or revoke ownership, decide a claim, change a listing's commercial state, or invent public business facts.
+Automation may collect evidence, produce artefacts, and report exceptions. The only narrow publication path is the token-protected, versioned **approved-source candidate handoff**: a new candidate may become an unclaimed listing only after it passes the deterministic source, scope, identity, category, duplicate and safety policy and its evidence is persisted. OpenStreetMap, Victorian liquor licences and the Tax Practitioners Board organisation-only register are the current approved automated contracts; each has its own source contract and field boundary. Automation must never approve or revoke ownership, decide a claim, change a listing's commercial state, or invent public business facts.
 
 Database health updates and contact retention are narrow, audited **Ops** processes, not Automation-lane workflows. They may not affect listings, ownership, claims, payments, or publication. The health monitor must not be treated as proof that GitHub evidence workflows are fresh.
 
 ## Current operating status
 
 - The internal Supabase health monitor and contact-retention job are active as Ops processes outside this lane.
-- GitHub has five active workflows on `main`: Verify, Catalogue candidate discovery, Website safety evidence, Production smoke, and the HubSpot Decision Inbox reconciliation. The HubSpot workflow is a one-way Ops companion: it creates or closes low-detail Tasks only and does not change SuburbMates data.
+- GitHub has seven active workflows on `main`: Verify; OpenStreetMap, Victorian liquor-licence and Tax Practitioners Board catalogue discovery; Website safety evidence; Production smoke; and HubSpot Decision Inbox reconciliation. The HubSpot workflow is a one-way Ops companion: it creates or closes low-detail Tasks only and does not change SuburbMates data.
 - Catalogue discovery and Production smoke fixes were merged in pull requests #4 and #5. Controlled manual runs then succeeded on `main`. Website safety retains evidence artefacts without turning raw external failures into operator work.
 - Stripe billing, bulk ABR/ABN checks, AI publication, media/logo processing, and the legacy inactivity pruner are disabled.
-- Candidate-to-Ops handoff is implemented for approved OpenStreetMap batches. A full manual run on 22 July 2026 covered 1,545 source rows: 1,544 private exceptions and one deterministically qualified, unclaimed listing with retained provenance, contact and audit evidence. The protected exception queue remains normal ongoing Ops work.
+- Candidate handoff is implemented for every approved automated source. The initial OpenStreetMap manual run on 22 July 2026 covered 1,545 source rows: 1,544 private exceptions and one deterministically qualified, unclaimed listing with retained provenance, contact and audit evidence. Routine exclusions and historic evidence gaps remain quiet background evidence; only a genuine ambiguity is surfaced for an operator decision.
 - The existing catalogue completed the private `existing-catalogue-v2` evidence pass on 26 July 2026: 619 qualified and 982 exceptions across 1,601 listings. It did not change listing visibility. These are background evidence records, not a queue for the operator to process one by one; only a genuine unresolved duplicate would be surfaced in Work.
 - The database health monitor does not ingest GitHub workflow runs or artefacts. Its green automation-queue status means only that the local job table has no failed or overdue rows; it is not evidence that GitHub checks ran.
 

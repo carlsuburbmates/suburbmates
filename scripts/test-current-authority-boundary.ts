@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 
 const unified = readFileSync("docs/REFERENCE/SuburbMates — Unified Operations Specification.md", "utf8");
 const decisionLog = readFileSync("docs/REFERENCE/SuburbMates — Decision Log.md", "utf8");
+const automationReadme = readFileSync("docs/AUTOMATION/README.md", "utf8");
+const automationWorkflows = readFileSync("docs/AUTOMATION/WORKFLOWS.md", "utf8");
 const candidateOps = readFileSync("web/src/app/ops/candidates/page.tsx", "utf8");
 const candidateDetail = readFileSync("web/src/app/ops/candidates/[recordId]/page.tsx", "utf8");
 const catalogueReview = readFileSync("web/src/app/ops/catalogue-review/page.tsx", "utf8");
@@ -14,6 +16,10 @@ assert.match(unified, /manual-only publication rule/);
 assert.match(unified, /requires a new owner-approved benefit, price, lifecycle and reconciliation specification/);
 assert.match(decisionLog, /D-018 — Modern directory automation, useful public profiles and value-first owner participation/);
 assert.match(decisionLog, /Payment must never determine publication, ownership, legitimacy, factual trust signals or organic search ranking/);
+assert.match(automationReadme, /versioned \*\*approved-source candidate handoff\*\*/);
+assert.doesNotMatch(automationReadme, /sole narrow publication path is the token-protected OpenStreetMap candidate handoff/);
+assert.match(automationWorkflows, /Tax Practitioners Board catalogue discovery/);
+assert.match(automationWorkflows, /OpenStreetMap, the licensed Victorian liquor-licence source and the Tax Practitioners Board organisation-only register/);
 for (const source of [candidateOps, candidateDetail, catalogueReview]) {
   assert.match(source, /Historical evidence did not include a direct contact route/);
   assert.match(source, /This alone no longer blocks an otherwise qualifying approved-source listing/);
