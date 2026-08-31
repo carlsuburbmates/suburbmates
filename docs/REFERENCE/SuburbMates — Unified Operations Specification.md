@@ -6,11 +6,26 @@ This is a detailed reference only where it agrees with the current [Target State
 
 The historical Stripe, Payments, tier, payment-status, provider-dashboard, AI-content and manual-only-publication sections below are not active scope. Billing is off and must remain off until a separately approved commercial model exists. Deterministically qualifying approved-source candidates may become unclaimed listings with retained evidence; raw, uncertain or user-submitted candidates remain private. No future implementation may revive a historical section that conflicts with these controls.
 
-**Document status:** Historical detailed reference; use only where it agrees with the current authority above.
+**Document status:** Historical detailed reference; use only where it agrees with the current authority above. The detailed sections following this notice are retained for decision history, not as implementation requirements.
 **Authority:** Subordinate to the Target State and Operating Authority, Decision Log, Journey Map, and Operations Responsibility and Follow-through Map.
 **Primary operator:** One authorised solo operator
 **Primary route:** `/ops`
 **Operating rule:** Routine platform operations occur inside `/ops`; connected-platform dashboards are reserved for setup, exceptional account administration and emergencies.
+
+---
+
+## Historical-reference boundary
+
+The remaining sections include earlier proposals for Stripe, Payments, Premium tiers, payment reconciliation, AI content, Search Console panels and manual publication. They are **not active scope** and must not be revived from this document. When an old section conflicts with current authority, the current authority wins without exception.
+
+In particular, this document does not authorise:
+
+- Stripe checkout, subscriptions, invoices, payment-status operations, Premium presentation, entitlement enforcement, webhooks or reconciliation;
+- payment, tier, ABN, claim or AI output changing publication, ownership, legitimacy, trust signals or organic ranking;
+- AI-generated public facts, automated ownership/moderation decisions, or a manual-only publication rule; or
+- a routine `/ops` Payments, Stripe, Search Console or infrastructure-control workspace.
+
+The active implementation is the D-018 evidence-backed default-publication, multi-source, owner-controlled model. A future commercial feature requires a new owner-approved benefit, price, lifecycle and reconciliation specification before any code or schema change. Historical references to a “retained” Stripe/Premium capability mean only that the earlier proposal was recorded; they do not make it approved.
 
 ---
 
