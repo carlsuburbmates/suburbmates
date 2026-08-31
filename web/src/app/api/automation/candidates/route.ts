@@ -193,6 +193,15 @@ export async function POST(request: NextRequest) {
             vendor_id: priorQualified.data.vendor_id,
           }).select("id").single();
           if (createdRecord.error || !createdRecord.data) throw new Error("Could not record refreshed source qualification evidence.");
+          if (recoveredRecordId) {
+            const recoveredLink = await admin.from("candidate_handoff_records").update({
+              qualification_outcome: "qualified",
+              qualification_reasons: [],
+              duplicate_vendor_id: null,
+              vendor_id: priorQualified.data.vendor_id,
+            }).eq("id", recoveredRecordId);
+            if (recoveredLink.error) throw new Error("Could not link recovered source qualification evidence.");
+          }
           await refreshQualifiedSourceListing(admin, {
             vendorId: priorQualified.data.vendor_id,
             candidate,

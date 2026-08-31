@@ -8,6 +8,7 @@ assert.match(route, /A prior qualified record is the stable identity for this ex
 assert.match(route, /if \(priorQualified\.data\?\.vendor_id\) \{/);
 assert.match(route, /existingListings = await loadCandidateDuplicateCandidates/);
 assert.match(route, /qualification_outcome: "qualified"/);
+assert.match(route, /Could not link recovered source qualification evidence/);
 assert.match(route, /refreshQualifiedSourceListing/);
 
 assert.match(migration, /HAVING count\(\*\) = 2/);
