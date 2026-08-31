@@ -27,6 +27,22 @@ This is an acquisition pipeline, not a one-time CSV exercise. Every record must 
 
 The next source must provide both a compatible licence for persistent display and an automatable, stable record/refresh path. The active contracts are OpenStreetMap, Victorian liquor licences by location and the Tax Practitioners Board organisation-only register.
 
+## Ready-to-send local source permission brief — not yet sent or approved
+
+This is the exact scope required before a Darebin Council, trader association or similar local provider can become an automated source. It is a request brief only: it grants SuburbMates no permission to copy, store, display, scrape or refresh any current page, map or directory.
+
+> SuburbMates is a Darebin local-business directory that sends residents directly to businesses. We would like to discuss a reusable data feed or written permission for a limited business-listing dataset. Could you confirm whether SuburbMates may persist, display and periodically refresh the supplied business name, public category, public business address or Darebin locality, public contact details and a stable source identifier/URL? We would retain field-level source attribution and observation dates, give the provider any required attribution, and never use the data for advertising, lead resale, individual profiling or direct marketing. We would exclude owner/personal contact details, internal notes, application/permit history and any field you do not authorise for public display. A feed may be CSV, API or another documented export; the minimum technical requirement is a stable business identity and non-postal Darebin location so records can be reconciled safely.
+
+Before onboarding, record all of the following in the approved-source registry and source review:
+
+1. written authorisation or an explicit compatible licence covering storage, public directory display, attribution and recurring refreshes;
+2. a documented delivery method, update cadence and stable record ID or canonical source URL;
+3. permitted public fields and explicit exclusions, especially personal/proprietor data and permit or compliance detail;
+4. an attribution form and any change/withdrawal process; and
+5. a dry-run artifact, duplicate report, field-level evidence mapping and deterministic qualification test before production handoff.
+
+No source becomes active merely because it is public, searchable, viewable in a map, or useful for a manual enquiry.
+
 ## Sources excluded
 
 Do not scrape or bulk-rehost Yellow Pages, White Pages, Google Places, Foursquare, Facebook, or similar closed directories without a written licence that explicitly permits this product use and storage. Their current terms either prohibit automated extraction or restrict caching, bulk display, or re-hosting of place data.
