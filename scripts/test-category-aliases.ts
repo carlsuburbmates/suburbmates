@@ -10,6 +10,7 @@ const candidateRoute = fs.readFileSync("web/src/app/api/automation/candidates/ro
 const joinActions = fs.readFileSync("web/src/app/(directory)/join/actions.ts", "utf8");
 
 assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.category_aliases/);
+assert.match(migration, /VALUES \('jeweller', 'Jeweller', 'Find local jewellers in Darebin\.'\)/);
 assert.match(migration, /VALUES \('jewelry', 'jeweller'\)/);
 assert.match(migration, /CREATE TRIGGER normalize_vendor_category_alias/);
 assert.match(migration, /UPDATE public\.vendors/);

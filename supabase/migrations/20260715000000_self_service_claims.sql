@@ -6,7 +6,17 @@ DROP FUNCTION IF EXISTS public.approve_claim(UUID);
 DROP FUNCTION IF EXISTS public.search_claimable_vendors(TEXT);
 DROP FUNCTION IF EXISTS public.list_pending_claims(INTEGER);
 DROP FUNCTION IF EXISTS public.reject_claim(UUID, TEXT);
-DROP TRIGGER IF EXISTS trg_check_vendor_claimable ON public.claim_requests;
+DO $$
+BEGIN
+  -- A fresh local replay reaches this historical migration before the later
+  -- reviewed-claims table is created. Production already had that table when
+  -- this cleanup first ran, so retain the cleanup where it exists without
+  -- making a fresh D-017 environment fail to initialise.
+  IF to_regclass('public.claim_requests') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS trg_check_vendor_claimable ON public.claim_requests;
+  END IF;
+END;
+$$;
 DROP FUNCTION IF EXISTS public.check_vendor_claimable();
 DROP TABLE IF EXISTS public.claim_requests;
 

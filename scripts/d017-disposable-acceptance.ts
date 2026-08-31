@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -10,12 +11,16 @@ const url = process.env.SUPABASE_URL;
 const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY;
 const serviceKey = process.env.SUPABASE_SECRET_KEY;
 const evidencePath = process.env.D017_EVIDENCE_PATH;
+const localDatabaseUrl = process.env.D017_LOCAL_DATABASE_URL;
 
 if (!url || !anonKey || !serviceKey || process.env.D017_CONTROLLED_ACCEPTANCE !== "true") {
   throw new Error("D-017 acceptance requires explicit disposable-project credentials and D017_CONTROLLED_ACCEPTANCE=true.");
 }
 if (url.includes("lqxohgpignkqqfkkbzsn") || url.includes("suburbmates.com.au")) {
   throw new Error("D-017 acceptance refuses the production Supabase project.");
+}
+if (localDatabaseUrl && !/^postgresql:\/\/[^/]+@(?:127\.0\.0\.1|localhost)(?::\d+)?\//.test(localDatabaseUrl)) {
+  throw new Error("D-017 local expiry control only accepts a loopback database URL.");
 }
 
 const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -41,6 +46,32 @@ async function mustFail(label: string, task: () => Promise<{ error: unknown }>) 
   const result = await task();
   assert(result.error, `${label}: expected a rejected request`);
   pass(label);
+}
+
+function expireEmailCode(email: string) {
+  if (!localDatabaseUrl) return new Promise((resolve) => setTimeout(resolve, 1_250));
+
+  const escapedEmail = "$d017$" + email + "$d017$";
+  const expirySql = `
+    DO $$
+    DECLARE
+      target_user_id uuid;
+      changed integer;
+    BEGIN
+      SELECT id INTO target_user_id FROM auth.users WHERE email = ${escapedEmail};
+      IF target_user_id IS NULL THEN RAISE EXCEPTION 'D-017 expiry target was not created'; END IF;
+      UPDATE auth.users
+      SET confirmation_sent_at = now() - interval '2 hours', recovery_sent_at = now() - interval '2 hours'
+      WHERE id = target_user_id;
+      UPDATE auth.one_time_tokens
+      SET created_at = now() - interval '2 hours', updated_at = now() - interval '2 hours'
+      WHERE user_id = target_user_id;
+      GET DIAGNOSTICS changed = ROW_COUNT;
+      IF changed = 0 THEN RAISE EXCEPTION 'D-017 expiry token was not created'; END IF;
+    END;
+    $$;
+  `;
+  execFileSync("psql", [localDatabaseUrl, "-v", "ON_ERROR_STOP=1", "-q", "-c", expirySql], { stdio: "ignore" });
 }
 
 async function createUser(email: string) {
@@ -111,7 +142,7 @@ async function main() {
   assert.ifError(expiredCode.error);
   const expiredToken = expiredCode.data.properties?.email_otp;
   assert.match(expiredToken ?? "", /^\d{6,8}$/);
-  await new Promise((resolve) => setTimeout(resolve, 1_250));
+  await expireEmailCode(emails.access);
   const expiredClient = createClient(url!, anonKey!, { auth: { persistSession: false, autoRefreshToken: false } });
   await mustFail("expired email code is rejected", () => expiredClient.auth.verifyOtp({ email: emails.access, token: expiredToken!, type: "email" }));
   pass("password sign-in, reset recovery, valid, expired, superseded and reused email-code paths work against hosted Auth");
@@ -286,7 +317,7 @@ async function main() {
     contact_email: emails.browser, source_key: `${suffix}:browser-claim`, listing_source: "operator_added",
     is_published: true, listing_status: "published", ownership_status: "unclaimed",
   });
-  const result = { environment: new URL(url!).hostname, fixturePrefix: suffix, users: { ownerId, otherId, operatorId, submitterId, accessId, browserId }, browser: { ownerEmail: emails.browser, ownerPassword: password, operatorEmail: emails.operator, operatorPassword: password, vendor: browserVendor }, workflowIds: { profileChangeId: profileId, contactRequestId: contactId }, vendor: { id: claimVendor.id, slug: claimVendor.slug }, assertions: evidence, teardown: "Delete disposable Supabase project nehccskyczmrhrzaudqy after browser and production-smoke evidence is captured." };
+  const result = { environment: new URL(url!).hostname, fixturePrefix: suffix, users: { ownerId, otherId, operatorId, submitterId, accessId, browserId }, browser: { ownerEmail: emails.browser, ownerPassword: password, operatorEmail: emails.operator, operatorPassword: password, vendor: browserVendor }, workflowIds: { profileChangeId: profileId, contactRequestId: contactId }, vendor: { id: claimVendor.id, slug: claimVendor.slug }, assertions: evidence, teardown: "The local Supabase environment is disposable; stop it without a backup after controlled acceptance evidence is captured." };
   if (evidencePath) await writeFile(path.resolve(evidencePath), `${JSON.stringify(result, null, 2)}\n`, "utf8");
   console.log(JSON.stringify(result, null, 2));
 }

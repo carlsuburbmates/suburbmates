@@ -15,6 +15,13 @@ CREATE POLICY "Public readers can resolve category aliases"
   TO anon, authenticated
   USING (true);
 
+-- Production already had this canonical category from the imported catalogue.
+-- A fresh local replay does not include production data, so create the same
+-- presentation category before the alias's foreign key is evaluated.
+INSERT INTO public.categories (slug, name, seo_description)
+VALUES ('jeweller', 'Jeweller', 'Find local jewellers in Darebin.')
+ON CONFLICT (slug) DO NOTHING;
+
 INSERT INTO public.category_aliases (alias_slug, category_slug)
 VALUES ('jewelry', 'jeweller')
 ON CONFLICT (alias_slug) DO UPDATE
