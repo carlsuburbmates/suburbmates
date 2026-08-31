@@ -1,11 +1,11 @@
 # Existing catalogue requalification audit
 
 **Date:** 26 July 2026 (Australia/Melbourne)
-**Scope:** private, idempotent evidence classification of the live published catalogue. It retained requalification evidence and one audit record; no listing, publication, ownership, commercial or lifecycle state changed.
+**Scope:** private, idempotent evidence classification of the live published catalogue. It retained requalification evidence and one audit record; no listing, publication, ownership, commercial or lifecycle state changed. This is a historical 26 July evidence snapshot, not the current D-018 qualification policy.
 
 ## Why this audit exists
 
-The approved qualification policy applies to every directory listing: permitted provenance, valid Darebin/category scope, identifiable business, at least one customer contact method, no strong duplicate and no known safety or legitimacy concern. The pre-existing catalogue was published before the current candidate handoff was built, so it must not be assumed to have passed that same policy.
+At the time, this pass treated a customer contact method as required evidence. D-018 superseded that rule: the current qualification policy requires approved provenance, valid Darebin/category scope, an identifiable business, no strong duplicate and no known safety or legitimacy concern; missing website, phone or email alone is not disqualifying. The pre-existing catalogue was published before the current candidate handoff was built, so this historical result must not be read as its current lifecycle policy.
 
 ## Live baseline
 

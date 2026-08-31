@@ -5,6 +5,10 @@ const unified = readFileSync("docs/REFERENCE/SuburbMates — Unified Operations 
 const decisionLog = readFileSync("docs/REFERENCE/SuburbMates — Decision Log.md", "utf8");
 const automationReadme = readFileSync("docs/AUTOMATION/README.md", "utf8");
 const automationWorkflows = readFileSync("docs/AUTOMATION/WORKFLOWS.md", "utf8");
+const lifecycleContract = readFileSync("docs/REFERENCE/SuburbMates — Listing Lifecycle and Release-State Contract.md", "utf8");
+const responsibilityMap = readFileSync("docs/REFERENCE/SuburbMates — Operations Responsibility and Follow-through Map.md", "utf8");
+const catalogueCoverage = readFileSync("docs/catalogue-coverage.md", "utf8");
+const existingCatalogueAudit = readFileSync("docs/AUTOMATION/EXISTING_CATALOGUE_REQUALIFICATION_AUDIT.md", "utf8");
 const candidateOps = readFileSync("web/src/app/ops/candidates/page.tsx", "utf8");
 const candidateDetail = readFileSync("web/src/app/ops/candidates/[recordId]/page.tsx", "utf8");
 const catalogueReview = readFileSync("web/src/app/ops/catalogue-review/page.tsx", "utf8");
@@ -20,6 +24,14 @@ assert.match(automationReadme, /versioned \*\*approved-source candidate handoff\
 assert.doesNotMatch(automationReadme, /sole narrow publication path is the token-protected OpenStreetMap candidate handoff/);
 assert.match(automationWorkflows, /Tax Practitioners Board catalogue discovery/);
 assert.match(automationWorkflows, /OpenStreetMap, the licensed Victorian liquor-licence source and the Tax Practitioners Board organisation-only register/);
+for (const authority of [lifecycleContract, responsibilityMap, catalogueCoverage]) {
+  assert.doesNotMatch(authority, /source, scope, contact, duplicate and safety checks/);
+}
+assert.match(lifecycleContract, /A missing website, phone or email is not itself a disqualifier/);
+assert.match(responsibilityMap, /A missing website, phone or email does not itself hold an otherwise identifiable local business/);
+assert.match(catalogueCoverage, /Missing website, phone or email is not a standalone exclusion/);
+assert.match(existingCatalogueAudit, /historical 26 July evidence snapshot, not the current D-018 qualification policy/);
+assert.match(existingCatalogueAudit, /D-018 superseded that rule/);
 for (const source of [candidateOps, candidateDetail, catalogueReview]) {
   assert.match(source, /Historical evidence did not include a direct contact route/);
   assert.match(source, /This alone no longer blocks an otherwise qualifying approved-source listing/);
