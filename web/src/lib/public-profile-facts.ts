@@ -27,6 +27,18 @@ export function extractPublicProfileFacts(
       "Source-reported wheelchair access.",
       { label: "Wheelchair access", sourceReported: true },
     ],
+    [
+      "Source-reported Wi-Fi.",
+      { label: "Wi-Fi", sourceReported: true },
+    ],
+    [
+      "Source-reported contactless payment.",
+      { label: "Contactless payment", sourceReported: true },
+    ],
+    [
+      "Drive-through available.",
+      { label: "Drive-through", sourceReported: true },
+    ],
   ];
   for (const [sentence, fact] of exactFacts) {
     if (description.includes(sentence)) facts.push(fact);
