@@ -139,6 +139,7 @@ assert.match(outcomeRoute, /catalogue_source_handoff_failed/);
 assert.match(outcomeRoute, /"started"/);
 assert.match(outcomeRoute, /status: healthStatus/);
 assert.match(outcomeRoute, /started \? "running"/);
+assert.match(outcomeRoute, /updated_at: now/);
 assert.match(outcomeRoute, /listing_state_changed_by_status_callback: false/);
 assert.match(outcomeRoute, /integration_health/);
 

@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
         last_success_at: outcome === "completed" ? now : undefined,
         last_failure_at: failed ? now : undefined,
         last_error: failed ? message : null,
+        updated_at: now,
         metadata,
       }, { onConflict: "integration_name" }),
       admin.from("integration_health").upsert({
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
         last_success_at: outcome === "completed" ? now : undefined,
         last_failure_at: failed ? now : undefined,
         last_error: failed ? message : null,
+        updated_at: now,
         metadata,
       }, { onConflict: "integration_name" }),
     ]);
