@@ -51,23 +51,27 @@ export default async function JoinPage({
   const suburb = typeof message.suburb === "string" ? message.suburb : "";
   let matches: {
     id: string;
+    slug: string;
     business_name: string;
     suburb_slug: string;
     category_slug: string;
+    is_claimed: boolean;
   }[] = [];
-  if (query.length >= 2 && suburb) {
-    const { data } = await supabase
-      .from("published_vendors")
-      .select("id, business_name, suburb_slug, category_slug")
-      .ilike("business_name", `%${query.replace(/[%_\\]/g, "\\$&")}%`)
-      .eq("suburb_slug", suburb)
-      .order("business_name")
-      .limit(5);
+  if (query.length >= 2) {
+    const { data } = await supabase.rpc("search_published_vendors", {
+      p_query: query,
+      p_suburb_slug: suburb || null,
+      p_category_slug: null,
+      p_limit: 5,
+      p_offset: 0,
+    });
     matches = data ?? [];
   }
+  const hasSearched = query.length >= 2;
+  const hasLocation = Boolean(suburb);
   const mayChooseMissingPath =
-    query.length >= 2 &&
-    suburb &&
+    hasSearched &&
+    hasLocation &&
     (matches.length === 0 || message.choose === "1");
   const path =
     mayChooseMissingPath && (message.path === "owner" || message.path === "suggest")
@@ -117,11 +121,10 @@ export default async function JoinPage({
           <select
             id="join-suburb"
             name="suburb"
-            required
             defaultValue={suburb}
             className="min-h-11 rounded-xl border border-slate-300 bg-white px-4"
           >
-            <option value="">Choose a suburb</option>
+            <option value="">Any Darebin suburb</option>
             {(suburbsResult.data ?? []).map((item) => (
               <option key={item.slug} value={item.slug}>
                 {item.name}
@@ -132,11 +135,16 @@ export default async function JoinPage({
         </form>
       </section>
 
-      {query.length >= 2 && suburb && (
+      {hasSearched && (
         <section className="mt-6" aria-live="polite">
           {matches.length > 0 ? (
             <>
               <h2 className="text-xl font-black">Is this your business?</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                These are possible matches from the public directory, including
+                spelling variation and related services. Check the profile
+                before adding anything new.
+              </p>
               <div className="mt-4 grid gap-3">
                 {matches.map((match) => (
                   <article
@@ -148,12 +156,29 @@ export default async function JoinPage({
                       {match.category_slug.replaceAll("-", " ")} ·{" "}
                       {match.suburb_slug.replaceAll("-", " ")}
                     </p>
-                    <Link
-                      href={`/claim?listing=${encodeURIComponent(match.id)}`}
-                      className="btn btn-primary mt-4 min-h-11"
-                    >
-                      Claim this profile
-                    </Link>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <Link
+                        href={`/vendor/${match.slug}`}
+                        className="btn btn-outline min-h-11"
+                      >
+                        View profile
+                      </Link>
+                      {match.is_claimed ? (
+                        <Link
+                          href="/contact?topic=claim_help"
+                          className="btn btn-outline min-h-11"
+                        >
+                          Need ownership help?
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/claim?listing=${encodeURIComponent(match.id)}`}
+                          className="btn btn-primary min-h-11"
+                        >
+                          Claim this profile
+                        </Link>
+                      )}
+                    </div>
                   </article>
                 ))}
               </div>
@@ -169,8 +194,10 @@ export default async function JoinPage({
             <>
               <h2 className="text-xl font-black">No likely match found</h2>
               <p className="mt-2 text-slate-600">
-                Try another spelling or suburb. If it is still missing, you can
-                choose a private owner or community-submission path.
+                Try another spelling, a shorter name, or a different suburb.
+                {hasLocation
+                  ? " If it is still missing, you can choose a private owner or community-submission path."
+                  : " Choose the business suburb before adding a genuinely missing listing."}
               </p>
             </>
           )}

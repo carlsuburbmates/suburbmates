@@ -21,6 +21,12 @@ assert.match(actions, /verifyTurnstileToken\(fields\.token, "business_submission
 assert.match(actions, /OwnerSubmissionState/);
 assert.match(join, /I own or represent it/);
 assert.match(join, /Suggest a local business/);
+assert.match(join, /rpc\("search_published_vendors"/, "Find-first must reuse the safe public typo and intent reader rather than a second literal-only lookup.");
+assert.match(join, /p_suburb_slug: suburb \|\| null/, "Owner search may search all Darebin before a suburb is known, while retaining an optional suburb filter.");
+assert.match(join, /Any Darebin suburb/, "Suburb must be optional while checking for an existing listing.");
+assert.match(join, /View profile/, "Possible matches must be inspectable before a claim or missing-business path.");
+assert.match(join, /match\.is_claimed/, "A claimed match must offer ownership help instead of a misleading new claim action.");
+assert.doesNotMatch(join, /\.ilike\("business_name"/, "The owner find-first route must not fall back to an isolated literal-only name search.");
 assert.match(ownerForm, /Submit business and ownership request/);
 assert.match(join, /CategoryField/);
 assert.match(join, /Submitting securely/);
