@@ -24,6 +24,8 @@ assert.match(page, /Bulk ABN checks/);
 assert.match(page, /OpenStreetMap source/);
 assert.match(page, /Candidate processing is safely held; no listing changed/);
 assert.match(page, /An approved source refresh is in progress/);
+assert.match(page, /activeSourceRefreshes/);
+assert.match(page, /refresh .* in progress\. It does not need an operator decision/);
 assert.match(page, /value === "running"/);
 assert.match(page, /catalogueSourceName/);
 assert.match(page, /Victorian liquor-licence/);

@@ -30,6 +30,7 @@ export default async function OpsSystemPage() {
   const events = (auditResult.data ?? []) as Audit[];
   const attention = attentionItems(health, jobs);
   const dormant = health.filter((item) => item.status === "disabled" || item.status === "unknown");
+  const activeSourceRefreshes = health.filter((item) => item.status === "running" && item.integration_name.endsWith("_source"));
 
   return (
     <div className="space-y-8">
@@ -41,7 +42,7 @@ export default async function OpsSystemPage() {
 
       <section className={`rounded-2xl border p-6 shadow-sm ${attention.length === 0 ? "border-green-200 bg-green-50" : "border-amber-300 bg-amber-50"}`}>
         <h3 className="text-xl font-bold">{attention.length === 0 ? "All clear" : `${attention.length} item${attention.length === 1 ? "" : "s"} need attention`}</h3>
-        {attention.length === 0 ? <p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p> : <div className="mt-4 space-y-3">{attention.map((item) => <article id={item.reference} key={item.reference} className="scroll-mt-6 rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: ask for technical help and quote reference {item.reference}.</p></article>)}</div>}
+        {attention.length === 0 ? <><p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p>{activeSourceRefreshes.length > 0 && <p className="mt-3 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm font-semibold text-sky-950">{activeSourceRefreshes.map((item) => label(item.integration_name)).join(", ")} refresh {activeSourceRefreshes.length === 1 ? "is" : "are"} in progress. It does not need an operator decision.</p>}</> : <div className="mt-4 space-y-3">{attention.map((item) => <article id={item.reference} key={item.reference} className="scroll-mt-6 rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: ask for technical help and quote reference {item.reference}.</p></article>)}</div>}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
