@@ -6,6 +6,7 @@ const refinement = fs.readFileSync("supabase/migrations/20260827143425_refine_re
 const expansion = fs.readFileSync("supabase/migrations/20260828145153_expand_directory_intent_language.sql", "utf8");
 const specificity = fs.readFileSync("supabase/migrations/20260830105746_prefer_specific_directory_intent.sql", "utf8");
 const venueCoverage = fs.readFileSync("supabase/migrations/20260830143000_expand_osm_venue_coverage.sql", "utf8");
+const specificityFix = fs.readFileSync("supabase/migrations/20260901100000_fix_directory_intent_specificity.sql", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
 assert.match(migration, /FROM public\.published_vendors AS vendor/);
@@ -50,4 +51,11 @@ assert.match(venueCoverage, /SECURITY INVOKER/);
 assert.match(venueCoverage, /FROM public\.published_vendors AS vendor/);
 assert.doesNotMatch(venueCoverage, /FROM public\.vendors\b/);
 assert.match(venueCoverage, /Query text is never retained/);
+assert.match(specificityFix, /\('dog groomer', 'pet-grooming'\)/);
+assert.match(specificityFix, /cardinality\(string_to_array\(aliases\.alias, ' '\)\) AS specificity/);
+assert.match(specificityFix, /specificity = \(SELECT max\(specificity\) FROM matched_intents\)/);
+assert.match(specificityFix, /SECURITY INVOKER/);
+assert.match(specificityFix, /FROM public\.published_vendors AS vendor/);
+assert.doesNotMatch(specificityFix, /FROM public\.vendors\b/);
+assert.match(specificityFix, /Query text is never retained/);
 console.log("Directory intent-search policy checks passed.");
