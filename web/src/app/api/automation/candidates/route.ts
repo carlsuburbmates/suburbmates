@@ -172,8 +172,39 @@ export async function POST(request: NextRequest) {
           }
           recoveredRecordId = existingRecord.id;
         }
-        const existingListings = (await loadCandidateDuplicateCandidates(admin, candidate))
-          .filter((listing) => listing.id !== priorQualified.data?.vendor_id);
+        // A prior qualified record is the stable identity for this exact
+        // approved-source record. Do not let an older, separately retained
+        // legacy row with the same source URL turn its refresh into a private
+        // duplicate exception. Refreshing the qualified row preserves any
+        // later operator lifecycle decision; it never republishes a listing.
+        if (priorQualified.data?.vendor_id) {
+          const createdRecord = recoveredRecordId ? { data: { id: recoveredRecordId }, error: null } : await admin.from("candidate_handoff_records").insert({
+            run_id: run.id,
+            source_record_key: sourceRecordKey,
+            candidate_data: toCandidateData(candidate),
+            normalized_data: qualifyCandidate(candidate, {
+              allowedSources: new Set(Object.keys(CATALOGUE_SOURCE_CONTRACTS)),
+              allowedSuburbs: suburbs,
+              allowedCategories: categories,
+              existingListings: [],
+            }).normalized,
+            qualification_outcome: "qualified",
+            qualification_reasons: [],
+            vendor_id: priorQualified.data.vendor_id,
+          }).select("id").single();
+          if (createdRecord.error || !createdRecord.data) throw new Error("Could not record refreshed source qualification evidence.");
+          await refreshQualifiedSourceListing(admin, {
+            vendorId: priorQualified.data.vendor_id,
+            candidate,
+            sourceRecordKey,
+            sourceContract,
+            correlationId: run.correlation_id,
+          });
+          qualifiedCount++;
+          continue;
+        }
+
+        const existingListings = await loadCandidateDuplicateCandidates(admin, candidate);
         const qualification = qualifyCandidate(candidate, {
           allowedSources: new Set(Object.keys(CATALOGUE_SOURCE_CONTRACTS)),
           allowedSuburbs: suburbs,
@@ -192,20 +223,6 @@ export async function POST(request: NextRequest) {
         }).select("id").single();
         if (createdRecord.error || !createdRecord.data) throw new Error("Could not record candidate qualification evidence.");
         const recordId = createdRecord.data.id;
-
-        if (priorQualified.data?.vendor_id && qualification.outcome === "qualified") {
-          await refreshQualifiedSourceListing(admin, {
-            vendorId: priorQualified.data.vendor_id,
-            candidate,
-            sourceRecordKey,
-            sourceContract,
-            correlationId: run.correlation_id,
-          });
-          const link = await admin.from("candidate_handoff_records").update({ vendor_id: priorQualified.data.vendor_id }).eq("id", recordId);
-          if (link.error) throw new Error("Could not link refreshed source evidence to its listing.");
-          qualifiedCount++;
-          continue;
-        }
 
         if (qualification.outcome === "exception") {
           let enrichment: ExistingListingEnrichment | null = null;
