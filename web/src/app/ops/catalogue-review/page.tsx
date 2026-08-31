@@ -70,7 +70,7 @@ function ExceptionCard({ record }: { record: CatalogueException }) {
 function label(value: string) { return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()); }
 function reasonLabel(reason: string) {
   return ({
-    missing_reachable_contact: "There is no usable way for customers to contact the business.",
+    missing_reachable_contact: "Historical evidence did not include a direct contact route. This alone no longer blocks an otherwise qualifying approved-source listing.",
     unproven_existing_provenance: "The original source evidence is incomplete.",
     unsafe_or_invalid_website: "The stored website address is unsafe or invalid.",
     strong_duplicate: "It matches another listing strongly.",
