@@ -20,6 +20,7 @@ import {
   Building2,
 } from "lucide-react";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
+import { displayDirectoryStreetAddress } from "@/lib/directory-location";
 
 type DirectoryVendor = {
   id: string;
@@ -400,11 +401,12 @@ export function DirectoryBrowseClient({
                 categories.find((c) => c.slug === vendor.category_slug)?.name ||
                 vendor.category_slug;
               const detail = vendor.description?.replace(/\s+/g, " ").trim();
+              const displayedAddress = displayDirectoryStreetAddress(vendor.street_address);
 
               return (
                 <article
                   key={vendor.id}
-                  className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-400 transition-all overflow-hidden flex flex-col justify-between"
+                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow,transform] hover:border-slate-400 hover:shadow-md"
                 >
                   {viewMode === "grid" && (
                     <DirectoryCategoryVisual
@@ -415,8 +417,8 @@ export function DirectoryBrowseClient({
                   )}
                   {/* Card Header & Compact Info */}
                   <div className="p-5 sm:p-6 flex-1">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 group-hover:text-black transition-colors leading-snug">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <h2 className="min-w-0 break-words text-lg font-black leading-snug tracking-tight text-slate-900 transition-colors group-hover:text-black sm:text-xl">
                         {vendor.business_name}
                       </h2>
                       <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-slate-100 rounded-full text-slate-700 border border-slate-200">
@@ -431,8 +433,8 @@ export function DirectoryBrowseClient({
                         aria-hidden="true"
                       />
                       <span className="truncate">
-                        {vendor.street_address
-                          ? `${vendor.street_address} · `
+                        {displayedAddress
+                          ? `${displayedAddress} · `
                           : ""}
                         {subName}
                       </span>

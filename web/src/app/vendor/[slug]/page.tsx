@@ -17,7 +17,7 @@ import { resolvePublicVendorRoute } from "@/lib/public-vendor-route";
 import { DirectoryProfileView } from "@/components/observability/DirectoryObservabilityObserver";
 import { PublicDirectoryShell } from "@/components/ui/PublicDirectoryShell";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
-import { isDirectoryCatchment } from "@/lib/directory-location";
+import { displayDirectoryStreetAddress, isDirectoryCatchment } from "@/lib/directory-location";
 import {
   extractPublicProfileFacts,
   type PublicProfileFact,
@@ -129,6 +129,7 @@ export default async function VendorWebsite({ params }: PageProps) {
   const profileDescription = vendor.description?.trim() || null;
   const profileFacts = extractPublicProfileFacts(profileDescription);
   const tradingHours = vendor.trading_hours?.trim() || null;
+  const displayedStreetAddress = displayDirectoryStreetAddress(vendor.street_address);
   const profileSummary = describeKnownProfile({
     businessName: vendor.business_name,
     categoryName,
@@ -197,10 +198,10 @@ export default async function VendorWebsite({ params }: PageProps) {
                     <h1 className="text-4xl font-black leading-tight tracking-tight sm:text-6xl">
                       {vendor.business_name}
                     </h1>
-                    {vendor.street_address && (
+                    {displayedStreetAddress && (
                       <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-600">
                         <MapPin size={16} aria-hidden="true" />
-                        {vendor.street_address}{!isCatchment && <>, {suburbName}</>}
+                        {displayedStreetAddress}{!isCatchment && <>, {suburbName}</>}
                       </p>
                     )}
                   </div>

@@ -10,9 +10,10 @@ assert.match(migration, /SET name = 'Darebin area'/);
 assert.doesNotMatch(migration, /UPDATE public\.vendors|DELETE|INSERT INTO public\.vendors/);
 assert.match(location, /DIRECTORY_CATCHMENT_SLUG = "darebin"/);
 assert.match(location, /DIRECTORY_CATCHMENT_NAME = "Darebin area"/);
+assert.match(location, /displayDirectoryStreetAddress/);
 assert.match(profile, /isDirectoryCatchment\(vendor\.suburb_slug\)/);
 assert.match(profile, /addressLocality: isCatchment \? undefined : suburbName/);
-assert.ok(profile.includes("{vendor.street_address}{!isCatchment && <>, {suburbName}</>}"));
+assert.ok(profile.includes("{displayedStreetAddress}{!isCatchment && <>, {suburbName}</>}"));
 assert.match(profile, /The recorded street address is \$\{streetAddress\}; the listing is in the \$\{suburbName\}/);
 
 console.log("Catchment location presentation checks passed.");

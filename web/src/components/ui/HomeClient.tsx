@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, MapPin, Phone, Search, Store } from "lucide-react";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
+import { displayDirectoryStreetAddress } from "@/lib/directory-location";
 import { HeroSearch } from "@/components/ui/HeroSearch";
 import { createClient } from "@/utils/supabase/client";
 
@@ -190,15 +191,16 @@ export function HomeClient({
                   ? categoryNames.get(vendor.category_slug)
                   : null;
                 const detail = conciseDetail(vendor.description);
+                const displayedAddress = displayDirectoryStreetAddress(vendor.street_address);
                 return (
                   <article
                     key={vendor.id}
-                    className="group flex min-h-72 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
+                    className="group flex min-h-72 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-xl"
                   >
                     <DirectoryCategoryVisual categorySlug={vendor.category_slug} label={categoryName ?? "Local business"} className="h-24" />
                     <div className="flex flex-1 flex-col p-5">
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-xl font-black leading-tight tracking-tight text-slate-950">
+                      <h3 className="min-w-0 break-words text-xl font-black leading-tight tracking-tight text-slate-950">
                         {vendor.business_name}
                       </h3>
                       {categoryName && (
@@ -218,8 +220,8 @@ export function HomeClient({
                         {detail}
                       </p>
                     )}
-                    {!detail && vendor.street_address && (
-                      <p className="mt-4 text-sm leading-6 text-slate-600">{vendor.street_address}</p>
+                    {!detail && displayedAddress && (
+                      <p className="mt-4 text-sm leading-6 text-slate-600">{displayedAddress}</p>
                     )}
                     <Link
                       href={`/vendor/${vendor.slug}`}
