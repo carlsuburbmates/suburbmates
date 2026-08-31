@@ -525,20 +525,23 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     const isSameValue = comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
     const canApply = ["contact_email", "phone", "website", "description", "trading_hours"].includes(fieldName)
       && vendor.ownership_status === "unclaimed" && !currentText;
-    const applicationState = canApply ? "applied" : isSameValue ? "observed" : "conflict";
+    const emailIsAssignedElsewhere = fieldName === "contact_email" && canApply
+      ? await hasExternalContactEmailAssignment(admin, vendor.id, valueText)
+      : false;
+    const applicationState = canApply && !emailIsAssignedElsewhere ? "applied" : isSameValue ? "observed" : "conflict";
     const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").upsert({
       vendor_id: vendor.id, field_name: fieldName, value_text: valueText,
       source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
       source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
-      applied_at: canApply ? new Date().toISOString() : null,
+      applied_at: applicationState === "applied" ? new Date().toISOString() : null,
     }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true }).select("id").maybeSingle();
     if (evidenceError) throw new Error("Could not retain refreshed approved-source evidence.");
     if (!evidence) {
       if (applicationState === "observed") observedFields.push(fieldName);
       continue;
     }
-    if (canApply) {
+    if (applicationState === "applied") {
       updates[fieldName] = valueText;
       appliedFields.push(fieldName);
     } else if (applicationState === "conflict") {
@@ -594,20 +597,27 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
     const currentText = currentValue?.trim() ?? "";
     const sameValue = comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
     const canApply = vendor.ownership_status === "unclaimed" && !currentText;
-    const applicationState = canApply ? "applied" : currentText && !sameValue ? "conflict" : "observed";
+    const emailIsAssignedElsewhere = fieldName === "contact_email" && canApply
+      ? await hasExternalContactEmailAssignment(admin, vendor.id, valueText)
+      : false;
+    const applicationState = canApply && !emailIsAssignedElsewhere
+      ? "applied"
+      : emailIsAssignedElsewhere || (currentText && !sameValue)
+        ? "conflict"
+        : "observed";
     const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").upsert({
       vendor_id: vendor.id, field_name: fieldName, value_text: valueText,
       source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
       source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
-      applied_at: canApply ? new Date().toISOString() : null,
+      applied_at: applicationState === "applied" ? new Date().toISOString() : null,
     }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true }).select("id").maybeSingle();
     if (evidenceError) throw new Error("Could not retain matching-listing field evidence.");
     const evidenceId = evidence?.id ?? (await admin.from("listing_field_evidence").select("id")
       .eq("vendor_id", vendor.id).eq("field_name", fieldName).eq("source_key", input.sourceContract.key)
       .eq("source_record_key", input.sourceRecordKey).eq("value_text", valueText).eq("observed_at", observedAt).maybeSingle()).data?.id;
     if (!evidenceId) throw new Error("Could not recover matching-listing field evidence.");
-    if (canApply) {
+    if (applicationState === "applied") {
       updates[fieldName] = valueText;
       appliedFields.push(fieldName);
     } else if (applicationState === "conflict") {
@@ -639,6 +649,22 @@ function comparableFieldValue(fieldName: string, value: string) {
     catch { return value.toLowerCase(); }
   }
   return value.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+async function hasExternalContactEmailAssignment(
+  admin: ReturnType<typeof createAdminClient>,
+  vendorId: string,
+  email: string,
+) {
+  const { data, error } = await admin
+    .from("vendors")
+    .select("id")
+    .eq("contact_email", email)
+    .neq("id", vendorId)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error("Could not check the incoming contact email for a safe enrichment.");
+  return Boolean(data);
 }
 
 function freshnessDueAt(observedAt: string, source: CatalogueSourceContract) {
