@@ -5,6 +5,10 @@ import { createOpsDataClient } from "@/lib/ops/auth";
 import { formatOpsDateTime } from "@/lib/ops/date";
 import { decideListingAction, decideMediaProposalAction, deleteRejectedListingAction, runAbnCheckAction, saveListingDraftAction, setBusinessSubmissionStatusAction } from "../actions";
 import { createAdminClient } from "@/utils/supabase/admin";
+import {
+  canonicalDirectoryCategories,
+  loadCategoryAliasMap,
+} from "@/lib/category-aliases";
 
 type Listing = {
   vendor_id: string;
@@ -45,7 +49,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
   const { vendorId } = await params;
   const message = await searchParams;
   const supabase = await createOpsDataClient();
-  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult, submissionResult, mediaResult] = await Promise.all([
+  const [{ data, error }, categoriesResult, suburbsResult, evidenceResult, routeResult, submissionResult, mediaResult, aliases] = await Promise.all([
     supabase.rpc("ops_list_listings", { p_status: "all", p_query: null, p_vendor_id: vendorId, p_ownership_status: null, p_listing_source: null, p_limit: 1, p_offset: 0 }),
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
@@ -53,6 +57,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
     supabase.rpc("resolve_public_vendor_route", { p_route_key: vendorId }),
     supabase.rpc("ops_get_business_submission_status", { p_vendor_id: vendorId }),
     supabase.rpc("ops_list_media_proposals", { p_status: null, p_vendor_id: vendorId }),
+    loadCategoryAliasMap(supabase),
   ]);
   if (error || categoriesResult.error || suburbsResult.error || evidenceResult.error) throw new Error("The listing could not be loaded.");
   const listing = data?.[0] as Listing | undefined;
@@ -122,7 +127,7 @@ export default async function OpsListingDetailPage({ params, searchParams }: {
         <form action={saveListingDraftAction} className="mt-6 grid gap-5 sm:grid-cols-2">
           <input type="hidden" name="vendorId" value={vendorId} />
           <Field label="Business name" name="businessName" required defaultValue={value(values, "business_name")} wide />
-          <SelectField label="Category" name="categorySlug" required defaultValue={value(values, "category_slug")} options={categoriesResult.data ?? []} />
+          <SelectField label="Category" name="categorySlug" required defaultValue={value(values, "category_slug")} options={canonicalDirectoryCategories(categoriesResult.data ?? [], aliases)} />
           <SelectField label="Location" name="suburbSlug" required defaultValue={value(values, "suburb_slug")} options={suburbsResult.data ?? []} />
           <Field label="Street address" name="streetAddress" defaultValue={value(values, "street_address")} />
           <Field label="Contact email" name="contactEmail" type="email" defaultValue={value(values, "contact_email")} />

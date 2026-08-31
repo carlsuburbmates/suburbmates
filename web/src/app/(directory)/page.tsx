@@ -1,5 +1,9 @@
 import { HomeClient } from "@/components/ui/HomeClient";
 import { LaunchPage } from "@/components/ui/LaunchPage";
+import {
+  canonicalDirectoryCategories,
+  loadCategoryAliasMap,
+} from "@/lib/category-aliases";
 import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +14,7 @@ export default async function Home() {
   }
 
   const supabase = await createClient();
-  const [categoriesResult, suburbsResult, listingsResult] = await Promise.all([
+  const [categoriesResult, suburbsResult, listingsResult, aliases] = await Promise.all([
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase
@@ -21,6 +25,7 @@ export default async function Home() {
       )
       .order("business_name", { ascending: true })
       .limit(6),
+    loadCategoryAliasMap(supabase),
   ]);
 
   if (categoriesResult.error || suburbsResult.error || listingsResult.error) {
@@ -29,7 +34,7 @@ export default async function Home() {
 
   return (
     <HomeClient
-      categories={categoriesResult.data ?? []}
+      categories={canonicalDirectoryCategories(categoriesResult.data ?? [], aliases)}
       suburbs={suburbsResult.data ?? []}
       featuredVendors={listingsResult.data ?? []}
       publishedCount={listingsResult.count ?? 0}

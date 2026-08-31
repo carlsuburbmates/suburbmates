@@ -1,6 +1,12 @@
 import { createClient } from "@/utils/supabase/server";
 import { DirectoryBrowseClient } from "@/components/ui/DirectoryBrowseClient";
 import type { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
+import {
+  canonicalCategorySlug,
+  canonicalDirectoryCategories,
+  loadCategoryAliasMap,
+} from "@/lib/category-aliases";
 
 export async function generateMetadata({
   searchParams,
@@ -27,13 +33,24 @@ export default async function BusinessesPage({
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q : "";
   const suburb = typeof params.suburb === "string" ? params.suburb : "";
-  const category = typeof params.category === "string" ? params.category : "";
+  const requestedCategory =
+    typeof params.category === "string" ? params.category : "";
   const pageStr = typeof params.page === "string" ? params.page : "1";
   let requestedPage = parseInt(pageStr, 10);
   if (isNaN(requestedPage) || requestedPage < 1) requestedPage = 1;
   const pageSize = 24;
 
   const supabase = await createClient();
+  const aliases = await loadCategoryAliasMap(supabase);
+  const category = canonicalCategorySlug(requestedCategory, aliases);
+  if (requestedCategory && category !== requestedCategory) {
+    const nextParams = new URLSearchParams();
+    if (q) nextParams.set("q", q);
+    if (suburb) nextParams.set("suburb", suburb);
+    nextParams.set("category", category);
+    if (pageStr !== "1") nextParams.set("page", pageStr);
+    permanentRedirect(`/businesses?${nextParams.toString()}`);
+  }
 
   const searchQuery = q.trim();
   const vendorFields = "id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address, suburb_slug, category_slug";
@@ -97,7 +114,7 @@ export default async function BusinessesPage({
       currentPage={clampedPage}
       pageSize={pageSize}
       suburbs={suburbsRes.data || []}
-      categories={categoriesRes.data || []}
+      categories={canonicalDirectoryCategories(categoriesRes.data || [], aliases)}
       initialQ={q}
       initialSuburb={suburb}
       initialCategory={category}

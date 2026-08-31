@@ -6,6 +6,7 @@ import { normaliseSubmissionWebsite } from "@/lib/submission-input";
 import { recordDirectoryObservabilityEvent } from "@/lib/directory-observability";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
+import { canonicalCategorySlug, loadCategoryAliasMap } from "@/lib/category-aliases";
 
 function fail(code: string, next = "/join"): never {
   redirect(`${next}${next.includes("?") ? "&" : "?"}error=${encodeURIComponent(code)}`);
@@ -110,11 +111,15 @@ export async function submitBusinessAction(formData: FormData) {
 
   try {
     const supabase = createAdminClient();
+    const canonicalCategory = canonicalCategorySlug(
+      categorySlug,
+      await loadCategoryAliasMap(supabase),
+    );
     const { error } = await supabase.rpc("submit_business_listing_with_status", {
       p_submitter_name: submitterName,
       p_submitter_email: submitterEmail,
       p_business_name: businessName,
-      p_category_slug: categorySlug,
+      p_category_slug: canonicalCategory,
       p_suburb_slug: suburbSlug,
       p_contact_email: contactEmail,
       p_phone: phone || null,
@@ -161,7 +166,10 @@ export async function submitOwnedBusinessAction(previousState: OwnerSubmissionSt
   const { error } = await supabase.rpc("submit_owned_business_candidate_for_current_user", {
     p_submitter_name: fields.submitterName,
     p_business_name: fields.businessName,
-    p_category_slug: fields.categorySlug,
+    p_category_slug: canonicalCategorySlug(
+      fields.categorySlug,
+      await loadCategoryAliasMap(supabase),
+    ),
     p_suburb_slug: fields.suburbSlug,
     p_contact_email: fields.contactEmail,
     p_phone: fields.phone || null,

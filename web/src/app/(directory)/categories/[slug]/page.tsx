@@ -1,8 +1,12 @@
 import { createClient } from "@/utils/supabase/server";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { isTaxonomyPageEligible } from "@/lib/taxonomy-eligibility";
+import {
+  canonicalCategorySlug,
+  loadCategoryAliasMap,
+} from "@/lib/category-aliases";
 
 export async function generateMetadata({
   params,
@@ -11,18 +15,22 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
+  const categorySlug = canonicalCategorySlug(
+    slug,
+    await loadCategoryAliasMap(supabase),
+  );
   const [categoryResult, isEligible] = await Promise.all([
-    supabase.from("categories").select("name").eq("slug", slug).single(),
+    supabase.from("categories").select("name").eq("slug", categorySlug).single(),
     isTaxonomyPageEligible(supabase, {
       routeType: "category",
-      categorySlug: slug,
+      categorySlug,
     }),
   ]);
-  const name = categoryResult.data?.name ?? slug;
+  const name = categoryResult.data?.name ?? categorySlug;
   return {
     title: `${name} by Location | SuburbMates`,
     description: `Browse published ${name.toLowerCase()} listings by location.`,
-    alternates: { canonical: `/categories/${slug}` },
+    alternates: { canonical: `/categories/${categorySlug}` },
     robots: isEligible ? undefined : { index: false, follow: true },
   };
 }
@@ -34,11 +42,16 @@ export default async function CategoryPage({
 }) {
   const { slug } = await params;
   const supabase = await createClient();
+  const categorySlug = canonicalCategorySlug(
+    slug,
+    await loadCategoryAliasMap(supabase),
+  );
+  if (categorySlug !== slug) permanentRedirect("/categories/" + categorySlug);
 
   const { data: categoryData } = await supabase
     .from("categories")
     .select("name, slug")
-    .eq("slug", slug)
+    .eq("slug", categorySlug)
     .single();
 
   if (!categoryData) {
@@ -48,7 +61,7 @@ export default async function CategoryPage({
   const { data: vendorSuburbs } = await supabase
     .from("published_vendors")
     .select("suburb_slug")
-    .eq("category_slug", slug);
+    .eq("category_slug", categorySlug);
   const suburbSlugs = [
     ...new Set(
       (vendorSuburbs ?? []).map((vendor) => vendor.suburb_slug).filter(Boolean),

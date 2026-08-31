@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { runtimeEnv } from "@/lib/runtime-env";
 import { createClient } from "@/utils/supabase/server";
+import {
+  canonicalDirectoryCategories,
+  loadCategoryAliasMap,
+} from "@/lib/category-aliases";
 import { submitBusinessAction } from "./actions";
 import {
   CategoryField,
@@ -34,10 +38,11 @@ export default async function JoinPage({
   const message = await searchParams;
   const siteKey = runtimeEnv("TURNSTILE_SITE_KEY");
   const supabase = await createClient();
-  const [categoriesResult, suburbsResult, authResult] = await Promise.all([
+  const [categoriesResult, suburbsResult, authResult, aliases] = await Promise.all([
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase.auth.getUser(),
+    loadCategoryAliasMap(supabase),
   ]);
   if (categoriesResult.error || suburbsResult.error)
     throw new Error("Business submission options could not be loaded.");
@@ -304,7 +309,12 @@ export default async function JoinPage({
                 maxLength={200}
                 autoComplete="organization"
               />
-              <CategoryField options={categoriesResult.data ?? []} />
+              <CategoryField
+                options={canonicalDirectoryCategories(
+                  categoriesResult.data ?? [],
+                  aliases,
+                )}
+              />
               <Select
                 label="Location"
                 name="suburbSlug"
@@ -432,7 +442,10 @@ export default async function JoinPage({
             </p>
           ) : (
             <OwnerSubmissionForm
-              categories={categoriesResult.data ?? []}
+              categories={canonicalDirectoryCategories(
+                categoriesResult.data ?? [],
+                aliases,
+              )}
               suburbs={suburbsResult.data ?? []}
               siteKey={siteKey}
               email={authResult.data.user.email}

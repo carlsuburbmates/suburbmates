@@ -10,9 +10,13 @@ import {
   Building2,
   ExternalLink,
 } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { isTaxonomyPageEligible } from "@/lib/taxonomy-eligibility";
+import {
+  canonicalCategorySlug,
+  loadCategoryAliasMap,
+} from "@/lib/category-aliases";
 
 interface PageProps {
   params: Promise<{
@@ -26,10 +30,14 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { suburb: suburbSlug, service: serviceSlug } = await params;
   const supabase = await createClient();
+  const categorySlug = canonicalCategorySlug(
+    serviceSlug,
+    await loadCategoryAliasMap(supabase),
+  );
 
   const [suburbRes, categoryRes] = await Promise.all([
     supabase.from("suburbs").select("name").eq("slug", suburbSlug).single(),
-    supabase.from("categories").select("name").eq("slug", serviceSlug).single(),
+    supabase.from("categories").select("name").eq("slug", categorySlug).single(),
   ]);
 
   const suburbName = suburbRes.data?.name || suburbSlug;
@@ -37,13 +45,13 @@ export async function generateMetadata({
   const isEligible = await isTaxonomyPageEligible(supabase, {
     routeType: "pair",
     suburbSlug,
-    categorySlug: serviceSlug,
+    categorySlug,
   });
 
   return {
     title: `Local ${categoryName} in ${suburbName} | SuburbMates`,
     description: `Find local ${categoryName} in ${suburbName}. Direct contact, no paywalls, no middlemen.`,
-    alternates: { canonical: `/${suburbSlug}/${serviceSlug}` },
+    alternates: { canonical: `/${suburbSlug}/${categorySlug}` },
     robots: isEligible ? undefined : { index: false, follow: true },
   };
 }
@@ -51,6 +59,13 @@ export async function generateMetadata({
 export default async function Page({ params }: PageProps) {
   const { suburb: suburbSlug, service: serviceSlug } = await params;
   const supabase = await createClient();
+  const categorySlug = canonicalCategorySlug(
+    serviceSlug,
+    await loadCategoryAliasMap(supabase),
+  );
+  if (categorySlug !== serviceSlug) {
+    permanentRedirect("/" + suburbSlug + "/" + categorySlug);
+  }
 
   // Fetch suburb, category and active vendors matching the route parameters
   const [suburbRes, categoryRes, vendorsRes] = await Promise.all([
@@ -62,7 +77,7 @@ export default async function Page({ params }: PageProps) {
     supabase
       .from("categories")
       .select("name, seo_description")
-      .eq("slug", serviceSlug)
+      .eq("slug", categorySlug)
       .single(),
     supabase
       .from("published_vendors")
@@ -70,7 +85,7 @@ export default async function Page({ params }: PageProps) {
         "id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address",
       )
       .eq("suburb_slug", suburbSlug)
-      .eq("category_slug", serviceSlug)
+      .eq("category_slug", categorySlug)
       .order("business_name", { ascending: true }),
   ]);
 

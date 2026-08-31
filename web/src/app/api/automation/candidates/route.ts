@@ -3,6 +3,7 @@ import { qualifyCandidate, type CandidateInput, type ExistingListing } from "@/l
 import { CATALOGUE_SOURCE_CONTRACTS, getCatalogueSourceContract, hasCatalogueSourceContract, isAllowedCatalogueSourceUrl, type CatalogueSourceContract } from "@/lib/automation/catalogue-source-contract";
 import { runtimeEnv } from "@/lib/runtime-env";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { canonicalCategorySlug, loadCategoryAliasMap } from "@/lib/category-aliases";
 
 const MAX_CANDIDATES = 100;
 // The Worker request cannot legitimately outlive this window. Treat a longer
@@ -57,7 +58,19 @@ export async function POST(request: NextRequest) {
 
     await finaliseStaleSourceRuns(admin, sourceContract);
 
-    const candidates = Array.isArray(body.candidates) ? body.candidates.map((candidate: unknown) => readCandidate(candidate, sourceContract)) : null;
+    const categoryAliases = await loadCategoryAliasMap(admin);
+    const candidates = Array.isArray(body.candidates)
+      ? body.candidates.map((candidate: unknown) => {
+          const parsed = readCandidate(candidate, sourceContract);
+          return {
+            ...parsed,
+            categorySlug: canonicalCategorySlug(
+              parsed.categorySlug,
+              categoryAliases,
+            ),
+          };
+        })
+      : null;
     if (!/^[0-9a-f]{64}$/.test(artifactSha256) || !candidates || candidates.length < 1 || candidates.length > MAX_CANDIDATES) {
       return NextResponse.json({ error: "Invalid approved-source candidate batch" }, { status: 400 });
     }
