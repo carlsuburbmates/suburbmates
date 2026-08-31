@@ -17,7 +17,11 @@ const BATCH_SIZE = 1;
 // A single, gently paced handoff prevents an automation burst from exhausting
 // its request resource budget; prior singleton results are idempotent.
 const MAX_CONCURRENT_BATCHES = 1;
-const REQUEST_SETTLE_DELAY_MS = 250;
+// The production Next/Worker route does several provenance and audit writes
+// for each source record. A one-second gap makes the weekly import a stable
+// single-lane process on the existing Worker limit instead of a burst that can
+// exhaust the runtime and strand a partially refreshed source snapshot.
+const REQUEST_SETTLE_DELAY_MS = 1_000;
 // A deployed Worker must never leave a GitHub shard waiting on a socket without
 // a deadline. The route itself treats one minute as an interrupted run, so a
 // shorter client deadline gives the idempotent retry loop time to recover it.

@@ -50,14 +50,15 @@ jobs:
   handoff:
     needs: acquire
     runs-on: ubuntu-latest
-    # Each source row still has a singleton, idempotent audit path. A Worker
-    # can exhaust its resource budget after roughly 227 sequential requests;
-    # eight shards keep each scheduled job below that observed limit while two
-    # at a time retain the production service's recovery headroom.
-    timeout-minutes: 60
+    # Each source row still has a singleton, idempotent audit path. The public
+    # Next/Worker runtime can exceed its resource ceiling when several shards
+    # continuously issue database-backed requests at once. Keep one paced lane:
+    # it is slower, but it completes the lawful refresh instead of leaving a
+    # partially processed source snapshot.
+    timeout-minutes: 75
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 1
       matrix:
         shard_index: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
