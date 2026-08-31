@@ -5,6 +5,7 @@ const migration = fs.readFileSync("supabase/migrations/20260720080458_ops_audit_
 const abnHealthCorrection = fs.readFileSync("supabase/migrations/20260725210822_correct_abn_health_readiness.sql", "utf8");
 const candidateHealthCorrection = fs.readFileSync("supabase/migrations/20260830130000_ignore_superseded_candidate_jobs_in_ops_health.sql", "utf8");
 const page = fs.readFileSync("web/src/app/ops/system/page.tsx", "utf8");
+const profileCoverage = fs.readFileSync("web/src/lib/public-profile-coverage.ts", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION private\.redact_ops_audit_state/);
 assert.match(migration, /DROP FUNCTION IF EXISTS public\.ops_list_audit_events\(INTEGER\)/);
@@ -13,6 +14,13 @@ assert.match(migration, /REVOKE ALL ON FUNCTION public\.ops_list_audit_events\(I
 assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.ops_list_audit_events\(INTEGER\) TO authenticated/);
 for (const privateField of ["contact_email", "requester_email", "requester_name", "message", "operator_note", "vendor_id", "entity_id"]) assert(!migration.includes(`'${privateField}'`), `Audit projection must not expose ${privateField}.`);
 assert.match(page, /Intentionally disabled/);
+assert.match(page, /Public profile coverage/, "System must expose the quiet aggregate profile-coverage summary.");
+assert.match(page, /getPublicProfileCoverage\(supabase\)/, "Profile coverage must use the existing authenticated System data client.");
+assert.match(profileCoverage, /from\("published_vendors"\)/, "Profile coverage may read only the safe public projection.");
+assert.match(profileCoverage, /head: true/, "Profile coverage must count without loading individual profiles.");
+for (const forbidden of ["contact_requests", "claim_requests", "listing_change_requests", "audit_events", "insert\\(", "update\\(", "delete\\("]) {
+  assert.doesNotMatch(profileCoverage, new RegExp(forbidden), `Profile coverage must not access private requests or mutate data: ${forbidden}`);
+}
 assert.match(page, /Contact request retention/);
 assert.match(page, /Evidence reference/);
 assert.match(page, /safeHealthDetails/);
