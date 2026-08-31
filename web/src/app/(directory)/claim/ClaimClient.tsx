@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { ArrowRight, Building, MapPin, Tag, CheckCircle2, AlertCircle, Mail, ShieldCheck } from "lucide-react";
 import { recordDirectoryObservabilityEvent } from "@/components/observability/DirectoryObservabilityObserver";
+import { displayDirectoryLocation } from "@/lib/directory-location";
 
 type ClaimableVendor = {
   id: string;
@@ -131,7 +132,7 @@ export default function ClaimClient({ selectedListingId }: { selectedListingId: 
                       <Tag size={14} aria-hidden="true" /> {humanize(vendor.category_slug)}
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 font-semibold">
-                      <MapPin size={14} aria-hidden="true" /> {humanize(vendor.suburb_slug)}
+                      <MapPin size={14} aria-hidden="true" /> {displayDirectoryLocation(vendor.suburb_slug)}
                     </span>
                   </div>
                 </div>

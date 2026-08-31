@@ -17,6 +17,7 @@ import { resolvePublicVendorRoute } from "@/lib/public-vendor-route";
 import { DirectoryProfileView } from "@/components/observability/DirectoryObservabilityObserver";
 import { PublicDirectoryShell } from "@/components/ui/PublicDirectoryShell";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
+import { isDirectoryCatchment } from "@/lib/directory-location";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -120,6 +121,7 @@ export default async function VendorWebsite({ params }: PageProps) {
   const photos = media.filter((item) => item.media_kind === "listing_image");
   const suburbName = vendor.suburbs?.name ?? vendor.suburb_slug;
   const categoryName = vendor.categories?.name ?? vendor.category_slug;
+  const isCatchment = isDirectoryCatchment(vendor.suburb_slug);
   const profileDescription = vendor.description?.trim() || null;
   const tradingHours = vendor.trading_hours?.trim() || null;
   const profileSummary = describeKnownProfile({
@@ -142,7 +144,7 @@ export default async function VendorWebsite({ params }: PageProps) {
       ? {
           "@type": "PostalAddress",
           streetAddress: vendor.street_address,
-          addressLocality: suburbName,
+          addressLocality: isCatchment ? undefined : suburbName,
           addressCountry: "AU",
         }
       : undefined,
@@ -150,7 +152,7 @@ export default async function VendorWebsite({ params }: PageProps) {
     sameAs: vendor.website ? [vendor.website] : undefined,
   };
   const directionsUrl = vendor.street_address
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([vendor.street_address, suburbName].filter(Boolean).join(", "))}`
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([vendor.street_address, isCatchment ? "Darebin, Victoria, Australia" : suburbName].filter(Boolean).join(", "))}`
     : null;
   const relatedResult = await supabase
     .from("published_vendors")
@@ -192,7 +194,7 @@ export default async function VendorWebsite({ params }: PageProps) {
                     {vendor.street_address && (
                       <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-600">
                         <MapPin size={16} aria-hidden="true" />
-                        {vendor.street_address}, {suburbName}
+                        {vendor.street_address}{!isCatchment && <>, {suburbName}</>}
                       </p>
                     )}
                   </div>
