@@ -4,6 +4,20 @@ export type PublicProfileFact = {
   sourceReported?: boolean;
 };
 
+const exactFactSentences = [
+  "Takeaway available.",
+  "Delivery available.",
+  "Outdoor seating.",
+  "Vegan menu.",
+  "Vegan options.",
+  "Vegetarian menu.",
+  "Vegetarian options.",
+  "Source-reported wheelchair access.",
+  "Source-reported Wi-Fi.",
+  "Source-reported contactless payment.",
+  "Drive-through available.",
+];
+
 // These are presentation-only recognisers for the bounded OSM detail strings
 // already stored on a public profile. They never infer a new business fact or
 // expose a value that the profile does not already contain.
@@ -44,4 +58,18 @@ export function extractPublicProfileFacts(
     if (description.includes(sentence)) facts.push(fact);
   }
   return facts;
+}
+
+// A source refresh can legitimately give a profile a short set of structured
+// amenities before it has a fuller owner-written description. In that case the
+// presentation should not mislabel those facts as an editorial business story.
+// This deliberately returns false as soon as any unrecognised prose remains.
+export function hasOnlyStructuredPublicProfileFacts(description: string | null): boolean {
+  if (!description?.trim()) return false;
+  let remainder = description;
+  remainder = remainder.replace(/Cuisine:\s*[^.\n]{1,150}\./gi, " ");
+  for (const sentence of exactFactSentences) {
+    remainder = remainder.replaceAll(sentence, " ");
+  }
+  return remainder.replace(/[\s.]+/g, "").length === 0;
 }

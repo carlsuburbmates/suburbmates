@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { extractPublicProfileFacts } from "../web/src/lib/public-profile-facts";
+import {
+  extractPublicProfileFacts,
+  hasOnlyStructuredPublicProfileFacts,
+} from "../web/src/lib/public-profile-facts";
 
 assert.deepEqual(extractPublicProfileFacts(null), []);
 assert.deepEqual(extractPublicProfileFacts("An owner-written profile."), []);
@@ -13,6 +16,10 @@ assert.deepEqual(
     { label: "Wheelchair access", sourceReported: true },
   ],
 );
+assert.equal(hasOnlyStructuredPublicProfileFacts("Source-reported Wi-Fi. Source-reported contactless payment."), true);
+assert.equal(hasOnlyStructuredPublicProfileFacts("Cuisine: Italian, Pizza. Takeaway available."), true);
+assert.equal(hasOnlyStructuredPublicProfileFacts("A friendly local cafe. Takeaway available."), false);
+assert.equal(hasOnlyStructuredPublicProfileFacts(null), false);
 assert.deepEqual(
   extractPublicProfileFacts("Cuisine: Thai. Vegetarian menu. Delivery available."),
   [

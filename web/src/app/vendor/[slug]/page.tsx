@@ -20,6 +20,7 @@ import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual
 import { displayDirectoryStreetAddress, isDirectoryCatchment } from "@/lib/directory-location";
 import {
   extractPublicProfileFacts,
+  hasOnlyStructuredPublicProfileFacts,
   type PublicProfileFact,
 } from "@/lib/public-profile-facts";
 
@@ -128,6 +129,7 @@ export default async function VendorWebsite({ params }: PageProps) {
   const isCatchment = isDirectoryCatchment(vendor.suburb_slug);
   const profileDescription = vendor.description?.trim() || null;
   const profileFacts = extractPublicProfileFacts(profileDescription);
+  const hasOnlyStructuredFacts = hasOnlyStructuredPublicProfileFacts(profileDescription);
   const tradingHours = vendor.trading_hours?.trim() || null;
   const displayedStreetAddress = displayDirectoryStreetAddress(vendor.street_address);
   const profileSummary = describeKnownProfile({
@@ -233,16 +235,18 @@ export default async function VendorWebsite({ params }: PageProps) {
             <PublicProfileHighlights facts={profileFacts} />
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <h2 className="text-2xl font-black tracking-tight">
-                About this business
+                {hasOnlyStructuredFacts ? "Known local details" : "About this business"}
               </h2>
-              {profileDescription ? (
+              {profileDescription && !hasOnlyStructuredFacts ? (
                 <p className="mt-5 whitespace-pre-wrap text-base leading-7 text-slate-700">
                   {profileDescription}
                 </p>
               ) : (
                 <div className="mt-5 rounded-2xl border border-teal-900/10 bg-teal-50/60 p-5 text-sm leading-6 text-slate-700">
-                  <p className="font-bold text-slate-900">Known local details</p>
                   <p className="mt-1">{profileSummary}</p>
+                  {hasOnlyStructuredFacts && (
+                    <p className="mt-3 text-slate-600">The source-backed details currently available for this profile are shown above.</p>
+                  )}
                 </div>
               )}
             </section>
