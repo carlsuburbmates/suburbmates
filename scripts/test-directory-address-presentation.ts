@@ -7,8 +7,8 @@ assert.equal(
   "45 Johnson Street, VIC 3073",
 );
 assert.equal(
-  displayDirectoryStreetAddress("1D BOWER ST NORTHCOTE VIC 3070"),
-  "1D Bower St Northcote VIC 3070",
+  displayDirectoryStreetAddress("1D BOWER ST NORTHCOTE Victoria 3070 Australia"),
+  "1D Bower St Northcote Victoria 3070 Australia",
 );
 assert.equal(
   displayDirectoryStreetAddress("21-23 Railway Place, Fairfield VIC 3078"),
