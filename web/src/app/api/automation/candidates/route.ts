@@ -535,7 +535,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
       source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
       applied_at: applicationState === "applied" ? new Date().toISOString() : null,
-    }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true }).select("id").maybeSingle();
+    }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at" }).select("id").maybeSingle();
     if (evidenceError) throw new Error("Could not retain refreshed approved-source evidence.");
     if (!evidence) {
       if (applicationState === "observed") observedFields.push(fieldName);
@@ -611,7 +611,7 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
       source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
       applied_at: applicationState === "applied" ? new Date().toISOString() : null,
-    }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at", ignoreDuplicates: true }).select("id").maybeSingle();
+    }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at" }).select("id").maybeSingle();
     if (evidenceError) throw new Error("Could not retain matching-listing field evidence.");
     const evidenceId = evidence?.id ?? (await admin.from("listing_field_evidence").select("id")
       .eq("vendor_id", vendor.id).eq("field_name", fieldName).eq("source_key", input.sourceContract.key)
