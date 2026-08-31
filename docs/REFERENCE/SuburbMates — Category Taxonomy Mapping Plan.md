@@ -49,13 +49,15 @@ These change only a readable category name, not a slug, URL, listing assignment,
 | `hifi` | Hifi | Hi-Fi | Standard punctuation. |
 | `it` | It | IT | Correct acronym casing. |
 
-### Phase 2 — approved merge candidate
+### Phase 2 — completed compatibility mapping (1 September 2026)
 
 | Alias slug | Canonical slug | Listings affected at snapshot | Recommendation |
 | --- | --- | ---: | --- |
 | `jewelry` | `jeweller` | 4 → 1 | Merge after a brief listing-evidence check. `Jeweller` is the established Australian-English label and the two labels describe the same retail/service category. |
 
 The canonical public name remains **Jeweller**. Existing `jewelry` filter and taxonomy URLs must resolve permanently to `jeweller`.
+
+Implemented by `20260901150000_category_aliases_jewelry_to_jeweller.sql` and commit `d57b63d`. The migration retains the legacy category as a compatibility alias, canonicalises the five affected published vendor assignments transactionally, and applies the same normalisation before future vendor writes. It does not delete listings, source evidence, or audit records. Live acceptance confirms permanent canonical redirects for `/categories/jewelry`, `/preston/jewelry`, and `/businesses?category=jewelry`; public selectors display **Jeweller** only.
 
 ### Phase 3 — evidence review queue, not automatic merges
 
