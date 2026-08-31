@@ -12,7 +12,7 @@ import { createClient } from "@/utils/supabase/client";
 interface HomeClientProps {
   categories: { name: string; slug: string }[];
   suburbs: { name: string; slug: string }[];
-  featuredVendors: Array<{
+  sampleVendors: Array<{
     id: string;
     slug: string;
     business_name: string;
@@ -55,7 +55,7 @@ function conciseDetail(description: string | null) {
 export function HomeClient({
   categories,
   suburbs,
-  featuredVendors,
+  sampleVendors,
   publishedCount,
 }: HomeClientProps) {
   const router = useRouter();
@@ -155,10 +155,10 @@ export function HomeClient({
         </div>
       </section>
 
-      {featuredVendors.length > 0 && (
+      {sampleVendors.length > 0 && (
         <section
           className="bg-white py-14 sm:py-20"
-          aria-label="Featured local businesses"
+          aria-label="A few local businesses"
         >
           <div className="mx-auto max-w-7xl px-5 sm:px-6">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -182,7 +182,7 @@ export function HomeClient({
               </Link>
             </div>
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredVendors.map((vendor) => {
+              {sampleVendors.map((vendor) => {
                 const suburbName = vendor.suburb_slug
                   ? suburbNames.get(vendor.suburb_slug)
                   : null;

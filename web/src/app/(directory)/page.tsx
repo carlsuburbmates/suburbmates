@@ -36,7 +36,7 @@ export default async function Home() {
     <HomeClient
       categories={canonicalDirectoryCategories(categoriesResult.data ?? [], aliases)}
       suburbs={suburbsResult.data ?? []}
-      featuredVendors={listingsResult.data ?? []}
+      sampleVendors={listingsResult.data ?? []}
       publishedCount={listingsResult.count ?? 0}
     />
   );
