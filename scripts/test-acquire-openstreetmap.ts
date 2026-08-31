@@ -43,6 +43,9 @@ async function runTests() {
   assert.strictEqual(osmProfileDetail({ wheelchair: 'limited' }, 'cafe'), '', 'Ambiguous OSM accessibility values must not become a public access promise.');
   assert.strictEqual(osmProfileDetail({ wheelchair: 'no' }, 'cafe'), '', 'A negative OSM accessibility tag must not become a public profile detail.');
   assert.strictEqual(osmProfileDetail({ cuisine: 'italian', wheelchair: 'yes' }, 'restaurant'), 'Cuisine: Italian. Source-reported wheelchair access.', 'Accessibility evidence should compose with existing structured hospitality evidence.');
+  assert.strictEqual(osmProfileDetail({ internet_access: 'wlan', 'payment:contactless': 'yes', drive_through: 'yes' }, 'fast-food'), 'Drive-through available. Source-reported Wi-Fi. Source-reported contactless payment.', 'Exact structured amenity tags should become bounded source-derived profile details.');
+  assert.strictEqual(osmProfileDetail({ internet_access: 'no', 'payment:contactless': 'no', drive_through: 'no' }, 'fast-food'), '', 'Negative amenity tags must not create a public availability claim.');
+  assert.strictEqual(osmProfileDetail({ drive_through: 'yes' }, 'plumber'), '', 'Drive-through must remain limited to food-and-drink profiles.');
   assert.strictEqual(osmTradingHours('Mo-Fr 09:00-17:00; Sa 09:00-13:00'), 'Mo-Fr 09:00-17:00; Sa 09:00-13:00', 'An explicit OSM schedule should be retained without rewriting it.');
   assert.strictEqual(osmTradingHours('by appointment'), '', 'A prose-only OSM hours value must not become a public schedule.');
   assert.strictEqual(firstListedPhone('+61 425 306 991;+61 424 574 844'), '+61 425 306 991', 'Multiple OSM phone values must not make the full candidate run fail.');

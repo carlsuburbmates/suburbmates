@@ -94,7 +94,10 @@ export function osmProfileDetail(tags: Record<string, unknown>, categorySlug: st
     if (isAffirmativeOsmValue(tags['diet:vegetarian'])) {
       details.push(normalizeOsmValue(tags['diet:vegetarian']) === 'only' ? 'Vegetarian menu.' : 'Vegetarian options.');
     }
+    if (isAffirmativeOsmValue(tags.drive_through)) details.push('Drive-through available.');
   }
+  if (hasSourceReportedWifi(tags.internet_access)) details.push('Source-reported Wi-Fi.');
+  if (isAffirmativeOsmValue(tags['payment:contactless'])) details.push('Source-reported contactless payment.');
   if (normalizeOsmValue(tags.wheelchair) === 'yes') details.push('Source-reported wheelchair access.');
   return details.filter(Boolean).join(' ');
 }
@@ -105,6 +108,11 @@ function normalizeOsmValue(value: unknown): string {
 
 function isAffirmativeOsmValue(value: unknown): boolean {
   return ['yes', 'only'].includes(normalizeOsmValue(value));
+}
+
+function hasSourceReportedWifi(value: unknown): boolean {
+  const normalized = normalizeOsmValue(value);
+  return normalized === 'yes' || normalized.split(/[;,]/).map((item) => item.trim()).includes('wlan');
 }
 
 // Keep the source expression intact rather than guessing a human-readable
