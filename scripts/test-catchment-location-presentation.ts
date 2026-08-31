@@ -13,5 +13,6 @@ assert.match(location, /DIRECTORY_CATCHMENT_NAME = "Darebin area"/);
 assert.match(profile, /isDirectoryCatchment\(vendor\.suburb_slug\)/);
 assert.match(profile, /addressLocality: isCatchment \? undefined : suburbName/);
 assert.ok(profile.includes("{vendor.street_address}{!isCatchment && <>, {suburbName}</>}"));
+assert.match(profile, /The recorded street address is \$\{streetAddress\}; the listing is in the \$\{suburbName\}/);
 
 console.log("Catchment location presentation checks passed.");

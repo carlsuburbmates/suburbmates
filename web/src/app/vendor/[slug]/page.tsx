@@ -129,6 +129,7 @@ export default async function VendorWebsite({ params }: PageProps) {
     categoryName,
     suburbName,
     streetAddress: vendor.street_address,
+    isCatchment,
     hasDirectContact: Boolean(vendor.phone || vendor.contact_email || vendor.website),
   });
   const canonicalUrl = `https://suburbmates.com.au/vendor/${route.currentSlug}`;
@@ -316,16 +317,20 @@ function describeKnownProfile({
   categoryName,
   suburbName,
   streetAddress,
+  isCatchment,
   hasDirectContact,
 }: {
   businessName: string;
   categoryName: string;
   suburbName: string;
   streetAddress: string | null;
+  isCatchment: boolean;
   hasDirectContact: boolean;
 }) {
   const location = streetAddress
-    ? ` The recorded address is ${streetAddress}, ${suburbName}.`
+    ? isCatchment
+      ? ` The recorded street address is ${streetAddress}; the listing is in the ${suburbName}.`
+      : ` The recorded address is ${streetAddress}, ${suburbName}.`
     : ` The recorded local area is ${suburbName}.`;
   const contact = hasDirectContact
     ? " Use the direct contact options above to take the next step."
