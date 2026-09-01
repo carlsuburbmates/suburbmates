@@ -431,9 +431,9 @@ async function recordCandidateHandoffHealth(
   const current = await admin.from("integration_health")
     .select("status")
     .eq("integration_name", "candidate_handoff")
-    .maybeSingle();
+    .limit(1);
   if (current.error) throw new Error("Could not read candidate handoff health.");
-  if (current.data?.status === "running") return;
+  if (current.data?.[0]?.status === "running") return;
 
   const health = await admin.from("integration_health").upsert({
     integration_name: "candidate_handoff",
