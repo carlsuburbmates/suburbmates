@@ -10,9 +10,11 @@ if (!fixturePath || process.env.D017_CONTROLLED_ACCEPTANCE !== "true") {
 }
 const fixture = JSON.parse(await readFile(fixturePath, "utf8"));
 const scope = process.env.D017_BROWSER_SCOPE ?? "all";
-if (!["all", "public", "owner", "contact", "operator"].includes(scope)) throw new Error("D017_BROWSER_SCOPE must be all, public, owner, contact, or operator.");
+if (!["all", "public", "owner", "media", "contact", "operator"].includes(scope)) throw new Error("D017_BROWSER_SCOPE must be all, public, owner, media, contact, or operator.");
 const results = [];
 const pass = (label) => { results.push(label); console.log(`PASS ${label}`); };
+const controlledLogo = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL6lwAAAABJRU5ErkJggg==", "base64");
+const controlledLogoAlt = "Synthetic one-pixel logo for controlled browser acceptance";
 
 async function controlledPage(context, mode = "ready") {
   await context.route("**/turnstile/v0/api.js*", (route) => route.fulfill({ contentType: "application/javascript", body: "" }));
@@ -104,6 +106,71 @@ try {
   await ownerPage.getByText("Your claim request was withdrawn. The business listing was not changed.").waitFor({ timeout: 20_000 });
   pass("browser claim recovery withdrawal gives the documented unchanged-listing state");
   await ownerContext.close();
+  }
+
+  if (["all", "media"].includes(scope)) {
+  const mediaOwnerContext = await browser.newContext({ baseURL });
+  const mediaOwnerPage = await controlledPage(mediaOwnerContext);
+  await mediaOwnerPage.goto(`/login?next=${encodeURIComponent("/dashboard")}`, { waitUntil: "domcontentloaded" });
+  await mediaOwnerPage.locator("#email").fill(fixture.browser.mediaOwnerEmail);
+  await mediaOwnerPage.locator("#password").fill(fixture.browser.mediaOwnerPassword);
+  await mediaOwnerPage.getByRole("button", { name: "Sign in" }).click();
+  await mediaOwnerPage.getByText("Add a real visual to this profile").waitFor({ timeout: 20_000 });
+  await mediaOwnerPage.locator('input[name="file"]').setInputFiles({
+    name: "d017-controlled-logo.png", mimeType: "image/png", buffer: controlledLogo,
+  });
+  await mediaOwnerPage.getByRole("button", { name: "I own this image" }).click();
+  await mediaOwnerPage.locator('input[name="altText"]').fill(controlledLogoAlt);
+  await mediaOwnerPage.getByRole("button", { name: "Submit for review" }).click();
+  await mediaOwnerPage.getByText("Your image is private and awaiting operator review. Its review status is now shown below.").waitFor({ timeout: 20_000 });
+  await mediaOwnerPage.getByText("Logo: pending").waitFor({ timeout: 20_000 });
+  assert.equal(await mediaOwnerPage.locator(`img[alt="${controlledLogoAlt}"]`).count(), 1, "owner preview should remain visible in the private dashboard");
+  pass("claimed owner uploads a synthetic logo with recorded permission and sees only the private pending state");
+  await mediaOwnerContext.close();
+
+  const mediaOperatorContext = await browser.newContext({ baseURL });
+  const mediaOperatorPage = await controlledPage(mediaOperatorContext);
+  await mediaOperatorPage.goto(`/login?next=${encodeURIComponent(`/ops/listings/${fixture.browser.mediaVendor.id}`)}`, { waitUntil: "domcontentloaded" });
+  await mediaOperatorPage.locator("#email").fill(fixture.browser.operatorEmail);
+  await mediaOperatorPage.locator("#password").fill(fixture.browser.operatorPassword);
+  await mediaOperatorPage.getByRole("button", { name: "Sign in" }).click();
+  await mediaOperatorPage.getByText("Owner media proposals").waitFor({ timeout: 20_000 });
+  await mediaOperatorPage.getByText(controlledLogoAlt).waitFor({ timeout: 20_000 });
+  await mediaOperatorPage.locator('textarea[name="reason"]').fill("Synthetic owner logo is permitted for controlled acceptance.");
+  await mediaOperatorPage.getByRole("button", { name: "Approve media" }).click();
+  await mediaOperatorPage.getByText("Decision recorded with an immutable audit event.").waitFor({ timeout: 20_000 });
+  await mediaOperatorPage.getByText("Logo · Approved").waitFor({ timeout: 20_000 });
+  pass("authorised operator approves the private media with an immutable decision record");
+  await mediaOperatorContext.close();
+
+  const mediaPublicContext = await browser.newContext({ baseURL });
+  const mediaPublicPage = await controlledPage(mediaPublicContext);
+  await mediaPublicPage.goto(`/vendor/${fixture.browser.mediaVendor.slug}`, { waitUntil: "domcontentloaded" });
+  await mediaPublicPage.locator(`img[alt="${controlledLogoAlt}"]`).waitFor({ timeout: 20_000 });
+  pass("approved owner logo appears on the controlled public profile only after operator approval");
+  await mediaPublicContext.close();
+
+  const removalOperatorContext = await browser.newContext({ baseURL });
+  const removalOperatorPage = await controlledPage(removalOperatorContext);
+  await removalOperatorPage.goto(`/login?next=${encodeURIComponent(`/ops/listings/${fixture.browser.mediaVendor.id}`)}`, { waitUntil: "domcontentloaded" });
+  await removalOperatorPage.locator("#email").fill(fixture.browser.operatorEmail);
+  await removalOperatorPage.locator("#password").fill(fixture.browser.operatorPassword);
+  await removalOperatorPage.getByRole("button", { name: "Sign in" }).click();
+  await removalOperatorPage.getByText("Logo · Approved").waitFor({ timeout: 20_000 });
+  await removalOperatorPage.locator('textarea[name="reason"]').fill("Synthetic media removal completes controlled acceptance.");
+  await removalOperatorPage.getByRole("button", { name: "Remove media" }).click();
+  await removalOperatorPage.getByText("Decision recorded with an immutable audit event.").waitFor({ timeout: 20_000 });
+  await removalOperatorPage.getByText("Logo · Removed").waitFor({ timeout: 20_000 });
+  pass("operator removal revokes the synthetic public logo without changing ownership or publication");
+  await removalOperatorContext.close();
+
+  const removedPublicContext = await browser.newContext({ baseURL });
+  const removedPublicPage = await controlledPage(removedPublicContext);
+  await removedPublicPage.goto(`/vendor/${fixture.browser.mediaVendor.slug}`, { waitUntil: "domcontentloaded" });
+  await expectText(removedPublicPage, "main#main-content");
+  assert.equal(await removedPublicPage.locator(`img[alt="${controlledLogoAlt}"]`).count(), 0, "removed controlled media must not remain public");
+  pass("removed synthetic logo is absent from the controlled public profile");
+  await removedPublicContext.close();
   }
 
   if (["all", "contact"].includes(scope)) {

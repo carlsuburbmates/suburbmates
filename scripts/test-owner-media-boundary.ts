@@ -6,6 +6,7 @@ const root = path.resolve(import.meta.dirname, "..");
 const migration = fs.readFileSync(path.join(root, "supabase/migrations/20260722023000_moderated_owner_media.sql"), "utf8");
 const ownerRoute = fs.readFileSync(path.join(root, "web/src/app/api/owner/media/route.ts"), "utf8");
 const publicRoute = fs.readFileSync(path.join(root, "web/src/app/api/media/[mediaId]/route.ts"), "utf8");
+const browserAcceptance = fs.readFileSync(path.join(root, "scripts/d017-browser-acceptance.mjs"), "utf8");
 
 assert.match(migration, /'owner-media-proposals', 'owner-media-proposals', false, 2097152/);
 assert.match(migration, /REVOKE ALL ON TABLE public\.listing_media_proposals FROM PUBLIC, anon, authenticated/);
@@ -19,5 +20,11 @@ assert.match(ownerRoute, /Only the claimed owner can propose media/);
 assert.match(publicRoute, /NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED !== "true"/);
 assert.match(publicRoute, /resolve_public_media/);
 assert.doesNotMatch(ownerRoute, /getPublicUrl/);
+assert.match(browserAcceptance, /D017_BROWSER_SCOPE must be all, public, owner, media, contact, or operator/);
+assert.match(browserAcceptance, /Submit for review/);
+assert.match(browserAcceptance, /Approve media/);
+assert.match(browserAcceptance, /Remove media/);
+assert.match(browserAcceptance, /only after operator approval/);
+assert.match(browserAcceptance, /absent from the controlled public profile/);
 
 console.log("Owner media privacy and holding-gate boundary checks passed.");
