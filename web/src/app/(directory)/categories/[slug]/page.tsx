@@ -103,7 +103,7 @@ export default async function CategoryPage({
           <Link
             key={suburb.slug}
             href={`/${suburb.slug}/${categoryData.slug}`}
-            className="block min-h-36 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-400 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+            className="block min-h-36 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-teal-500 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
           >
             <h2 className="text-xl font-black tracking-tight text-slate-950">
               {suburb.name}

@@ -28,7 +28,7 @@ export function PublicDirectoryShell({
     <div className="min-h-screen flex flex-col">
       <a
         href="#main-content"
-        className="sr-only absolute left-4 top-4 z-50 rounded-lg bg-white px-4 py-3 font-bold text-black shadow-lg focus:not-sr-only focus:outline-none focus:ring-4 focus:ring-black"
+        className="sr-only absolute left-4 top-4 z-50 rounded-lg bg-white px-4 py-3 font-bold text-teal-950 shadow-lg focus:not-sr-only focus:outline-none focus:ring-4 focus:ring-teal-800"
       >
         Skip to main content
       </a>
@@ -57,14 +57,14 @@ export function PublicDirectoryShell({
               <Link
                 key={item.href}
                 href={item.href}
-                className="inline-flex min-h-11 items-center rounded px-1 py-2 text-sm font-bold text-slate-700 transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                className="inline-flex min-h-11 items-center rounded px-1 py-2 text-sm font-bold text-slate-700 transition-colors hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
               >
                 {item.label}
               </Link>
             ))}
             <Link
               href="/login"
-              className="inline-flex min-h-11 items-center rounded px-1 py-2 text-sm font-bold text-slate-700 transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              className="inline-flex min-h-11 items-center rounded px-1 py-2 text-sm font-bold text-slate-700 transition-colors hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
             >
               Sign in
             </Link>
@@ -80,7 +80,7 @@ export function PublicDirectoryShell({
           </p>
 
           <details className="relative lg:hidden">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center rounded px-3 py-2 text-sm font-bold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black [&::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center rounded px-3 py-2 text-sm font-bold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800 [&::-webkit-details-marker]:hidden">
               Menu
             </summary>
             <nav
@@ -91,14 +91,14 @@ export function PublicDirectoryShell({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block rounded-lg px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                  className="block rounded-lg px-4 py-3 text-sm font-bold text-slate-800 hover:bg-teal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
                 >
                   {item.label}
                 </Link>
               ))}
               <Link
                 href="/login"
-                className="block rounded-lg px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                className="block rounded-lg px-4 py-3 text-sm font-bold text-slate-800 hover:bg-teal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
               >
                 Sign in
               </Link>

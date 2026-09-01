@@ -110,7 +110,7 @@ export default async function Page({ params }: PageProps) {
     <div className="min-h-screen bg-slate-50/50 pb-20">
       {/* ── Sub-header Banner ── */}
       <section
-        className="bg-black text-white py-16 px-6 relative overflow-hidden"
+        className="bg-[#073b3a] text-white py-16 px-6 relative overflow-hidden"
         aria-label="Page Header"
       >
         {/* Glow decoration */}
@@ -182,7 +182,7 @@ export default async function Page({ params }: PageProps) {
                   <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-3 mb-3">
-                        <h3 className="text-2xl font-black tracking-tight text-black">
+                        <h3 className="text-2xl font-black tracking-tight text-teal-950">
                           {vendor.business_name}
                         </h3>
                       </div>

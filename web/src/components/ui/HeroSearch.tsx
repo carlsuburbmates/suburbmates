@@ -146,7 +146,7 @@ export function HeroSearch({ categories, suburbs }: HeroSearchProps) {
           ))}
           <Link
             href="/categories"
-            className="inline-flex min-h-11 items-center font-semibold text-slate-700 underline underline-offset-4 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+            className="inline-flex min-h-11 items-center font-semibold text-slate-700 underline underline-offset-4 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
           >
             All categories
           </Link>

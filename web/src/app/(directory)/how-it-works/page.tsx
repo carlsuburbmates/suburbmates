@@ -56,7 +56,7 @@ function Step({
 }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-sm font-black text-white">
+      <p className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-800 text-sm font-black text-white">
         {number}
       </p>
       <h2 className="mt-5 text-xl font-black">{title}</h2>

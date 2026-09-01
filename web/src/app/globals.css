@@ -14,16 +14,16 @@
 
 :root {
   /* ── Surfaces ────────────────────────────────────────────── */
-  --sm-surface:           #ffffff;    /* page background          */
-  --sm-surface-muted:     #f9fafb;    /* gray-50 — section tint   */
-  --sm-surface-inverse:   #000000;    /* dark sections / header   */
-  --sm-surface-overlay:   rgba(0,0,0,0.60); /* image overlays    */
+  --sm-surface:           #fdfdf9;    /* warm paper page background */
+  --sm-surface-muted:     #f1f6f2;    /* soft local-green tint     */
+  --sm-surface-inverse:   #073b3a;    /* deep teal header / footer */
+  --sm-surface-overlay:   rgba(7,59,58,0.72); /* image overlays    */
 
   /* ── Text ON light surfaces (white / gray-50) ───────────── */
-  --sm-text-primary:      #000000;    /* 21:1   ✅               */
-  --sm-text-secondary:    #374151;    /* gray-700 — 10.7:1 ✅    */
-  --sm-text-tertiary:     #4b5563;    /* gray-600 — 7.0:1  ✅    */
-  --sm-text-placeholder:  #6b7280;    /* gray-500 — 4.6:1  ✅    */
+  --sm-text-primary:      #102a2a;    /* 14.7:1 on surface ✅    */
+  --sm-text-secondary:    #31504e;    /* 8.4:1 on surface ✅     */
+  --sm-text-tertiary:     #4a6664;    /* 5.8:1 on surface ✅     */
+  --sm-text-placeholder:  #58716f;    /* 4.9:1 on surface ✅     */
 
   /* ── Text ON dark/inverse surfaces (black) ──────────────── */
   --sm-text-on-inverse:           #ffffff;    /* 21:1    ✅       */
@@ -31,18 +31,18 @@
   /* REMOVED: gray-400 (#9ca3af) on black = 3.1:1 — WCAG FAIL    */
 
   /* ── Interactive / Brand ────────────────────────────────── */
-  --sm-brand-bg:          #000000;
+  --sm-brand-bg:          #0f766e;
   --sm-brand-text:        #ffffff;    /* 21:1 on brand-bg ✅     */
-  --sm-brand-hover-bg:    #1f2937;    /* gray-800 — 16:1 ✅      */
-  --sm-brand-active-bg:   #111827;    /* gray-900                */
+  --sm-brand-hover-bg:    #115e59;    /* 7.3:1 with white ✅     */
+  --sm-brand-active-bg:   #134e4a;    /* 8.8:1 with white ✅     */
 
   /* ── Borders ─────────────────────────────────────────────── */
   --sm-border:            #e5e7eb;    /* gray-200                */
-  --sm-border-strong:     #000000;
+  --sm-border-strong:     #0f766e;
   --sm-border-muted:      #f3f4f6;    /* gray-100                */
 
   /* ── Focus rings ─────────────────────────────────────────── */
-  --sm-ring-on-light:     #000000;    /* ring on white bg        */
+  --sm-ring-on-light:     #0f766e;    /* ring on light surfaces  */
   --sm-ring-on-dark:      #ffffff;    /* ring on black bg        */
 
   /* ── Disabled state ─────────────────────────────────────── */
@@ -142,10 +142,10 @@ body {
   pointer-events: none;
 }
 
-/* ── Primary: black bg / white text ── */
+/* ── Primary: deep teal / white text ── */
 .btn-primary {
-  background-color: var(--sm-brand-bg);     /* #000 */
-  color: var(--sm-brand-text);              /* #fff — 21:1 ✅ */
+  background-color: var(--sm-brand-bg);
+  color: var(--sm-brand-text);
   border-color: var(--sm-brand-bg);
 }
 .btn-primary:hover {
@@ -160,15 +160,15 @@ body {
   background-color: var(--sm-brand-active-bg);
 }
 
-/* ── Outline: white bg / black border / black text ── */
+/* ── Outline: light surface / teal border / dark text ── */
 .btn-outline {
   background-color: var(--sm-surface);       /* #fff */
-  color: var(--sm-text-primary);             /* #000 — 21:1 ✅ */
+  color: var(--sm-text-primary);
   border-color: var(--sm-border-strong);
 }
 .btn-outline:hover {
-  background-color: var(--sm-brand-bg);      /* invert on hover */
-  color: var(--sm-brand-text);               /* #fff — 21:1 ✅ */
+  background-color: var(--sm-brand-bg);
+  color: var(--sm-brand-text);
   border-color: var(--sm-brand-bg);
 }
 .btn-outline:focus-visible {
@@ -176,10 +176,10 @@ body {
               0 0 0 4px var(--sm-ring-on-light);
 }
 
-/* ── Ghost: transparent / black text / hover fills ── */
+/* ── Ghost: transparent / dark text / hover fills ── */
 .btn-ghost {
   background-color: transparent;
-  color: var(--sm-text-primary);             /* #000 — 21:1 ✅ */
+  color: var(--sm-text-primary);
   border-color: transparent;
 }
 .btn-ghost:hover {
@@ -191,15 +191,15 @@ body {
               0 0 0 4px var(--sm-ring-on-light);
 }
 
-/* ── Inverse: white bg / black text (for use ON dark sections) ── */
+/* ── Inverse: light bg / dark text (for use on deep teal sections) ── */
 .btn-inverse {
   background-color: var(--sm-surface);       /* #fff */
-  color: var(--sm-text-primary);             /* #000 — 21:1 ✅ */
+  color: var(--sm-text-primary);
   border-color: var(--sm-surface);
 }
 .btn-inverse:hover {
-  background-color: #e5e7eb;                 /* gray-200 — #000 text = 16:1 ✅ */
-  border-color: #e5e7eb;
+  background-color: #dceee6;
+  border-color: #dceee6;
   transform: scale(1.03);
 }
 .btn-inverse:focus-visible {
@@ -208,7 +208,7 @@ body {
               0 0 0 4px var(--sm-ring-on-dark);
 }
 .btn-inverse:active:not(:disabled) {
-  background-color: #d1d5db;                 /* gray-300 */
+  background-color: #c7dfd5;
 }
 
 /* ═══════════════════════════════════════════════════════════════

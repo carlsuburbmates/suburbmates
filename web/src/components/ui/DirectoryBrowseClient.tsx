@@ -128,7 +128,7 @@ export function DirectoryBrowseClient({
     <div className="min-h-screen bg-slate-50/70 pb-24">
       {/* ── Header ───────────────────────────────────────────── */}
       <section
-        className="border-b border-slate-800 bg-slate-950 px-5 py-12 text-white sm:px-6 sm:py-16"
+        className="border-b border-teal-950/40 bg-[#073b3a] px-5 py-12 text-white sm:px-6 sm:py-16"
         aria-label="Directory header"
       >
         <div className="mx-auto max-w-6xl">
@@ -153,7 +153,7 @@ export function DirectoryBrowseClient({
                 onClick={() => setViewMode("grid")}
                 className={`flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                   viewMode === "grid"
-                    ? "bg-white text-black shadow-md scale-100"
+                    ? "bg-white text-teal-950 shadow-md scale-100"
                     : "text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
                 aria-label="Grid view"
@@ -167,7 +167,7 @@ export function DirectoryBrowseClient({
                 onClick={() => setViewMode("list")}
                 className={`flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
                   viewMode === "list"
-                    ? "bg-white text-black shadow-md scale-100"
+                    ? "bg-white text-teal-950 shadow-md scale-100"
                     : "text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
                 aria-label="Compact list view"
@@ -202,7 +202,7 @@ export function DirectoryBrowseClient({
                 placeholder="Search business name or keyword..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:bg-white text-black font-medium text-sm transition-all placeholder:text-slate-400"
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-800 focus:bg-white text-teal-950 font-medium text-sm transition-all placeholder:text-slate-400"
               />
             </div>
 
@@ -217,7 +217,7 @@ export function DirectoryBrowseClient({
                 value={service}
                 onChange={(event) => setServiceFilter(event.target.value)}
                 placeholder="Optional service"
-                className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-black transition-all placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-teal-950 transition-all placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-800"
                 aria-describedby="directory-service-help"
               />
               <datalist id="directory-service-options">
@@ -233,7 +233,7 @@ export function DirectoryBrowseClient({
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="btn btn-primary min-h-11 flex-1 lg:flex-initial rounded-xl px-6 text-xs font-bold uppercase tracking-wider bg-black text-white hover:bg-slate-800 transition-all shadow-md active:scale-95"
+                className="btn btn-primary min-h-11 flex-1 lg:flex-initial rounded-xl px-6 text-xs font-bold uppercase tracking-wider shadow-md active:scale-95"
               >
                 Search
               </button>
@@ -282,7 +282,7 @@ export function DirectoryBrowseClient({
                   id="directory-suburb"
                   value={suburb}
                   onChange={(event) => setSuburb(event.target.value)}
-                  className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-black focus:outline-none focus:ring-2 focus:ring-black"
+                  className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-teal-950 focus:outline-none focus:ring-2 focus:ring-teal-800"
                 >
                   <option value="">Any suburb</option>
                   {suburbs.map((item) => (
@@ -320,7 +320,7 @@ export function DirectoryBrowseClient({
                     }}
                     aria-label="Remove search query filter"
                   >
-                    <X size={12} className="hover:text-black" />
+                    <X size={12} className="hover:text-teal-900" />
                   </button>
                 </span>
               )}
@@ -336,7 +336,7 @@ export function DirectoryBrowseClient({
                     }}
                     aria-label="Remove category filter"
                   >
-                    <X size={12} className="hover:text-black" />
+                    <X size={12} className="hover:text-teal-900" />
                   </button>
                 </span>
               )}
@@ -351,13 +351,13 @@ export function DirectoryBrowseClient({
                     }}
                     aria-label="Remove suburb filter"
                   >
-                    <X size={12} className="hover:text-black" />
+                    <X size={12} className="hover:text-teal-900" />
                   </button>
                 </span>
               )}
               <button
                 onClick={clearAllFilters}
-                className="text-xs font-bold text-slate-500 hover:text-black underline ml-2 transition-colors"
+                className="text-xs font-bold text-slate-500 hover:text-teal-900 underline ml-2 transition-colors"
               >
                 Clear all
               </button>
@@ -418,7 +418,7 @@ export function DirectoryBrowseClient({
                   {/* Card Header & Compact Info */}
                   <div className="p-5 sm:p-6 flex-1">
                     <div className="mb-2 flex items-start justify-between gap-3">
-                      <h2 className="min-w-0 break-words text-lg font-black leading-snug tracking-tight text-slate-900 transition-colors group-hover:text-black sm:text-xl">
+                      <h2 className="min-w-0 break-words text-lg font-black leading-snug tracking-tight text-slate-900 transition-colors group-hover:text-teal-900 sm:text-xl">
                         {vendor.business_name}
                       </h2>
                       <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-slate-100 rounded-full text-slate-700 border border-slate-200">
