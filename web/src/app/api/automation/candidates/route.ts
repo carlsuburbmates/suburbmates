@@ -749,7 +749,11 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
 
   if (Object.keys(updates).length > 0) {
     const { error: updateError } = await admin.from("vendors").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", vendor.id);
-    if (updateError) throw new Error("Could not apply safe matching-listing enrichment.");
+    // Keep the public response generic, but retain the database error code in
+    // the private run record. It lets the retry path distinguish a stale or
+    // invalid source observation from a Worker/network interruption without
+    // exposing candidate values or database detail to callers.
+    if (updateError) throw new Error(`Could not apply safe matching-listing enrichment (database code ${updateError.code ?? "unknown"}).`);
     const { error: auditError } = await admin.from("audit_events").insert({
       actor_type: "service", action: "approved_source_empty_field_enriched", entity_type: "vendor", entity_id: vendor.id,
       reason: "Approved source filled empty unclaimed listing fields without overwriting existing information.",
