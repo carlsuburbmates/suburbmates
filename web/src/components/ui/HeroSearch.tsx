@@ -139,7 +139,7 @@ export function HeroSearch({ categories, suburbs }: HeroSearchProps) {
               key={category.slug}
               type="button"
               onClick={() => navigate(category.slug)}
-              className="min-h-11 rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-slate-950 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+              className="min-h-11 rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-700 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
             >
               {category.name}
             </button>
