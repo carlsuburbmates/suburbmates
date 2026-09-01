@@ -8,6 +8,7 @@ assert.match(migration, /openstreetmap-candidate-v1/);
 assert.match(migration, /victorian-liquor-licences-v1/);
 const correction = fs.readFileSync("supabase/migrations/20260828015545_revise_victorian_liquor_source_contract.sql", "utf8");
 const taxPractitionersBoard = fs.readFileSync("supabase/migrations/20260831100000_add_tax_practitioners_board_source.sql", "utf8");
+const asicCreditLicensees = fs.readFileSync("supabase/migrations/20260901210000_add_asic_credit_licensee_source.sql", "utf8");
 assert.match(correction, /victorian-liquor-licences-v2/);
 assert.match(correction, /unapproved_source/);
 assert.match(taxPractitionersBoard, /tax_practitioners_board/);
@@ -15,6 +16,10 @@ assert.match(taxPractitionersBoard, /Creative Commons Attribution 4\.0 Internati
 assert.match(taxPractitionersBoard, /store_and_display/);
 assert.match(taxPractitionersBoard, /organisation records only/);
 assert.match(taxPractitionersBoard, /must never store individual-agent/);
+assert.match(asicCreditLicensees, /asic_credit_licensees/);
+assert.match(asicCreditLicensees, /Creative Commons Attribution 3\.0 Australia/);
+assert.match(asicCreditLicensees, /store_and_display/);
+assert.match(asicCreditLicensees, /must never retain an individual licensee name/);
 const freshnessBackfill = fs.readFileSync("supabase/migrations/20260828021000_backfill_catalogue_evidence_freshness.sql", "utf8");
 assert.match(freshnessBackfill, /freshness_due_at/);
 assert.match(freshnessBackfill, /interval '7 days'/);

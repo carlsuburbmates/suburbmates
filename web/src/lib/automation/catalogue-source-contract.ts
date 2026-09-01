@@ -1,4 +1,4 @@
-export type CatalogueSourceKey = "openstreetmap" | "victorian_liquor_licences" | "tax_practitioners_board";
+export type CatalogueSourceKey = "openstreetmap" | "victorian_liquor_licences" | "tax_practitioners_board" | "asic_credit_licensees";
 
 export type CatalogueSourceContract = {
   key: CatalogueSourceKey;
@@ -33,6 +33,14 @@ export const CATALOGUE_SOURCE_CONTRACTS: Record<CatalogueSourceKey, CatalogueSou
     allowedHosts: ["www.data.gov.au", "data.gov.au"],
     refreshIntervalDays: 31,
     defaultSourceNotes: "Approved Tax Practitioners Board organisation-only candidate handoff.",
+  },
+  asic_credit_licensees: {
+    key: "asic_credit_licensees",
+    displayName: "ASIC Credit Licensee register",
+    version: "asic-credit-licensee-org-v1",
+    allowedHosts: ["www.data.gov.au", "data.gov.au"],
+    refreshIntervalDays: 7,
+    defaultSourceNotes: "Approved ASIC Credit Licensee organisation-only candidate handoff.",
   },
 };
 
