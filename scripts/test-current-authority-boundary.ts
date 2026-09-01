@@ -6,6 +6,7 @@ const decisionLog = readFileSync("docs/REFERENCE/SuburbMates — Decision Log.md
 const automationReadme = readFileSync("docs/AUTOMATION/README.md", "utf8");
 const automationWorkflows = readFileSync("docs/AUTOMATION/WORKFLOWS.md", "utf8");
 const openStreetMapAcquisition = readFileSync("docs/openstreetmap-acquisition.md", "utf8");
+const retiredDirectProfileUpdate = readFileSync("supabase/migrations/20260902093000_retire_legacy_direct_profile_update.sql", "utf8");
 const lifecycleContract = readFileSync("docs/REFERENCE/SuburbMates — Listing Lifecycle and Release-State Contract.md", "utf8");
 const responsibilityMap = readFileSync("docs/REFERENCE/SuburbMates — Operations Responsibility and Follow-through Map.md", "utf8");
 const catalogueCoverage = readFileSync("docs/catalogue-coverage.md", "utf8");
@@ -32,6 +33,7 @@ assert.match(automationWorkflows, /ASIC Credit Licensee catalogue discovery/);
 assert.match(openStreetMapAcquisition, /openstreetmap-candidate-v2/);
 assert.match(openStreetMapAcquisition, /not a direct import or the sole source of a public business identity/);
 assert.doesNotMatch(openStreetMapAcquisition, /openstreetmap-candidate-v1/);
+assert.match(retiredDirectProfileUpdate, /DROP FUNCTION IF EXISTS public\.update_vendor_profile/);
 for (const authority of [lifecycleContract, responsibilityMap, catalogueCoverage]) {
   assert.doesNotMatch(authority, /source, scope, contact, duplicate and safety checks/);
 }
