@@ -21,6 +21,8 @@ export const NON_COMMERCIAL_TOKENS = new Set([
 ]);
 
 const OVERPASS_REQUEST_TIMEOUT_MS = 20_000;
+const OVERPASS_MAX_ATTEMPTS = 2;
+const OVERPASS_RETRY_DELAY_MS = 15_000;
 const CUISINE_PROFILE_CATEGORIES = new Set(['bar', 'cafe', 'fast-food', 'ice-cream', 'pub', 'restaurant']);
 // These are the only non-primary OSM feature classes that can enter the
 // business pipeline. They are deliberately narrow: parks, hospitals, public
@@ -183,18 +185,33 @@ export async function requestFromOverpassEndpoints(
   endpoints: string[],
   query: string,
   fetchImpl: typeof fetch = fetch,
+  options: {
+    maxAttempts?: number;
+    retryDelayMs?: number;
+    wait?: (milliseconds: number) => Promise<void>;
+  } = {},
 ): Promise<{ elements: any[] }> {
   let lastError: unknown;
+  const maxAttempts = Math.max(1, options.maxAttempts ?? OVERPASS_MAX_ATTEMPTS);
+  const retryDelayMs = Math.max(0, options.retryDelayMs ?? OVERPASS_RETRY_DELAY_MS);
+  const wait = options.wait ?? ((milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds)));
 
-  for (const endpoint of endpoints) {
-    console.log(`Trying ${endpoint}...`);
-    try {
-      const data = await requestOverpass(endpoint, query, fetchImpl);
-      console.log(`Successfully fetched from ${endpoint}`);
-      return data;
-    } catch (error) {
-      lastError = error;
-      console.warn(`Endpoint ${endpoint} failed:`, error instanceof Error ? error.message : error);
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    for (const endpoint of endpoints) {
+      console.log(`Trying ${endpoint} (attempt ${attempt}/${maxAttempts})...`);
+      try {
+        const data = await requestOverpass(endpoint, query, fetchImpl);
+        console.log(`Successfully fetched from ${endpoint}`);
+        return data;
+      } catch (error) {
+        lastError = error;
+        console.warn(`Endpoint ${endpoint} failed:`, error instanceof Error ? error.message : error);
+      }
+    }
+
+    if (attempt < maxAttempts) {
+      console.warn(`All configured Overpass endpoints failed; waiting ${retryDelayMs}ms before one bounded retry.`);
+      await wait(retryDelayMs);
     }
   }
 

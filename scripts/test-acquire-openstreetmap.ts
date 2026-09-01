@@ -154,6 +154,24 @@ async function runTests() {
   ]);
   assert.deepStrictEqual(fallbackResponse.elements, []);
 
+  // Test 11: a transient all-provider outage gets one bounded retry rather
+  // than silently producing a stale or empty candidate feed.
+  let retryAttempts = 0;
+  const retryWaits: number[] = [];
+  const retryResponse = await requestFromOverpassEndpoints(
+    ['https://first.example.test/interpreter', 'https://second.example.test/interpreter'],
+    '[out:json];',
+    async () => {
+      retryAttempts += 1;
+      if (retryAttempts <= 2) throw new Error('temporary provider outage');
+      return { ok: true, status: 200, json: async () => ({ elements: [] }) } as Response;
+    },
+    { maxAttempts: 2, retryDelayMs: 1, wait: async (milliseconds) => { retryWaits.push(milliseconds); } },
+  );
+  assert.equal(retryAttempts, 3, 'The second provider pass should be attempted after a complete transient outage.');
+  assert.deepEqual(retryWaits, [1], 'The retry must remain bounded and observable.');
+  assert.deepEqual(retryResponse.elements, []);
+
   console.log('All tests passed.');
 }
 
