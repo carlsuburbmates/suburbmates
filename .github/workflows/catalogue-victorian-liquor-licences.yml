@@ -35,6 +35,39 @@ jobs:
           if-no-files-found: error
           path: data/vendor-candidates-victorian-liquor-licences.csv
 
+  mark-handoff-running:
+    needs: discover
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record the licensed source refresh as running
+        env:
+          AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
+        run: |
+          curl --fail-with-body --retry 3 --retry-all-errors --request POST \
+            --header "authorization: Bearer $AUTOMATION_INGEST_TOKEN" \
+            --header "content-type: application/json" \
+            --data "{\"source\":\"victorian_liquor_licences\",\"outcome\":\"started\",\"workflowRunId\":\"${{ github.run_id }}\"}" \
+            https://suburbmates.com.au/api/automation/catalogue-run-status
+
+  handoff:
+    needs: [discover, mark-handoff-running]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: victorian-liquor-licence-candidates-${{ github.run_id }}
+          path: data
+
       - name: Send licensed candidates to the private qualification handoff
         run: npm run candidate:handoff -- data/vendor-candidates-victorian-liquor-licences.csv
         env:
@@ -44,3 +77,27 @@ jobs:
 
       - name: Confirm publication boundary
         run: echo "Licensed candidate facts entered the authenticated qualification handoff. Private evidence is retained; only deterministic qualification can create an unclaimed public listing."
+
+  record-handoff-outcome:
+    if: always()
+    needs: [discover, mark-handoff-running, handoff]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record the aggregate source-run outcome
+        env:
+          AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
+          HANDOFF_RESULT: ${{ needs.handoff.result }}
+        run: |
+          if [ "$HANDOFF_RESULT" = "success" ]; then
+            outcome=completed
+          else
+            outcome=failed
+          fi
+          curl --fail-with-body --retry 3 --retry-all-errors --request POST \
+            --header "authorization: Bearer $AUTOMATION_INGEST_TOKEN" \
+            --header "content-type: application/json" \
+            --data "{\"source\":\"victorian_liquor_licences\",\"outcome\":\"$outcome\",\"workflowRunId\":\"${{ github.run_id }}\"}" \
+            https://suburbmates.com.au/api/automation/catalogue-run-status
+          if [ "$outcome" != "completed" ]; then
+            exit 1
+          fi

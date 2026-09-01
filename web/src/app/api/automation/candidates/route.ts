@@ -367,6 +367,7 @@ async function holdCatalogueSourceContract(admin: ReturnType<typeof createAdminC
     status: "failed",
     last_failure_at: now,
     last_error: `The expected ${source.displayName} source contract was not received. Candidate processing was held; no listing changed.`,
+    updated_at: now,
     metadata: { action: "source_contract_held", source: source.key },
   }, { onConflict: "integration_name" });
   if (health.error) throw new Error("Could not record the catalogue source contract hold.");
@@ -393,6 +394,7 @@ async function recordCandidateHandoffHealth(
     last_success_at: details.status === "healthy" ? details.completedAt : undefined,
     last_failure_at: details.status === "failed" ? details.completedAt : undefined,
     last_error: details.status === "failed" ? details.message ?? "Candidate handoff failed." : null,
+    updated_at: details.completedAt,
     metadata: details.metadata,
   }, { onConflict: "integration_name" });
   if (health.error) throw new Error("Could not record candidate handoff health.");
