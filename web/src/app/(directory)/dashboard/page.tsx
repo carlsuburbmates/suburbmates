@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
+import Image from 'next/image'
 import { BadgeCheck, Camera, ExternalLink, FileText, Phone, Sparkles } from 'lucide-react'
 import ProfileEditor from './ProfileEditor'
 import ClaimRequests from './ClaimRequests'
@@ -57,7 +58,12 @@ type MediaProposal = {
   created_at: string
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ media?: string }>
+}) {
+  const query = await searchParams
   const supabase = await createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
@@ -99,6 +105,12 @@ export default async function DashboardPage() {
             </form>
           </div>
         </header>
+
+        {query.media === 'submitted' && (
+          <p role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900">
+            Your image is private and awaiting operator review. Its review status is shown below.
+          </p>
+        )}
 
         {ownerRequestStatuses.length > 0 && (
           <section className="space-y-4">
@@ -173,7 +185,7 @@ export default async function DashboardPage() {
                   <div id={`media-${vendor.id}`}>
                     <MediaProposalForm vendorId={vendor.id} />
                   </div>
-                  {mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).length > 0 && <div className="border-t border-slate-100 pt-5"><h4 className="font-bold">Image review status</h4><div className="mt-3 space-y-2">{mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).map((proposal) => <div key={proposal.proposal_id} className="rounded-lg bg-slate-50 p-3 text-sm"><span className="font-semibold">{proposal.media_kind === 'logo' ? 'Logo' : 'Listing image'}:</span> {proposal.proposal_status.replaceAll('_', ' ')}{proposal.operator_reason && <p className="mt-1 text-slate-600">{proposal.operator_reason}</p>}</div>)}</div></div>}
+                  {mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).length > 0 && <div className="border-t border-slate-100 pt-5"><h4 className="font-bold">Image review status</h4><div className="mt-3 grid gap-3 sm:grid-cols-2">{mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).map((proposal) => <div key={proposal.proposal_id} className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-sm"><Image src={`/api/owner/media/${proposal.proposal_id}`} alt={proposal.alt_text} width={640} height={360} unoptimized className="h-36 w-full bg-white object-contain" /><div className="p-3"><span className="font-semibold">{proposal.media_kind === 'logo' ? 'Logo' : 'Listing image'}:</span> {proposal.proposal_status.replaceAll('_', ' ')}{proposal.operator_reason && <p className="mt-1 text-slate-600">{proposal.operator_reason}</p>}</div></div>)}</div></div>}
                 </div>
               ))}
             </div>

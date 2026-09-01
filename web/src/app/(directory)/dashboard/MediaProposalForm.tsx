@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { BadgeCheck, Camera, ImagePlus, ShieldCheck } from "lucide-react";
 
 export default function MediaProposalForm({ vendorId }: { vendorId: string }) {
-  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [sourceBasis, setSourceBasis] = useState("");
@@ -21,15 +19,16 @@ export default function MediaProposalForm({ vendorId }: { vendorId: string }) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setPending(true); setMessage(null);
-    const response = await fetch("/api/owner/media", { method: "POST", body: new FormData(event.currentTarget) });
+    const form = event.currentTarget;
+    const response = await fetch("/api/owner/media", { method: "POST", body: new FormData(form) });
     const body = await response.json().catch(() => ({}));
     setPending(false);
     setMessage(response.ok ? "Your image is private and awaiting operator review. Its review status is now shown below." : body.error || "We could not submit this image.");
     if (response.ok) {
-      event.currentTarget.reset();
+      form.reset();
       setSourceBasis("");
       preview(null);
-      router.refresh();
+      window.location.assign(`/dashboard?media=submitted#media-${vendorId}`);
     }
   }
   return <form onSubmit={submit} className="mt-6 space-y-5 border-t border-slate-100 pt-6">

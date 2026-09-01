@@ -92,7 +92,7 @@ try {
   await ownerPage.locator("#email").fill(fixture.browser.ownerEmail);
   await ownerPage.locator("#password").fill(fixture.browser.ownerPassword);
   await ownerPage.getByRole("button", { name: "Sign in" }).click();
-  await ownerPage.getByText("Listings linked to your email").waitFor({ timeout: 20_000 });
+  await ownerPage.getByText("Your eligible listing").waitFor({ timeout: 20_000 });
   const continueToClaim = ownerPage.getByRole("button", { name: "Continue to claim" });
   if (await continueToClaim.count()) await continueToClaim.click();
   await ownerPage.getByLabel("Your connection to this business").fill("I am the authorised representative of this controlled browser acceptance fixture.");
@@ -121,8 +121,11 @@ try {
   });
   await mediaOwnerPage.getByRole("button", { name: "I own this image" }).click();
   await mediaOwnerPage.locator('input[name="altText"]').fill(controlledLogoAlt);
-  await mediaOwnerPage.getByRole("button", { name: "Submit for review" }).click();
-  await mediaOwnerPage.getByText("Your image is private and awaiting operator review. Its review status is now shown below.").waitFor({ timeout: 20_000 });
+  await Promise.all([
+    mediaOwnerPage.waitForURL(/\/dashboard\?media=submitted/, { timeout: 20_000 }),
+    mediaOwnerPage.getByRole("button", { name: "Submit for review" }).click(),
+  ]);
+  await mediaOwnerPage.getByText("Your image is private and awaiting operator review. Its review status is shown below.").waitFor({ timeout: 20_000 });
   await mediaOwnerPage.getByText("Logo: pending").waitFor({ timeout: 20_000 });
   assert.equal(await mediaOwnerPage.locator(`img[alt="${controlledLogoAlt}"]`).count(), 1, "owner preview should remain visible in the private dashboard");
   pass("claimed owner uploads a synthetic logo with recorded permission and sees only the private pending state");
@@ -139,7 +142,7 @@ try {
   await mediaOperatorPage.locator('textarea[name="reason"]').fill("Synthetic owner logo is permitted for controlled acceptance.");
   await mediaOperatorPage.getByRole("button", { name: "Approve media" }).click();
   await mediaOperatorPage.getByText("Decision recorded with an immutable audit event.").waitFor({ timeout: 20_000 });
-  await mediaOperatorPage.getByText("Logo · Approved").waitFor({ timeout: 20_000 });
+  await mediaOperatorPage.getByText("Logo · Approved").first().waitFor({ timeout: 20_000 });
   pass("authorised operator approves the private media with an immutable decision record");
   await mediaOperatorContext.close();
 
@@ -156,11 +159,11 @@ try {
   await removalOperatorPage.locator("#email").fill(fixture.browser.operatorEmail);
   await removalOperatorPage.locator("#password").fill(fixture.browser.operatorPassword);
   await removalOperatorPage.getByRole("button", { name: "Sign in" }).click();
-  await removalOperatorPage.getByText("Logo · Approved").waitFor({ timeout: 20_000 });
+  await removalOperatorPage.getByText("Logo · Approved").first().waitFor({ timeout: 20_000 });
   await removalOperatorPage.locator('textarea[name="reason"]').fill("Synthetic media removal completes controlled acceptance.");
   await removalOperatorPage.getByRole("button", { name: "Remove media" }).click();
   await removalOperatorPage.getByText("Decision recorded with an immutable audit event.").waitFor({ timeout: 20_000 });
-  await removalOperatorPage.getByText("Logo · Removed").waitFor({ timeout: 20_000 });
+  await removalOperatorPage.getByText("Logo · Removed").first().waitFor({ timeout: 20_000 });
   pass("operator removal revokes the synthetic public logo without changing ownership or publication");
   await removalOperatorContext.close();
 

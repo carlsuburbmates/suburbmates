@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const route = readFileSync("web/src/app/api/automation/candidates/route.ts", "utf8");
-const migration = readFileSync("supabase/migrations/20260901210000_reconcile_exact_osm_source_duplicates.sql", "utf8");
+const migration = readFileSync("supabase/migrations/20260901210001_reconcile_exact_osm_source_duplicates.sql", "utf8");
 
 assert.match(route, /A prior qualified record is the stable identity for this exact/);
 assert.match(route, /if \(priorQualified\.data\?\.vendor_id\) \{/);
