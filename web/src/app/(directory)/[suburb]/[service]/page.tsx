@@ -8,6 +8,7 @@ import {
   MapPin,
   Shield,
   Building2,
+  Clock3,
   ExternalLink,
 } from "lucide-react";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -82,7 +83,7 @@ export default async function Page({ params }: PageProps) {
     supabase
       .from("published_vendors")
       .select(
-        "id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address",
+        "id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address, trading_hours",
       )
       .eq("suburb_slug", suburbSlug)
       .eq("category_slug", categorySlug)
@@ -204,6 +205,12 @@ export default async function Page({ params }: PageProps) {
                       {vendor.description && (
                         <p className="text-slate-600 text-sm leading-relaxed max-w-3xl">
                           {vendor.description}
+                        </p>
+                      )}
+                      {vendor.trading_hours && (
+                        <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold leading-5 text-slate-600">
+                          <Clock3 size={14} className="mt-0.5 shrink-0 text-teal-800" aria-hidden="true" />
+                          <span>Hours: {vendor.trading_hours}</span>
                         </p>
                       )}
                     </div>

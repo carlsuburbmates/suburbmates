@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, MapPin, Phone, Search, Store } from "lucide-react";
+import { ArrowRight, Clock3, MapPin, Phone, Search, Store } from "lucide-react";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
 import { displayDirectoryStreetAddress } from "@/lib/directory-location";
 import { HeroSearch } from "@/components/ui/HeroSearch";
@@ -21,6 +21,7 @@ interface HomeClientProps {
     category_slug: string | null;
     description: string | null;
     street_address: string | null;
+    trading_hours: string | null;
     phone: string | null;
     website: string | null;
   }>;
@@ -191,6 +192,7 @@ export function HomeClient({
                   ? categoryNames.get(vendor.category_slug)
                   : null;
                 const detail = conciseDetail(vendor.description);
+                const hours = conciseDetail(vendor.trading_hours);
                 const displayedAddress = displayDirectoryStreetAddress(vendor.street_address);
                 return (
                   <article
@@ -222,6 +224,12 @@ export function HomeClient({
                     )}
                     {!detail && displayedAddress && (
                       <p className="mt-4 text-sm leading-6 text-slate-600">{displayedAddress}</p>
+                    )}
+                    {hours && (
+                      <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold leading-5 text-slate-600">
+                        <Clock3 size={14} className="mt-0.5 shrink-0 text-teal-800" aria-hidden="true" />
+                        <span className="line-clamp-2">Hours: {hours}</span>
+                      </p>
                     )}
                     <Link
                       href={`/vendor/${vendor.slug}`}

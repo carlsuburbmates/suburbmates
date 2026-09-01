@@ -20,7 +20,7 @@ export default async function Home() {
     supabase
       .from("published_vendors")
       .select(
-        "id, slug, business_name, suburb_slug, category_slug, description, street_address, phone, website",
+        "id, slug, business_name, suburb_slug, category_slug, description, street_address, trading_hours, phone, website",
         { count: "exact" },
       )
       .order("business_name", { ascending: true })

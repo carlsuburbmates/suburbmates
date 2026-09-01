@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Clock3,
   LayoutGrid,
   List,
   X,
@@ -32,6 +33,7 @@ type DirectoryVendor = {
   website: string | null;
   is_claimed: boolean;
   street_address: string | null;
+  trading_hours: string | null;
   suburb_slug: string;
   category_slug: string;
 };
@@ -401,6 +403,7 @@ export function DirectoryBrowseClient({
                 categories.find((c) => c.slug === vendor.category_slug)?.name ||
                 vendor.category_slug;
               const detail = vendor.description?.replace(/\s+/g, " ").trim();
+              const hours = vendor.trading_hours?.replace(/\s+/g, " ").trim();
               const displayedAddress = displayDirectoryStreetAddress(vendor.street_address);
 
               return (
@@ -442,6 +445,12 @@ export function DirectoryBrowseClient({
                     {detail && (
                       <p className="line-clamp-3 text-sm leading-6 text-slate-600">
                         {detail}
+                      </p>
+                    )}
+                    {hours && (
+                      <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold leading-5 text-slate-600">
+                        <Clock3 size={14} className="mt-0.5 shrink-0 text-teal-800" aria-hidden="true" />
+                        <span className="line-clamp-2">Hours: {hours}</span>
                       </p>
                     )}
                   </div>

@@ -134,6 +134,11 @@ async function run() {
     /conciseDetail/,
     "home previews must use concise existing listing detail when available",
   );
+  assert.match(
+    home,
+    /trading_hours/,
+    "home previews must request existing public trading-hours data when available",
+  );
 
   assert.match(
     browse,
@@ -189,6 +194,11 @@ async function run() {
     directoryBrowse,
     /Popular services/,
     "browse must offer fast, low-noise paths for common services",
+  );
+  assert.match(
+    directoryBrowse,
+    /Hours:/,
+    "directory cards must surface recorded public trading hours when available",
   );
   assert.match(
     directoryBrowse,

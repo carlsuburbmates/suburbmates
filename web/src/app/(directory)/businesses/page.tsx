@@ -53,7 +53,7 @@ export default async function BusinessesPage({
   }
 
   const searchQuery = q.trim();
-  const vendorFields = "id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address, suburb_slug, category_slug";
+  const vendorFields = "id, slug, business_name, description, contact_email, phone, website, is_claimed, street_address, trading_hours, suburb_slug, category_slug";
 
   const browsePage = (targetPage: number) => {
     const from = (targetPage - 1) * pageSize;
