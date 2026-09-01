@@ -66,7 +66,7 @@ export default async function DashboardPage() {
     redirect('/login?next=/dashboard')
   }
 
-  const { data: ownerVendorRows } = await supabase.rpc('list_current_owner_vendors_with_hours')
+  const { data: ownerVendorRows } = await supabase.rpc('list_current_owner_vendors_with_channels')
   const ownedVendors = ownerVendorRows as OwnerVendor[] | null
 
   const { data: profileChanges } = await supabase.rpc('list_current_owner_profile_changes')

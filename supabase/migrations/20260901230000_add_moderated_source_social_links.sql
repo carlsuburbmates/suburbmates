@@ -47,8 +47,6 @@ SELECT
   vendor.contact_email,
   vendor.phone,
   vendor.website,
-  vendor.facebook_url,
-  vendor.instagram_url,
   vendor.description,
   vendor.tier,
   vendor.is_claimed,
@@ -71,14 +69,16 @@ SELECT
         LIMIT 1
       )
   ) AS abn_checked,
-  vendor.trading_hours
+  vendor.trading_hours,
+  vendor.facebook_url,
+  vendor.instagram_url
 FROM public.vendors AS vendor
 WHERE vendor.is_published = true;
 
 REVOKE ALL ON TABLE public.published_vendors FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.published_vendors TO anon, authenticated, service_role;
 
-CREATE OR REPLACE FUNCTION public.list_current_owner_vendors_with_hours()
+CREATE FUNCTION public.list_current_owner_vendors_with_channels()
 RETURNS TABLE (
   id UUID,
   slug TEXT,
@@ -91,10 +91,10 @@ RETURNS TABLE (
   contact_email TEXT,
   phone TEXT,
   website TEXT,
-  facebook_url TEXT,
-  instagram_url TEXT,
   description TEXT,
-  trading_hours TEXT
+  trading_hours TEXT,
+  facebook_url TEXT,
+  instagram_url TEXT
 )
 LANGUAGE sql
 STABLE
@@ -105,8 +105,7 @@ AS $$
     vendor.id, vendor.slug, vendor.business_name, vendor.suburb_slug,
     vendor.category_slug, vendor.tier, vendor.is_published,
     vendor.street_address, vendor.contact_email, vendor.phone, vendor.website,
-    vendor.facebook_url, vendor.instagram_url, vendor.description,
-    vendor.trading_hours
+    vendor.description, vendor.trading_hours, vendor.facebook_url, vendor.instagram_url
   FROM public.vendors AS vendor
   WHERE vendor.owner_id = auth.uid()
   ORDER BY vendor.business_name, vendor.id;
@@ -308,6 +307,7 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.list_current_owner_vendors_with_channels() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.submit_vendor_profile_change_with_channels(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC, anon, service_role;
-GRANT EXECUTE ON FUNCTION public.list_current_owner_vendors_with_hours() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.list_current_owner_vendors_with_channels() TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.submit_vendor_profile_change_with_channels(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated;

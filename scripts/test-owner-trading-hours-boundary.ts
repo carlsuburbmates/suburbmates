@@ -27,6 +27,7 @@ assert.match(migration, /publication_unchanged/);
 assert.match(migration, /REVOKE ALL ON FUNCTION public\.submit_vendor_profile_change_with_hours[\s\S]*FROM PUBLIC, anon, service_role/);
 assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.submit_vendor_profile_change_with_hours[\s\S]*TO authenticated/);
 
+assert.match(socialProfiles, /CREATE FUNCTION public\.list_current_owner_vendors_with_channels/);
 assert.match(socialProfiles, /CREATE OR REPLACE FUNCTION public\.submit_vendor_profile_change_with_channels/);
 assert.match(socialProfiles, /Only the approved owner can propose changes to this listing/);
 assert.match(socialProfiles, /'facebook_url', v_vendor\.facebook_url/);
@@ -47,7 +48,7 @@ assert.match(editor, /Facebook profile/);
 assert.match(editor, /Instagram profile/);
 assert.match(editor, /Opening hours/);
 assert.match(editor, /reviewed before publication/);
-assert.match(dashboard, /list_current_owner_vendors_with_hours/);
+assert.match(dashboard, /list_current_owner_vendors_with_channels/);
 assert.match(opsDetail, /trading_hours: "Opening hours"/);
 assert.match(opsDetail, /facebook_url: "Facebook profile"/);
 assert.match(opsDetail, /instagram_url: "Instagram profile"/);
