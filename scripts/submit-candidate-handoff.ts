@@ -9,12 +9,12 @@ const token = process.env.AUTOMATION_INGEST_TOKEN;
 const csvPath = process.argv[2];
 const source = process.env.CATALOGUE_SOURCE ?? "openstreetmap";
 const sourceContract = getCatalogueSourceContract(source);
-// Each request performs qualification, evidence retention and audit writes.
-// Ten candidates retain a wide margin beneath the route's 60-second recovery
-// window while avoiding the former one-request-per-row overhead. The route
-// validates a maximum of 100, but a larger batch makes a partial retry too
-// expensive for the Worker and slows the source refresh again.
-const BATCH_SIZE = 10;
+// Each request performs qualification, field-level evidence retention and
+// audit writes. Three candidates preserve a margin beneath the Worker runtime
+// ceiling now that an OSM observation can carry several independently
+// reconciled public facts. The route accepts more, but a larger batch can be
+// interrupted before its durable receipt is completed.
+const BATCH_SIZE = 3;
 // The public Worker performs provenance and audit writes for each candidate.
 // Keep one paced lane: batching makes the refresh practical without turning it
 // into a concurrent database burst.
