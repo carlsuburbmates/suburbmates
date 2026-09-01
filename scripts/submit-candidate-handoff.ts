@@ -9,13 +9,15 @@ const token = process.env.AUTOMATION_INGEST_TOKEN;
 const csvPath = process.argv[2];
 const source = process.env.CATALOGUE_SOURCE ?? "openstreetmap";
 const sourceContract = getCatalogueSourceContract(source);
-// Each request performs qualification, evidence retention and audit writes. Keep
-// the workload deliberately small so the Worker remains within its resource
-// budget during a large discovery run.
-const BATCH_SIZE = 1;
+// Each request performs qualification, evidence retention and audit writes.
+// Ten candidates retain a wide margin beneath the route's 60-second recovery
+// window while avoiding the former one-request-per-row overhead. The route
+// validates a maximum of 100, but a larger batch makes a partial retry too
+// expensive for the Worker and slows the source refresh again.
+const BATCH_SIZE = 10;
 // The public Worker performs provenance and audit writes for each candidate.
-// A single, gently paced handoff prevents an automation burst from exhausting
-// its request resource budget; prior singleton results are idempotent.
+// Keep one paced lane: batching makes the refresh practical without turning it
+// into a concurrent database burst.
 const MAX_CONCURRENT_BATCHES = 1;
 // The production Next/Worker route does several provenance and audit writes
 // for each source record. A one-second gap makes the weekly import a stable
@@ -42,8 +44,8 @@ if (shardIndex >= shardCount) throw new Error("--shard-index must be less than -
 
 const allRows = parse(fs.readFileSync(path.resolve(csvPath), "utf8"), { columns: true, skip_empty_lines: true }) as Array<Record<string, string>>;
 // A full OSM file has more records than one sequential Worker run can finish
-// before an occasional resource retry. Sharding preserves every singleton
-// payload identity, so retries still reuse their exact private run evidence.
+// comfortably. Sharding and bounded batches preserve an exact private input
+// identity, so retries still reuse their source evidence without a burst.
 const rows = allRows.filter((_, index) => index % shardCount === shardIndex);
 console.log(`Candidate handoff shard ${shardIndex + 1}/${shardCount}: ${rows.length} of ${allRows.length} records.`);
 const artifactUrl = process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID

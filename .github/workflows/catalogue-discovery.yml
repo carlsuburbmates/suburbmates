@@ -46,11 +46,10 @@ jobs:
   handoff:
     needs: [acquire, mark-handoff-running]
     runs-on: ubuntu-latest
-    # Each source row still has a singleton, idempotent audit path. The public
-    # Next/Worker runtime can exceed its resource ceiling when several shards
-    # continuously issue database-backed requests at once. Keep one paced lane:
-    # it is slower, but it completes the lawful refresh instead of leaving a
-    # partially processed source snapshot.
+    # Each bounded source batch retains an idempotent audit path. The public
+    # Worker can exceed its resource ceiling when several shards continuously
+    # issue database-backed requests at once. Keep one paced lane while the
+    # handoff script uses small batches to make the lawful refresh practical.
     timeout-minutes: 75
     strategy:
       fail-fast: false
