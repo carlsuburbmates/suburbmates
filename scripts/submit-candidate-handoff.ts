@@ -58,7 +58,8 @@ const batches = Array.from({ length: Math.ceil(rows.length / BATCH_SIZE) }, (_, 
     source: sourceContract.key, sourceRecordKey: row.source_record_key || row.source_url,
     businessName: row.business_name, categorySlug: row.category_slug, suburbSlug: row.suburb_slug,
     streetAddress: row.address || undefined, description: row.description || undefined, contactEmail: row.contact_email || undefined, phone: row.phone || undefined,
-    website: row.website || undefined, tradingHours: row.trading_hours || undefined, sourceUrl: row.source_url, sourceCheckedOn: row.source_checked_on || undefined, notes: row.notes || undefined,
+    website: row.website || undefined, facebookUrl: row.facebook_url || undefined, instagramUrl: row.instagram_url || undefined,
+    tradingHours: row.trading_hours || undefined, sourceUrl: row.source_url, sourceCheckedOn: row.source_checked_on || undefined, notes: row.notes || undefined,
     suburbEvidence: row.suburb_evidence_source_key && row.suburb_evidence_record_key && row.suburb_evidence_url
       ? {
           sourceKey: row.suburb_evidence_source_key,

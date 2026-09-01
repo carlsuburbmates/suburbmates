@@ -18,6 +18,8 @@ type IncomingCandidate = CandidateInput & {
   sourceUrl: string;
   sourceCheckedOn?: string;
   tradingHours?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
   notes?: string;
   suburbEvidence?: SupportingFieldEvidence;
 };
@@ -278,7 +280,7 @@ export async function POST(request: NextRequest) {
         const sourceKey = `automation:${sourceRecordKey}`;
         const { data: vendor, error: vendorError } = await admin.from("vendors").insert({
           business_name: candidate.businessName.trim(), category_slug: candidate.categorySlug.trim().toLowerCase(), suburb_slug: candidate.suburbSlug.trim().toLowerCase(),
-          street_address: nullable(candidate.streetAddress), description: nullable(candidate.description), contact_email: nullable(candidate.contactEmail?.toLowerCase()), phone: nullable(candidate.phone), website: nullable(candidate.website), trading_hours: nullable(candidate.tradingHours),
+          street_address: nullable(candidate.streetAddress), description: nullable(candidate.description), contact_email: nullable(candidate.contactEmail?.toLowerCase()), phone: nullable(candidate.phone), website: nullable(candidate.website), facebook_url: nullable(candidate.facebookUrl), instagram_url: nullable(candidate.instagramUrl), trading_hours: nullable(candidate.tradingHours),
           source_key: sourceKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10),
           source_notes: candidate.notes ?? sourceContract.defaultSourceNotes, verification_status: "unverified",
           listing_status: "published", listing_source: "approved_import", ownership_status: "unclaimed", is_published: true, is_claimed: false, tier: "free",
@@ -338,6 +340,7 @@ function readCandidate(value: unknown, sourceContract: CatalogueSourceContract):
   return {
     source: sourceContract.key, sourceRecordKey, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug,
     streetAddress: optionalText(item.streetAddress), description: optionalDescription(item.description), contactEmail: optionalText(item.contactEmail), phone: optionalText(item.phone), website: optionalText(item.website),
+    facebookUrl: optionalSocialProfileUrl(item.facebookUrl, "facebook"), instagramUrl: optionalSocialProfileUrl(item.instagramUrl, "instagram"),
     websiteSafety: item.websiteSafety === "safe" || item.websiteSafety === "unsafe" ? item.websiteSafety : "unknown",
     sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), tradingHours: optionalTradingHours(item.tradingHours), notes: optionalText(item.notes), suburbEvidence,
   };
@@ -566,6 +569,8 @@ async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminCl
     ["contact_email", input.candidate.contactEmail],
     ["phone", input.candidate.phone],
     ["website", input.candidate.website],
+    ["facebook_url", input.candidate.facebookUrl],
+    ["instagram_url", input.candidate.instagramUrl],
     ["trading_hours", input.candidate.tradingHours],
   ];
   const records = fields.flatMap(([fieldName, rawValue]) => {
@@ -591,7 +596,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
   sourceContract: CatalogueSourceContract; correlationId: string;
 }) {
   const { data: vendor, error: vendorError } = await admin.from("vendors")
-    .select("id, ownership_status, business_name, category_slug, suburb_slug, street_address, description, contact_email, phone, website, trading_hours")
+    .select("id, ownership_status, business_name, category_slug, suburb_slug, street_address, description, contact_email, phone, website, facebook_url, instagram_url, trading_hours")
     .eq("id", input.vendorId).maybeSingle();
   if (vendorError || !vendor) throw new Error("Could not load the prior qualified listing for source refresh.");
 
@@ -604,6 +609,8 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
     ["phone", input.candidate.phone, vendor.phone],
     ["website", input.candidate.website, vendor.website],
+    ["facebook_url", input.candidate.facebookUrl, vendor.facebook_url],
+    ["instagram_url", input.candidate.instagramUrl, vendor.instagram_url],
     ["trading_hours", input.candidate.tradingHours, vendor.trading_hours],
   ];
   const observedFields: string[] = [];
@@ -618,7 +625,7 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     const evidenceSource = fieldEvidenceSource(input.candidate, fieldName, input.sourceRecordKey, input.sourceContract);
     const observedAt = `${evidenceSource.observedOn ?? input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
     const isSameValue = comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
-    const canApplyEmptyProfileField = ["contact_email", "phone", "website", "description", "trading_hours"].includes(fieldName)
+    const canApplyEmptyProfileField = ["contact_email", "phone", "website", "facebook_url", "instagram_url", "description", "trading_hours"].includes(fieldName)
       && vendor.ownership_status === "unclaimed" && !currentText;
     const canApplyBroadLocality = fieldName === "suburb_slug"
       && Boolean(input.candidate.suburbEvidence)
@@ -676,16 +683,18 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
   vendorId: string; candidate: IncomingCandidate; sourceRecordKey: string; sourceContract: CatalogueSourceContract; correlationId: string;
 }): Promise<ExistingListingEnrichment> {
   const { data: vendor, error: vendorError } = await admin.from("vendors")
-    .select("id, ownership_status, suburb_slug, description, contact_email, phone, website, trading_hours")
+    .select("id, ownership_status, suburb_slug, description, contact_email, phone, website, facebook_url, instagram_url, trading_hours")
     .eq("id", input.vendorId).maybeSingle();
   if (vendorError || !vendor) throw new Error("Could not load the matching listing for safe enrichment.");
 
-  const fields: Array<["suburb_slug" | "description" | "contact_email" | "phone" | "website" | "trading_hours", string | null | undefined, string | null]> = [
+  const fields: Array<["suburb_slug" | "description" | "contact_email" | "phone" | "website" | "facebook_url" | "instagram_url" | "trading_hours", string | null | undefined, string | null]> = [
     ["suburb_slug", input.candidate.suburbSlug, vendor.suburb_slug],
     ["description", input.candidate.description, vendor.description],
     ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
     ["phone", input.candidate.phone, vendor.phone],
     ["website", input.candidate.website, vendor.website],
+    ["facebook_url", input.candidate.facebookUrl, vendor.facebook_url],
+    ["instagram_url", input.candidate.instagramUrl, vendor.instagram_url],
     ["trading_hours", input.candidate.tradingHours, vendor.trading_hours],
   ];
   const appliedFields: string[] = [];
@@ -753,7 +762,7 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
 
 function comparableFieldValue(fieldName: string, value: string) {
   if (fieldName === "phone") return value.replace(/\D/g, "").replace(/^61(?=\d{9,10}$)/, "0");
-  if (fieldName === "website") {
+  if (fieldName === "website" || fieldName === "facebook_url" || fieldName === "instagram_url") {
     try { const url = new URL(value); return `${url.hostname.toLowerCase().replace(/^www\./, "")}${url.pathname.replace(/\/$/, "")}`; }
     catch { return value.toLowerCase(); }
   }
@@ -801,13 +810,28 @@ function freshnessDueAt(observedAt: string, refreshIntervalDays: number) {
   return due.toISOString();
 }
 
-function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, description: candidate.description ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, suburb_evidence: candidate.suburbEvidence ?? null, notes: candidate.notes ?? null }; }
+function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, description: candidate.description ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, facebook_url: candidate.facebookUrl ?? null, instagram_url: candidate.instagramUrl ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, suburb_evidence: candidate.suburbEvidence ?? null, notes: candidate.notes ?? null }; }
 function asText(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function optionalText(value: unknown) { const text = asText(value); return text || undefined; }
 function optionalDescription(value: unknown) { const description = optionalText(value); return description && description.length <= 600 ? description : undefined; }
 function optionalTradingHours(value: unknown) {
   const hours = optionalText(value)?.replace(/\s+/g, " ");
   return hours && hours.length <= 300 && (hours === "24/7" || /\b(?:[01]?\d|2[0-3]):[0-5]\d\b/.test(hours)) ? hours : undefined;
+}
+function optionalSocialProfileUrl(value: unknown, platform: "facebook" | "instagram") {
+  const raw = optionalText(value);
+  if (!raw || raw.length > 1000) return undefined;
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase();
+    const allowed = platform === "facebook"
+      ? new Set(["facebook.com", "www.facebook.com", "m.facebook.com"])
+      : new Set(["instagram.com", "www.instagram.com"]);
+    if (url.protocol !== "https:" || url.username || url.password || !allowed.has(host) || url.pathname === "/") return undefined;
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch { return undefined; }
 }
 function nullable(value: string | null | undefined) { return value?.trim() || null; }
 function optionalDate(value: unknown) { const date = asText(value); return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined; }

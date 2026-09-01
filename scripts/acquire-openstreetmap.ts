@@ -137,6 +137,29 @@ export function firstListedPhone(value: unknown): string {
   return value.split(/[;,]/)[0]?.trim() ?? '';
 }
 
+// These values are direct outbound profile URLs only. They do not authorise
+// crawling, embedding, copying, or displaying any third-party social content.
+export function osmSocialProfileUrl(value: unknown, platform: 'facebook' | 'instagram'): string {
+  if (typeof value !== 'string') return '';
+  const raw = value.trim();
+  if (!raw || raw.length > 1000) return '';
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw.replace(/^\/+/, '')}`;
+  try {
+    const url = new URL(withProtocol);
+    if (url.protocol !== 'https:' || url.username || url.password || !url.pathname || url.pathname === '/') return '';
+    const host = url.hostname.toLowerCase();
+    const allowedHosts = platform === 'facebook'
+      ? new Set(['facebook.com', 'www.facebook.com', 'm.facebook.com'])
+      : new Set(['instagram.com', 'www.instagram.com']);
+    if (!allowedHosts.has(host)) return '';
+    url.hash = '';
+    url.search = '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
 export async function requestOverpass(endpoint: string, query: string, fetchImpl: typeof fetch = fetch): Promise<{ elements: any[] }> {
   const response = await fetchImpl(endpoint, {
     method: 'POST',
@@ -259,6 +282,8 @@ export function filterAndProcessElements(
     
     const email = el.tags['contact:email'] || el.tags.email || '';
     const phone = firstListedPhone(el.tags['contact:phone'] || el.tags.phone);
+    const facebookUrl = osmSocialProfileUrl(el.tags['contact:facebook'] || el.tags.facebook, 'facebook');
+    const instagramUrl = osmSocialProfileUrl(el.tags['contact:instagram'] || el.tags.instagram, 'instagram');
     let website = el.tags['contact:website'] || el.tags.website || '';
     if (website) {
       if (!website.startsWith('http')) website = 'https://' + website;
@@ -294,6 +319,8 @@ export function filterAndProcessElements(
       contact_email: email,
       phone,
       website,
+      facebook_url: facebookUrl,
+      instagram_url: instagramUrl,
       trading_hours: osmTradingHours(el.tags.opening_hours),
       source_url: sourceUrl,
       source_checked_on: getTodayAest(),
@@ -354,7 +381,7 @@ out tags center;`;
 
   const outPath = path.resolve(process.cwd(), 'data/vendor-candidates-osm.csv');
   const outLines = [
-    'business_name,address,category_slug,suburb_slug,description,contact_email,phone,website,trading_hours,source_url,source_checked_on,suburb_evidence_source_key,suburb_evidence_record_key,suburb_evidence_url,suburb_evidence_checked_on,verification_status,notes'
+    'business_name,address,category_slug,suburb_slug,description,contact_email,phone,website,facebook_url,instagram_url,trading_hours,source_url,source_checked_on,suburb_evidence_source_key,suburb_evidence_record_key,suburb_evidence_url,suburb_evidence_checked_on,verification_status,notes'
   ];
 
   for (const p of processed) {
@@ -367,6 +394,8 @@ out tags center;`;
       escapeCsv(p.contact_email),
       escapeCsv(p.phone),
       escapeCsv(p.website),
+      escapeCsv(p.facebook_url),
+      escapeCsv(p.instagram_url),
       escapeCsv(p.trading_hours),
       escapeCsv(p.source_url),
       escapeCsv(p.source_checked_on),

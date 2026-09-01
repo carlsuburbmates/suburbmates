@@ -11,6 +11,8 @@ type Vendor = {
   contact_email: string | null;
   phone: string | null;
   website: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
   description: string | null;
   trading_hours: string | null;
 };
@@ -29,6 +31,8 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
   const [contactEmail, setContactEmail] = useState(vendor.contact_email || "");
   const [phone, setPhone] = useState(vendor.phone || "");
   const [website, setWebsite] = useState(vendor.website || "");
+  const [facebookUrl, setFacebookUrl] = useState(vendor.facebook_url || "");
+  const [instagramUrl, setInstagramUrl] = useState(vendor.instagram_url || "");
   const [description, setDescription] = useState(vendor.description || "");
   const [tradingHours, setTradingHours] = useState(vendor.trading_hours || "");
   
@@ -46,13 +50,15 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
     setError(null);
     setSuccess(null);
 
-    const { error } = await supabase.rpc("submit_vendor_profile_change_with_hours", {
+    const { error } = await supabase.rpc("submit_vendor_profile_change_with_channels", {
       p_vendor_id: vendor.id,
       p_business_name: businessName,
       p_street_address: streetAddress || null,
       p_contact_email: contactEmail || null,
       p_phone: phone || null,
       p_website: website || null,
+      p_facebook_url: facebookUrl || null,
+      p_instagram_url: instagramUrl || null,
       p_description: description || null,
       p_trading_hours: tradingHours || null,
       p_submitter_note: null,
@@ -110,7 +116,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
             required
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
-            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" 
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
           />
         </div>
         <div>
@@ -119,7 +125,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
             type="text"
             value={streetAddress}
             onChange={(e) => setStreetAddress(e.target.value)}
-            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
           />
         </div>
         <div>
@@ -128,7 +134,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
             type="email"
             value={contactEmail}
             onChange={(e) => setContactEmail(e.target.value)}
-            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
           />
         </div>
         <div>
@@ -137,7 +143,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
             type="tel" 
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" 
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
           />
         </div>
         <div>
@@ -146,7 +152,27 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
             type="url" 
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
-            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" 
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Facebook profile</label>
+          <input
+            type="url"
+            value={facebookUrl}
+            onChange={(e) => setFacebookUrl(e.target.value)}
+            placeholder="https://www.facebook.com/yourbusiness"
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Instagram profile</label>
+          <input
+            type="url"
+            value={instagramUrl}
+            onChange={(e) => setInstagramUrl(e.target.value)}
+            placeholder="https://www.instagram.com/yourbusiness"
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
           />
         </div>
         <div className="sm:col-span-2">
@@ -155,7 +181,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" 
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
           />
         </div>
         <div className="sm:col-span-2">
@@ -165,7 +191,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
             value={tradingHours}
             onChange={(e) => setTradingHours(e.target.value)}
             placeholder="For example: Mon–Fri 9:00 am–5:00 pm; Sat 9:00 am–1:00 pm"
-            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all"
+            className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
           />
           <p className="mt-1 text-xs leading-5 text-slate-500">Hours are reviewed before publication. Include any appointment-only or holiday notes that visitors should know.</p>
         </div>

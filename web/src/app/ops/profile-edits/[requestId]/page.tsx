@@ -10,6 +10,8 @@ const fieldLabels: Record<string, string> = {
   contact_email: "Contact email",
   phone: "Phone",
   website: "Website",
+  facebook_url: "Facebook profile",
+  instagram_url: "Instagram profile",
   description: "Description",
   trading_hours: "Opening hours",
 };

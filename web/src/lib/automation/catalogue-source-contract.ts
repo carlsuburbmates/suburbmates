@@ -13,7 +13,7 @@ export const CATALOGUE_SOURCE_CONTRACTS: Record<CatalogueSourceKey, CatalogueSou
   openstreetmap: {
     key: "openstreetmap",
     displayName: "OpenStreetMap",
-    version: "openstreetmap-candidate-v1",
+    version: "openstreetmap-candidate-v2",
     allowedHosts: ["www.openstreetmap.org"],
     refreshIntervalDays: 7,
     defaultSourceNotes: "Approved OpenStreetMap candidate handoff.",

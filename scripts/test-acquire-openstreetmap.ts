@@ -1,4 +1,4 @@
-import { cuisineProfileDetail, filterAndProcessElements, firstListedPhone, osmProfileDetail, osmTradingHours, slugify, escapeCsv, getTodayAest, requestFromOverpassEndpoints, requestOverpass } from './acquire-openstreetmap';
+import { cuisineProfileDetail, filterAndProcessElements, firstListedPhone, osmProfileDetail, osmSocialProfileUrl, osmTradingHours, slugify, escapeCsv, getTodayAest, requestFromOverpassEndpoints, requestOverpass } from './acquire-openstreetmap';
 import assert from 'node:assert';
 import { resolveVictorianLocality, type VictorianLocalityBoundary } from '../web/src/lib/automation/victorian-locality-boundaries';
 
@@ -50,6 +50,17 @@ async function runTests() {
   assert.strictEqual(osmTradingHours('Mo-Fr 09:00-17:00; Sa 09:00-13:00'), 'Mo-Fr 09:00-17:00; Sa 09:00-13:00', 'An explicit OSM schedule should be retained without rewriting it.');
   assert.strictEqual(osmTradingHours('by appointment'), '', 'A prose-only OSM hours value must not become a public schedule.');
   assert.strictEqual(firstListedPhone('+61 425 306 991;+61 424 574 844'), '+61 425 306 991', 'Multiple OSM phone values must not make the full candidate run fail.');
+  assert.strictEqual(osmSocialProfileUrl('facebook.com/local-bakery?ref=osm', 'facebook'), 'https://facebook.com/local-bakery', 'A direct OSM Facebook profile link should be normalised without retaining tracking parameters.');
+  assert.strictEqual(osmSocialProfileUrl('https://www.instagram.com/local_bakery/', 'instagram'), 'https://www.instagram.com/local_bakery/', 'A direct OSM Instagram profile link should be retained.');
+  assert.strictEqual(osmSocialProfileUrl('https://facebook.evil.example/local-bakery', 'facebook'), '', 'Lookalike social hosts must never enter the candidate feed.');
+  assert.strictEqual(osmSocialProfileUrl('https://www.facebook.com/', 'facebook'), '', 'A platform home page is not a business profile link.');
+
+  const socialProfiles = filterAndProcessElements([{ type: 'node', id: 'social-1', tags: {
+    name: 'Local Social Bakery', shop: 'bakery', 'addr:suburb': 'Northcote',
+    'contact:facebook': 'facebook.com/local-social-bakery', 'contact:instagram': 'https://www.instagram.com/local_social_bakery/',
+  } }], catchments);
+  assert.equal(socialProfiles[0].facebook_url, 'https://facebook.com/local-social-bakery');
+  assert.equal(socialProfiles[0].instagram_url, 'https://www.instagram.com/local_social_bakery/');
 
   const exclEduOffice = filterAndProcessElements([{ type: 'node', id: '1', tags: { name: 'Virtual School', office: 'educational_institution' } }], catchments);
   assert.strictEqual(exclEduOffice.length, 0, 'Should exclude educational_institution even if it is an office');

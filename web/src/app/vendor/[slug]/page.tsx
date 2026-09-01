@@ -214,6 +214,8 @@ export default async function VendorWebsite({ params }: PageProps) {
                   phone={vendor.phone}
                   email={vendor.contact_email}
                   website={vendor.website}
+                  facebookUrl={vendor.facebook_url}
+                  instagramUrl={vendor.instagram_url}
                   directionsUrl={directionsUrl}
                 />
                 {vendor.is_claimed === false && (
@@ -353,14 +355,18 @@ function ContactActions({
   phone,
   email,
   website,
+  facebookUrl,
+  instagramUrl,
   directionsUrl,
 }: {
   phone: string | null;
   email: string | null;
   website: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
   directionsUrl: string | null;
 }) {
-  const hasDirectContact = Boolean(phone || email || website);
+  const hasDirectContact = Boolean(phone || email || website || facebookUrl || instagramUrl);
   const hasVisitAction = Boolean(directionsUrl);
   const hasAction = hasDirectContact || hasVisitAction;
   return (
@@ -394,6 +400,16 @@ function ContactActions({
             >
               <Globe size={16} aria-hidden="true" />
               Website <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          )}
+          {facebookUrl && (
+            <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline min-h-11">
+              <Globe size={16} aria-hidden="true" /> Facebook <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          )}
+          {instagramUrl && (
+            <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline min-h-11">
+              <Globe size={16} aria-hidden="true" /> Instagram <ArrowUpRight size={14} aria-hidden="true" />
             </a>
           )}
           {directionsUrl && (
@@ -500,6 +516,8 @@ const sourceFieldLabels: Record<string, string> = {
   contact_email: "email",
   phone: "phone",
   website: "website",
+  facebook_url: "Facebook profile",
+  instagram_url: "Instagram profile",
   description: "business details",
   trading_hours: "hours",
 };

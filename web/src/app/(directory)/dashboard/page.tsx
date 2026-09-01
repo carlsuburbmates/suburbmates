@@ -17,6 +17,8 @@ type OwnerVendor = {
   contact_email: string | null
   phone: string | null
   website: string | null
+  facebook_url: string | null
+  instagram_url: string | null
   description: string | null
   trading_hours: string | null
 }
