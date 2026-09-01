@@ -23,7 +23,8 @@ assert.match(decisionLog, /Payment must never determine publication, ownership, 
 assert.match(automationReadme, /versioned \*\*approved-source candidate handoff\*\*/);
 assert.doesNotMatch(automationReadme, /sole narrow publication path is the token-protected OpenStreetMap candidate handoff/);
 assert.match(automationWorkflows, /Tax Practitioners Board catalogue discovery/);
-assert.match(automationWorkflows, /OpenStreetMap, the licensed Victorian liquor-licence source and the Tax Practitioners Board organisation-only register/);
+assert.match(automationWorkflows, /OpenStreetMap, the licensed Victorian liquor-licence source, the Tax Practitioners Board organisation-only register and the ASIC Credit Licensee register/);
+assert.match(automationWorkflows, /Victorian locality boundary entry is supporting evidence for OSM location resolution only/);
 for (const authority of [lifecycleContract, responsibilityMap, catalogueCoverage]) {
   assert.doesNotMatch(authority, /source, scope, contact, duplicate and safety checks/);
 }

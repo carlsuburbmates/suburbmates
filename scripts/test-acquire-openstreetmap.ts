@@ -1,5 +1,6 @@
 import { cuisineProfileDetail, filterAndProcessElements, firstListedPhone, osmProfileDetail, osmTradingHours, slugify, escapeCsv, getTodayAest, requestFromOverpassEndpoints, requestOverpass } from './acquire-openstreetmap';
 import assert from 'node:assert';
+import { resolveVictorianLocality, type VictorianLocalityBoundary } from '../web/src/lib/automation/victorian-locality-boundaries';
 
 async function runTests() {
   const catchments = ['northcote', 'preston', 'darebin'];
@@ -68,6 +69,20 @@ async function runTests() {
 
   const subInvalid = filterAndProcessElements([{ type: 'node', id: '1', tags: { name: 'Fake Suburb Bakery', shop: 'bakery', 'addr:suburb': 'Faketown' } }], catchments);
   assert.strictEqual(subInvalid[0].suburb_slug, 'darebin', 'Should fallback to darebin for non-catchment suburb');
+
+  const localityBoundaries: VictorianLocalityBoundary[] = [{
+    name: 'Northcote', slug: 'northcote', sourceRecordKey: 'loc-test-northcote',
+    polygons: [[[[144.99, -37.80], [145.02, -37.80], [145.02, -37.77], [144.99, -37.77], [144.99, -37.80]]]],
+  }];
+  assert.equal(resolveVictorianLocality(145.0, -37.79, localityBoundaries)?.slug, 'northcote', 'A coordinate inside an official locality polygon should resolve to that locality.');
+  assert.equal(resolveVictorianLocality(145.10, -37.79, localityBoundaries), null, 'A coordinate outside the supplied locality polygons must remain unresolved.');
+  const localityResolved = filterAndProcessElements([{ type: 'node', id: '10', lat: -37.79, lon: 145.0, tags: { name: 'Coordinate Bakery', shop: 'bakery' } }], catchments, localityBoundaries);
+  assert.equal(localityResolved[0].suburb_slug, 'northcote', 'A coordinate-backed OSM business without addr:suburb should use the official locality boundary.');
+  assert.deepEqual(localityResolved[0].suburb_evidence_source_key, 'geoscape_vic_localities');
+  assert.deepEqual(localityResolved[0].suburb_evidence_record_key, 'loc-test-northcote');
+  const explicitLocalityWins = filterAndProcessElements([{ type: 'node', id: '11', lat: -37.79, lon: 145.0, tags: { name: 'Explicit Preston Bakery', shop: 'bakery', 'addr:suburb': 'Preston' } }], catchments, localityBoundaries);
+  assert.equal(explicitLocalityWins[0].suburb_slug, 'preston', 'An explicit OSM locality must remain authoritative over the supporting boundary resolver.');
+  assert.equal(explicitLocalityWins[0].suburb_evidence_source_key, '', 'An explicit OSM locality must not claim boundary-derived evidence.');
 
   // Test 5: deduplication
   const dupes = [

@@ -57,6 +57,14 @@ const batches = Array.from({ length: Math.ceil(rows.length / BATCH_SIZE) }, (_, 
     businessName: row.business_name, categorySlug: row.category_slug, suburbSlug: row.suburb_slug,
     streetAddress: row.address || undefined, description: row.description || undefined, contactEmail: row.contact_email || undefined, phone: row.phone || undefined,
     website: row.website || undefined, tradingHours: row.trading_hours || undefined, sourceUrl: row.source_url, sourceCheckedOn: row.source_checked_on || undefined, notes: row.notes || undefined,
+    suburbEvidence: row.suburb_evidence_source_key && row.suburb_evidence_record_key && row.suburb_evidence_url
+      ? {
+          sourceKey: row.suburb_evidence_source_key,
+          sourceRecordKey: row.suburb_evidence_record_key,
+          sourceUrl: row.suburb_evidence_url,
+          sourceCheckedOn: row.suburb_evidence_checked_on || row.source_checked_on || undefined,
+        }
+      : undefined,
   })),
 }));
 

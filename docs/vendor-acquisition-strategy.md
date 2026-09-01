@@ -8,7 +8,7 @@ This is an acquisition pipeline, not a one-time CSV exercise. Every record must 
 
 ## Source order
 
-1. **OpenStreetMap commercial features** are an active, attributed bulk-discovery contract across Darebin.
+1. **OpenStreetMap commercial features** are an active, attributed bulk-discovery contract across Darebin. Where an OSM feature has a coordinate but no supported `addr:suburb`, the acquisition uses the official Victorian locality-boundary reference (CC BY 4.0) to select an existing directory locality. The boundary reference supplies no business facts and cannot create a candidate independently.
 2. **Victorian liquor licences by location** are an active first-party CC BY 4.0 contract, refreshed monthly and mapped only to approved public categories.
 3. **Tax Practitioners Board public register** is an active CC BY 4.0 organisation-only contract, refreshed monthly. It emits only active Victorian organisation trading names with a non-postal Darebin business address, maps them narrowly to Accountant, and never retains individual-agent fields, individual trading names, registration numbers or dates.
 4. **ASIC Credit Licensee Dataset** is an active CC BY 3.0 AU organisation-only contract, refreshed weekly. It emits only active Victorian corporate or institutional licensees with a principal Darebin locality, maps them narrowly to Financial, and never retains individual licensee names, raw licence numbers, ABNs, ACNs, authorisation text, coordinates or postal addresses.
@@ -30,7 +30,7 @@ This is an acquisition pipeline, not a one-time CSV exercise. Every record must 
 - **Australian Business Register bulk extract:** the official dataset is CC BY 3.0 AU and refreshes regularly, but its public fields provide only state and postcode for the main business location, not a shopfront address or reliable service category. Its legal-name fields can also be personal data. It therefore does not meet the public-profile identity/scope rule. It is allowed only as a future aggregate coverage measurement input after a dedicated privacy-filtered implementation; it is not a candidate handoff, enrichment or publication source.
 - **Darebin Council and trader-association maps:** these are potentially high-value local coverage sources, but the currently published maps/pages do not provide a reusable-data licence, stable machine-readable record ID or refresh feed. The next external step is a written data-sharing arrangement that grants those three requirements. Until that exists, they remain prospective and are not scraped or copied.
 
-The next source must provide both a compatible licence for persistent display and an automatable, stable record/refresh path. The active contracts are OpenStreetMap, Victorian liquor licences by location, the Tax Practitioners Board organisation-only register and the ASIC Credit Licensee organisation-only register.
+The next business-discovery source must provide both a compatible licence for persistent display and an automatable, stable record/refresh path. The active business contracts are OpenStreetMap, Victorian liquor licences by location, the Tax Practitioners Board organisation-only register and the ASIC Credit Licensee organisation-only register. The separate Victorian locality-boundary reference is an active supporting source for OSM coordinate locality resolution only.
 
 ## Ready-to-send local source permission brief — not yet sent or approved
 
@@ -62,7 +62,7 @@ If a paid provider is later selected as the primary coverage source, it must pro
 - Same name at different addresses remains separate listings.
 - Never merge solely because two businesses share a name in the same suburb.
 - Retain field-level provenance, observation time, freshness and conflicts for every source fact.
-- A later approved-source observation re-observes evidence and freshness. It may fill an empty direct-contact field or a bounded, source-derived profile description on an unclaimed listing; it never silently overwrites a public or owner-confirmed field.
+- A later approved-source observation re-observes evidence and freshness. It may fill an empty direct-contact field or a bounded, source-derived profile description on an unclaimed listing; a supporting Victorian locality boundary may replace only the broad `darebin` fallback with a specific existing locality on an unclaimed listing. It never silently overwrites a specific public locality or an owner-confirmed field.
 - A new approved-source record may become public only after the deterministic qualification policy passes and evidence is retained. Claim state never decides publication.
 - Never generate a phone, email, address, website, or business record from inference.
 

@@ -19,7 +19,25 @@ type IncomingCandidate = CandidateInput & {
   sourceCheckedOn?: string;
   tradingHours?: string;
   notes?: string;
+  suburbEvidence?: SupportingFieldEvidence;
 };
+
+type SupportingFieldEvidence = {
+  sourceKey: "geoscape_vic_localities";
+  sourceRecordKey: string;
+  sourceUrl: string;
+  sourceCheckedOn?: string;
+};
+
+type FieldEvidenceSource = {
+  sourceKey: string;
+  sourceRecordKey: string;
+  sourceUrl: string;
+  observedOn?: string;
+  refreshIntervalDays: number;
+};
+
+const GEOSCAPE_LOCALITY_DATASET_PATH = "/data/dataset/vic-suburb-locality-boundaries-geoscape-administrative-boundaries";
 
 export async function POST(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
@@ -315,12 +333,38 @@ function readCandidate(value: unknown, sourceContract: CatalogueSourceContract):
   if (candidateSource && candidateSource !== sourceContract.key) throw new Error("Candidate source must match the approved source batch.");
   const sourceRecordKey = optionalText(item.sourceRecordKey) ?? sourceUrl;
   if (sourceRecordKey.length > 500) throw new Error("Candidate source record key is too long.");
+  const suburbSlug = asText(item.suburbSlug);
+  const suburbEvidence = optionalSuburbEvidence(item.suburbEvidence, sourceContract, suburbSlug);
   return {
-    source: sourceContract.key, sourceRecordKey, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug: asText(item.suburbSlug),
+    source: sourceContract.key, sourceRecordKey, businessName: asText(item.businessName), categorySlug: asText(item.categorySlug), suburbSlug,
     streetAddress: optionalText(item.streetAddress), description: optionalDescription(item.description), contactEmail: optionalText(item.contactEmail), phone: optionalText(item.phone), website: optionalText(item.website),
     websiteSafety: item.websiteSafety === "safe" || item.websiteSafety === "unsafe" ? item.websiteSafety : "unknown",
-    sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), tradingHours: optionalTradingHours(item.tradingHours), notes: optionalText(item.notes),
+    sourceUrl, sourceCheckedOn: optionalDate(item.sourceCheckedOn), tradingHours: optionalTradingHours(item.tradingHours), notes: optionalText(item.notes), suburbEvidence,
   };
+}
+
+function optionalSuburbEvidence(value: unknown, sourceContract: CatalogueSourceContract, suburbSlug: string): SupportingFieldEvidence | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (sourceContract.key !== "openstreetmap" || !value || typeof value !== "object") {
+    throw new Error("Supporting locality evidence is only permitted for OpenStreetMap candidates.");
+  }
+  const item = value as Record<string, unknown>;
+  const sourceKey = asText(item.sourceKey);
+  const sourceRecordKey = optionalText(item.sourceRecordKey);
+  const sourceUrl = optionalHttpsUrl(item.sourceUrl);
+  const sourceCheckedOn = optionalDate(item.sourceCheckedOn);
+  if (
+    sourceKey !== "geoscape_vic_localities"
+    || !sourceRecordKey
+    || sourceRecordKey.length > 500
+    || !sourceUrl
+    || new URL(sourceUrl).hostname !== "data.gov.au"
+    || new URL(sourceUrl).pathname !== GEOSCAPE_LOCALITY_DATASET_PATH
+    || suburbSlug === "darebin"
+  ) {
+    throw new Error("Supporting locality evidence is invalid.");
+  }
+  return { sourceKey, sourceRecordKey, sourceUrl, sourceCheckedOn };
 }
 
 function integrationName(source: CatalogueSourceContract) {
@@ -513,7 +557,6 @@ async function ensureQualifiedListingProof(admin: ReturnType<typeof createAdminC
 async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminClient>, input: {
   vendorId: string; candidate: IncomingCandidate; sourceRecordKey: string; sourceContract: CatalogueSourceContract;
 }) {
-  const observedAt = `${input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
   const fields: Array<[string, string | null | undefined]> = [
     ["business_name", input.candidate.businessName],
     ["category_slug", input.candidate.categorySlug],
@@ -527,10 +570,12 @@ async function recordListingFieldEvidence(admin: ReturnType<typeof createAdminCl
   ];
   const records = fields.flatMap(([fieldName, rawValue]) => {
     const valueText = rawValue?.trim();
+    const evidenceSource = fieldEvidenceSource(input.candidate, fieldName, input.sourceRecordKey, input.sourceContract);
+    const observedAt = `${evidenceSource.observedOn ?? input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
     return valueText ? [{
       vendor_id: input.vendorId, field_name: fieldName, value_text: valueText,
-      source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
-      source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
+      source_key: evidenceSource.sourceKey, source_record_key: evidenceSource.sourceRecordKey,
+      source_url: evidenceSource.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, evidenceSource.refreshIntervalDays), confidence: fieldName === "suburb_slug" && input.candidate.suburbEvidence ? 98 : 85,
       evidence_state: "active", application_state: "applied", applied_at: new Date().toISOString(),
     }] : [];
   });
@@ -550,7 +595,6 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     .eq("id", input.vendorId).maybeSingle();
   if (vendorError || !vendor) throw new Error("Could not load the prior qualified listing for source refresh.");
 
-  const observedAt = `${input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
   const fields: Array<[string, string | null | undefined, string | null | undefined]> = [
     ["business_name", input.candidate.businessName, vendor.business_name],
     ["category_slug", input.candidate.categorySlug, vendor.category_slug],
@@ -571,17 +615,25 @@ async function refreshQualifiedSourceListing(admin: ReturnType<typeof createAdmi
     const valueText = incomingValue?.trim();
     if (!valueText) continue;
     const currentText = currentValue?.trim() ?? "";
+    const evidenceSource = fieldEvidenceSource(input.candidate, fieldName, input.sourceRecordKey, input.sourceContract);
+    const observedAt = `${evidenceSource.observedOn ?? input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
     const isSameValue = comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
-    const canApply = ["contact_email", "phone", "website", "description", "trading_hours"].includes(fieldName)
+    const canApplyEmptyProfileField = ["contact_email", "phone", "website", "description", "trading_hours"].includes(fieldName)
       && vendor.ownership_status === "unclaimed" && !currentText;
+    const canApplyBroadLocality = fieldName === "suburb_slug"
+      && Boolean(input.candidate.suburbEvidence)
+      && vendor.ownership_status === "unclaimed"
+      && currentText === "darebin"
+      && valueText !== "darebin";
+    const canApply = canApplyEmptyProfileField || canApplyBroadLocality;
     const emailIsAssignedElsewhere = fieldName === "contact_email" && canApply
       ? await hasExternalContactEmailAssignment(admin, vendor.id, valueText)
       : false;
     const applicationState = canApply && !emailIsAssignedElsewhere ? "applied" : isSameValue ? "observed" : "conflict";
     const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").upsert({
       vendor_id: vendor.id, field_name: fieldName, value_text: valueText,
-      source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
-      source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
+      source_key: evidenceSource.sourceKey, source_record_key: evidenceSource.sourceRecordKey,
+      source_url: evidenceSource.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, evidenceSource.refreshIntervalDays), confidence: fieldName === "suburb_slug" && input.candidate.suburbEvidence ? 98 : 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
       applied_at: applicationState === "applied" ? new Date().toISOString() : null,
     }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at" }).select("id").maybeSingle();
@@ -624,12 +676,12 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
   vendorId: string; candidate: IncomingCandidate; sourceRecordKey: string; sourceContract: CatalogueSourceContract; correlationId: string;
 }): Promise<ExistingListingEnrichment> {
   const { data: vendor, error: vendorError } = await admin.from("vendors")
-    .select("id, ownership_status, description, contact_email, phone, website, trading_hours")
+    .select("id, ownership_status, suburb_slug, description, contact_email, phone, website, trading_hours")
     .eq("id", input.vendorId).maybeSingle();
   if (vendorError || !vendor) throw new Error("Could not load the matching listing for safe enrichment.");
 
-  const observedAt = `${input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
-  const fields: Array<["description" | "contact_email" | "phone" | "website" | "trading_hours", string | null | undefined, string | null]> = [
+  const fields: Array<["suburb_slug" | "description" | "contact_email" | "phone" | "website" | "trading_hours", string | null | undefined, string | null]> = [
+    ["suburb_slug", input.candidate.suburbSlug, vendor.suburb_slug],
     ["description", input.candidate.description, vendor.description],
     ["contact_email", input.candidate.contactEmail?.toLowerCase(), vendor.contact_email],
     ["phone", input.candidate.phone, vendor.phone],
@@ -644,8 +696,16 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
     const valueText = incomingValue?.trim();
     if (!valueText) continue;
     const currentText = currentValue?.trim() ?? "";
+    const evidenceSource = fieldEvidenceSource(input.candidate, fieldName, input.sourceRecordKey, input.sourceContract);
+    const observedAt = `${evidenceSource.observedOn ?? input.candidate.sourceCheckedOn ?? new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
     const sameValue = comparableFieldValue(fieldName, currentText) === comparableFieldValue(fieldName, valueText);
-    const canApply = vendor.ownership_status === "unclaimed" && !currentText;
+    const canApplyEmptyProfileField = vendor.ownership_status === "unclaimed" && !currentText;
+    const canApplyBroadLocality = fieldName === "suburb_slug"
+      && Boolean(input.candidate.suburbEvidence)
+      && vendor.ownership_status === "unclaimed"
+      && currentText === "darebin"
+      && valueText !== "darebin";
+    const canApply = canApplyEmptyProfileField || canApplyBroadLocality;
     const emailIsAssignedElsewhere = fieldName === "contact_email" && canApply
       ? await hasExternalContactEmailAssignment(admin, vendor.id, valueText)
       : false;
@@ -656,15 +716,15 @@ async function enrichMatchingListing(admin: ReturnType<typeof createAdminClient>
         : "observed";
     const { data: evidence, error: evidenceError } = await admin.from("listing_field_evidence").upsert({
       vendor_id: vendor.id, field_name: fieldName, value_text: valueText,
-      source_key: input.sourceContract.key, source_record_key: input.sourceRecordKey,
-      source_url: input.candidate.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, input.sourceContract), confidence: 85,
+      source_key: evidenceSource.sourceKey, source_record_key: evidenceSource.sourceRecordKey,
+      source_url: evidenceSource.sourceUrl, observed_at: observedAt, freshness_due_at: freshnessDueAt(observedAt, evidenceSource.refreshIntervalDays), confidence: fieldName === "suburb_slug" && input.candidate.suburbEvidence ? 98 : 85,
       evidence_state: applicationState === "conflict" ? "conflict" : "active", application_state: applicationState,
       applied_at: applicationState === "applied" ? new Date().toISOString() : null,
     }, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at" }).select("id").maybeSingle();
     if (evidenceError) throw new Error("Could not retain matching-listing field evidence.");
     const evidenceId = evidence?.id ?? (await admin.from("listing_field_evidence").select("id")
-      .eq("vendor_id", vendor.id).eq("field_name", fieldName).eq("source_key", input.sourceContract.key)
-      .eq("source_record_key", input.sourceRecordKey).eq("value_text", valueText).eq("observed_at", observedAt).maybeSingle()).data?.id;
+      .eq("vendor_id", vendor.id).eq("field_name", fieldName).eq("source_key", evidenceSource.sourceKey)
+      .eq("source_record_key", evidenceSource.sourceRecordKey).eq("value_text", valueText).eq("observed_at", observedAt).maybeSingle()).data?.id;
     if (!evidenceId) throw new Error("Could not recover matching-listing field evidence.");
     if (applicationState === "applied") {
       updates[fieldName] = valueText;
@@ -716,13 +776,32 @@ async function hasExternalContactEmailAssignment(
   return Boolean(data);
 }
 
-function freshnessDueAt(observedAt: string, source: CatalogueSourceContract) {
+function fieldEvidenceSource(candidate: IncomingCandidate, fieldName: string, sourceRecordKey: string, sourceContract: CatalogueSourceContract): FieldEvidenceSource {
+  if (fieldName === "suburb_slug" && candidate.suburbEvidence) {
+    return {
+      sourceKey: candidate.suburbEvidence.sourceKey,
+      sourceRecordKey: candidate.suburbEvidence.sourceRecordKey,
+      sourceUrl: candidate.suburbEvidence.sourceUrl,
+      observedOn: candidate.suburbEvidence.sourceCheckedOn,
+      refreshIntervalDays: 31,
+    };
+  }
+  return {
+    sourceKey: sourceContract.key,
+    sourceRecordKey,
+    sourceUrl: candidate.sourceUrl,
+    observedOn: candidate.sourceCheckedOn,
+    refreshIntervalDays: sourceContract.refreshIntervalDays,
+  };
+}
+
+function freshnessDueAt(observedAt: string, refreshIntervalDays: number) {
   const due = new Date(observedAt);
-  due.setUTCDate(due.getUTCDate() + source.refreshIntervalDays);
+  due.setUTCDate(due.getUTCDate() + refreshIntervalDays);
   return due.toISOString();
 }
 
-function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, description: candidate.description ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, notes: candidate.notes ?? null }; }
+function toCandidateData(candidate: IncomingCandidate) { return { business_name: candidate.businessName, category_slug: candidate.categorySlug, suburb_slug: candidate.suburbSlug, street_address: candidate.streetAddress ?? null, description: candidate.description ?? null, contact_email: candidate.contactEmail ?? null, phone: candidate.phone ?? null, website: candidate.website ?? null, trading_hours: candidate.tradingHours ?? null, source_record_key: candidate.sourceRecordKey, source_url: candidate.sourceUrl, source_checked_on: candidate.sourceCheckedOn ?? null, suburb_evidence: candidate.suburbEvidence ?? null, notes: candidate.notes ?? null }; }
 function asText(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function optionalText(value: unknown) { const text = asText(value); return text || undefined; }
 function optionalDescription(value: unknown) { const description = optionalText(value); return description && description.length <= 600 ? description : undefined; }

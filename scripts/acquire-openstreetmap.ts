@@ -1,5 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  fetchVictorianLocalityBoundaries,
+  resolveVictorianLocality,
+  VICTORIAN_LOCALITY_BOUNDARIES_SOURCE,
+  type VictorianLocalityBoundary,
+} from '../web/src/lib/automation/victorian-locality-boundaries';
 
 export const COMMERCIAL_AMENITIES = new Set([
   'bar', 'cafe', 'car_rental', 'car_wash', 'casino', 'cinema', 'clinic',
@@ -174,7 +180,11 @@ export async function requestFromOverpassEndpoints(
   );
 }
 
-export function filterAndProcessElements(elements: any[], catchments: string[]): any[] {
+export function filterAndProcessElements(
+  elements: any[],
+  catchments: string[],
+  localityBoundaries: readonly VictorianLocalityBoundary[] = [],
+): any[] {
   const results = [];
   const seen = new Set<string>();
   
@@ -219,10 +229,27 @@ export function filterAndProcessElements(elements: any[], catchments: string[]):
     if (!categorySlug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(categorySlug)) continue;
     
     let suburbSlug = 'darebin';
+    let suburbEvidence: { sourceKey: string; sourceRecordKey: string; sourceUrl: string; sourceCheckedOn: string } | undefined;
     if (el.tags['addr:suburb']) {
       const parsedSuburb = slugify(el.tags['addr:suburb']);
       if (catchments.includes(parsedSuburb)) {
         suburbSlug = parsedSuburb;
+      }
+    }
+    if (suburbSlug === 'darebin') {
+      const locality = resolveVictorianLocality(
+        typeof el.lon === 'number' ? el.lon : el.center?.lon,
+        typeof el.lat === 'number' ? el.lat : el.center?.lat,
+        localityBoundaries,
+      );
+      if (locality && catchments.includes(locality.slug)) {
+        suburbSlug = locality.slug;
+        suburbEvidence = {
+          sourceKey: VICTORIAN_LOCALITY_BOUNDARIES_SOURCE.key,
+          sourceRecordKey: locality.sourceRecordKey,
+          sourceUrl: VICTORIAN_LOCALITY_BOUNDARIES_SOURCE.datasetUrl,
+          sourceCheckedOn: getTodayAest(),
+        };
       }
     }
     
@@ -270,8 +297,14 @@ export function filterAndProcessElements(elements: any[], catchments: string[]):
       trading_hours: osmTradingHours(el.tags.opening_hours),
       source_url: sourceUrl,
       source_checked_on: getTodayAest(),
+      suburb_evidence_source_key: suburbEvidence?.sourceKey || '',
+      suburb_evidence_record_key: suburbEvidence?.sourceRecordKey || '',
+      suburb_evidence_url: suburbEvidence?.sourceUrl || '',
+      suburb_evidence_checked_on: suburbEvidence?.sourceCheckedOn || '',
       verification_status: 'pending_review',
-      notes: 'Imported from OpenStreetMap.'
+      notes: suburbEvidence
+        ? 'Imported from OpenStreetMap. Locality resolved from Victorian locality boundaries (CC BY 4.0).'
+        : 'Imported from OpenStreetMap.'
     });
   }
   
@@ -309,11 +342,19 @@ out tags center;`;
     process.exit(1);
   }
 
-  const processed = filterAndProcessElements(data.elements, catchments);
+  let localityBoundaries: VictorianLocalityBoundary[] = [];
+  try {
+    localityBoundaries = await fetchVictorianLocalityBoundaries(catchments);
+    console.log(`Loaded ${localityBoundaries.length} Victorian locality boundaries for safe OSM locality resolution.`);
+  } catch (error) {
+    console.warn(`Victorian locality boundary resolution unavailable; retaining broad Darebin locality where OSM does not name a supported suburb: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  const processed = filterAndProcessElements(data.elements, catchments, localityBoundaries);
 
   const outPath = path.resolve(process.cwd(), 'data/vendor-candidates-osm.csv');
   const outLines = [
-    'business_name,address,category_slug,suburb_slug,description,contact_email,phone,website,trading_hours,source_url,source_checked_on,verification_status,notes'
+    'business_name,address,category_slug,suburb_slug,description,contact_email,phone,website,trading_hours,source_url,source_checked_on,suburb_evidence_source_key,suburb_evidence_record_key,suburb_evidence_url,suburb_evidence_checked_on,verification_status,notes'
   ];
 
   for (const p of processed) {
@@ -329,6 +370,10 @@ out tags center;`;
       escapeCsv(p.trading_hours),
       escapeCsv(p.source_url),
       escapeCsv(p.source_checked_on),
+      escapeCsv(p.suburb_evidence_source_key),
+      escapeCsv(p.suburb_evidence_record_key),
+      escapeCsv(p.suburb_evidence_url),
+      escapeCsv(p.suburb_evidence_checked_on),
       escapeCsv(p.verification_status),
       escapeCsv(p.notes)
     ];
