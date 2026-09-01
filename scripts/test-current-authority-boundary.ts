@@ -22,6 +22,7 @@ assert.match(unified, /requires a new owner-approved benefit, price, lifecycle a
 assert.match(decisionLog, /D-018 — Modern directory automation, useful public profiles and value-first owner participation/);
 assert.match(decisionLog, /Payment must never determine publication, ownership, legitimacy, factual trust signals or organic search ranking/);
 assert.match(automationReadme, /versioned \*\*approved-source candidate handoff\*\*/);
+assert.match(automationReadme, /ASIC Credit Licensee organisation-only register/);
 assert.doesNotMatch(automationReadme, /sole narrow publication path is the token-protected OpenStreetMap candidate handoff/);
 assert.match(automationWorkflows, /Tax Practitioners Board catalogue discovery/);
 assert.match(automationWorkflows, /OpenStreetMap, the licensed Victorian liquor-licence source, the Tax Practitioners Board organisation-only register and the ASIC Credit Licensee register/);
