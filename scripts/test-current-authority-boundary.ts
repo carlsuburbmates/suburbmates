@@ -5,6 +5,7 @@ const unified = readFileSync("docs/REFERENCE/SuburbMates — Unified Operations 
 const decisionLog = readFileSync("docs/REFERENCE/SuburbMates — Decision Log.md", "utf8");
 const automationReadme = readFileSync("docs/AUTOMATION/README.md", "utf8");
 const automationWorkflows = readFileSync("docs/AUTOMATION/WORKFLOWS.md", "utf8");
+const openStreetMapAcquisition = readFileSync("docs/openstreetmap-acquisition.md", "utf8");
 const lifecycleContract = readFileSync("docs/REFERENCE/SuburbMates — Listing Lifecycle and Release-State Contract.md", "utf8");
 const responsibilityMap = readFileSync("docs/REFERENCE/SuburbMates — Operations Responsibility and Follow-through Map.md", "utf8");
 const catalogueCoverage = readFileSync("docs/catalogue-coverage.md", "utf8");
@@ -25,6 +26,11 @@ assert.doesNotMatch(automationReadme, /sole narrow publication path is the token
 assert.match(automationWorkflows, /Tax Practitioners Board catalogue discovery/);
 assert.match(automationWorkflows, /OpenStreetMap, the licensed Victorian liquor-licence source, the Tax Practitioners Board organisation-only register and the ASIC Credit Licensee register/);
 assert.match(automationWorkflows, /Victorian locality boundary entry is supporting evidence for OSM location resolution only/);
+assert.match(automationWorkflows, /openstreetmap-candidate-v2/);
+assert.match(automationWorkflows, /ASIC Credit Licensee catalogue discovery/);
+assert.match(openStreetMapAcquisition, /openstreetmap-candidate-v2/);
+assert.match(openStreetMapAcquisition, /not a direct import or the sole source of a public business identity/);
+assert.doesNotMatch(openStreetMapAcquisition, /openstreetmap-candidate-v1/);
 for (const authority of [lifecycleContract, responsibilityMap, catalogueCoverage]) {
   assert.doesNotMatch(authority, /source, scope, contact, duplicate and safety checks/);
 }
