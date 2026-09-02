@@ -7,6 +7,7 @@ const expansion = fs.readFileSync("supabase/migrations/20260828145153_expand_dir
 const specificity = fs.readFileSync("supabase/migrations/20260830105746_prefer_specific_directory_intent.sql", "utf8");
 const venueCoverage = fs.readFileSync("supabase/migrations/20260830143000_expand_osm_venue_coverage.sql", "utf8");
 const specificityFix = fs.readFileSync("supabase/migrations/20260901100000_fix_directory_intent_specificity.sql", "utf8");
+const cardDetails = fs.readFileSync("supabase/migrations/20260902094000_include_hours_in_directory_search.sql", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
 assert.match(migration, /FROM public\.published_vendors AS vendor/);
@@ -58,4 +59,9 @@ assert.match(specificityFix, /SECURITY INVOKER/);
 assert.match(specificityFix, /FROM public\.published_vendors AS vendor/);
 assert.doesNotMatch(specificityFix, /FROM public\.vendors\b/);
 assert.match(specificityFix, /Query text is never retained/);
+assert.match(cardDetails, /SECURITY INVOKER/);
+assert.match(cardDetails, /public\.search_published_vendors\(/);
+assert.match(cardDetails, /JOIN public\.published_vendors AS vendor ON vendor\.id = result\.id/);
+assert.match(cardDetails, /vendor\.trading_hours/);
+assert.doesNotMatch(cardDetails, /INSERT INTO|UPDATE public\.|DELETE FROM/);
 console.log("Directory intent-search policy checks passed.");

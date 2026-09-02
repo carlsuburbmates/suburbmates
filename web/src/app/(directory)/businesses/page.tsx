@@ -63,7 +63,7 @@ export default async function BusinessesPage({
     return query.order("business_name", { ascending: true }).range(from, from + pageSize - 1);
   };
 
-  const searchPage = (targetPage: number) => supabase.rpc("search_published_vendors", {
+  const searchPage = (targetPage: number) => supabase.rpc("search_published_vendors_with_hours", {
     p_query: searchQuery,
     p_suburb_slug: suburb || null,
     p_category_slug: category || null,

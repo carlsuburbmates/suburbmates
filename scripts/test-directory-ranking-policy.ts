@@ -16,7 +16,7 @@ async function run() {
 
   const businesses = await readFile(publicDirectoryRoutes[0], "utf8");
   const migration = await readFile(typoSearchMigration, "utf8");
-  assert.match(businesses, /rpc\("search_published_vendors"/, "keyword search must use the public typo-tolerant reader");
+  assert.match(businesses, /rpc\("search_published_vendors_with_hours"/, "keyword search must use the public typo-tolerant reader with existing public card details");
   assert.match(businesses, /browsePage/, "empty keyword browsing must retain the direct public reader");
   assert.doesNotMatch(businesses, /\.order\(["']tier["']/, "directory search must not rank by commercial tier");
   assert.match(migration, /FROM public\.published_vendors AS vendor/, "typo search must use the safe public projection");

@@ -162,7 +162,7 @@ async function run() {
   );
   assert.match(
     browse,
-    /rpc\("search_published_vendors"/,
+    /rpc\("search_published_vendors_with_hours"/,
     "directory keyword search must use the public typo-tolerant reader",
   );
   assert.match(
