@@ -8,6 +8,7 @@ const specificity = fs.readFileSync("supabase/migrations/20260830105746_prefer_s
 const venueCoverage = fs.readFileSync("supabase/migrations/20260830143000_expand_osm_venue_coverage.sql", "utf8");
 const specificityFix = fs.readFileSync("supabase/migrations/20260901100000_fix_directory_intent_specificity.sql", "utf8");
 const cardDetails = fs.readFileSync("supabase/migrations/20260902094000_include_hours_in_directory_search.sql", "utf8");
+const locationIntent = fs.readFileSync("supabase/migrations/20260904090000_parse_directory_location_intent.sql", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
 assert.match(migration, /FROM public\.published_vendors AS vendor/);
@@ -64,4 +65,15 @@ assert.match(cardDetails, /public\.search_published_vendors\(/);
 assert.match(cardDetails, /JOIN public\.published_vendors AS vendor ON vendor\.id = result\.id/);
 assert.match(cardDetails, /vendor\.trading_hours/);
 assert.doesNotMatch(cardDetails, /INSERT INTO|UPDATE public\.|DELETE FROM/);
+assert.match(locationIntent, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
+assert.match(locationIntent, /FROM public\.suburbs AS suburb/);
+assert.match(locationIntent, /inferred_location AS/);
+assert.match(locationIntent, /effective_filters AS/);
+assert.match(locationIntent, /nullif\(trim\(coalesce\(p_suburb_slug/);
+assert.match(locationIntent, /location_only_matches AS/);
+assert.match(locationIntent, /SECURITY INVOKER/);
+assert.match(locationIntent, /FROM public\.published_vendors AS vendor/);
+assert.doesNotMatch(locationIntent, /FROM public\.vendors\b/);
+assert.match(locationIntent, /Query text is never retained/);
+assert.doesNotMatch(locationIntent, /INSERT INTO|UPDATE public\.|DELETE FROM/);
 console.log("Directory intent-search policy checks passed.");
