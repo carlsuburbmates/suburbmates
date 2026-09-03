@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { WebsiteProfilePreview, type WebsiteProfilePreviewValues } from "./WebsiteProfilePreview";
 
 type Vendor = {
   id: string;
@@ -89,6 +90,14 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
       setSuccess("Your profile-change request was withdrawn. Your public listing was not changed.");
     }
     setLoading(false);
+  };
+
+  const applyWebsitePreview = (values: WebsiteProfilePreviewValues) => {
+    if (values.phone && !phone) setPhone(values.phone);
+    if (values.email && !contactEmail) setContactEmail(values.email);
+    if (values.tradingHours && !tradingHours) setTradingHours(values.tradingHours);
+    if (values.facebookUrl && !facebookUrl) setFacebookUrl(values.facebookUrl);
+    if (values.instagramUrl && !instagramUrl) setInstagramUrl(values.instagramUrl);
   };
 
   return (
@@ -196,6 +205,12 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
           <p className="mt-1 text-xs leading-5 text-slate-500">Hours are reviewed before publication. Include any appointment-only or holiday notes that visitors should know.</p>
         </div>
       </div>
+      <WebsiteProfilePreview
+        vendorId={vendor.id}
+        website={vendor.website}
+        currentValues={{ phone, email: contactEmail, tradingHours, facebookUrl, instagramUrl }}
+        onApply={applyWebsitePreview}
+      />
       
       {error && (
         <div className="bg-red-50 text-red-800 p-4 rounded-lg flex items-start gap-3 text-sm">

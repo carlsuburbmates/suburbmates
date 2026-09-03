@@ -180,6 +180,15 @@ No branch, pull request, automation run or lane handover changes product policy 
 - **Safety rule:** Automation may fill only an empty `trading_hours` field on an unclaimed listing. It retains field-level source/provenance/freshness evidence, records a conflicting later observation privately, and never overwrites an owner-controlled or existing schedule. An approved owner may propose a correction through the existing private profile-change review, stale-base and immutable-audit lifecycle; it never updates the public listing directly. This does not create a live “open now” claim, infer holiday exceptions, alter organic ranking, or relax any claim/publication boundary.
 - **Evidence to close:** Migration/projection review, acquisition and candidate-handoff regression coverage, Cloudflare release evidence, and an in-app production check after a post-release approved-source observation has supplied an eligible schedule.
 
+### D-020 — Owner-authorised structured website detail preview
+
+- **Date:** 4 September 2026
+- **Owner decision:** An approved owner may explicitly ask SuburbMates to read narrowly bounded, machine-readable JSON-LD from the already-recorded HTTPS website for their claimed listing. This is a private form-assistance tool, not a general crawler, candidate source or automated enrichment programme.
+- **Safety rule:** The tool reads one recorded website homepage only after an owner opt-in. It follows at most three same-domain HTTPS redirects, bounds response and JSON-LD size, accepts only telephone, email, opening-hours and canonical Facebook/Instagram fields, and never reads or stores page text, HTML, images, cookies, descriptions, analytics, search terms or arbitrary linked pages. The preview is `private, no-store` and does not create a database record.
+- **Review rule:** The owner chooses which previewed values are copied into their existing profile-change form. Existing form values are never overwritten; submission still uses the existing owner-only, stale-base, operator-reviewed and immutable-audit path. The preview never alters a public profile, source evidence, ownership, publication, ranking or commercial state.
+- **Boundary:** This permission does not authorise bulk website crawling, scraping an unclaimed business site, third-party images, generic page-copy reuse, automatic public updates, or treating a website as a versioned approved discovery source.
+- **Evidence to close:** Utility/route/UI boundary tests, controlled owner-route acceptance, Cloudflare release evidence and a non-mutating production access check. A genuine owner use is valuable operational evidence but is not a reason to create a synthetic production request.
+
 ## Open deviations to track
 
 | Deviation | Current truth | Required resolution |
