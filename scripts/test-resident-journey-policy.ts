@@ -121,6 +121,16 @@ async function run() {
   );
   assert.match(
     homeClient,
+    /Local profiles with more to explore/,
+    "home must describe its data-complete sample without implying paid placement",
+  );
+  assert.match(
+    homeClient,
+    /Search and browse results remain neutral/,
+    "home samples must not be presented as a ranking or featured placement",
+  );
+  assert.match(
+    homeClient,
     /View profile/,
     "home previews must direct people to the complete profile",
   );
@@ -138,6 +148,21 @@ async function run() {
     home,
     /trading_hours/,
     "home previews must request existing public trading-hours data when available",
+  );
+  assert.match(
+    home,
+    /\.not\("description", "is", null\)/,
+    "home samples must start from an existing public business detail",
+  );
+  assert.match(
+    home,
+    /phone\.not\.is\.null,website\.not\.is\.null/,
+    "home samples must have an existing direct-contact path",
+  );
+  assert.match(
+    home,
+    /\.order\("business_name", \{ ascending: true \}\)/,
+    "home samples must use a deterministic tie-breaker",
   );
 
   assert.match(

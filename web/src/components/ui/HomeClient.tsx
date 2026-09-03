@@ -160,7 +160,7 @@ export function HomeClient({
       {sampleVendors.length > 0 && (
         <section
           className="bg-white py-14 sm:py-20"
-          aria-label="A few local businesses"
+          aria-label="Local profiles with more to explore"
         >
           <div className="mx-auto max-w-7xl px-5 sm:px-6">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -169,11 +169,11 @@ export function HomeClient({
                   Explore the directory
                 </p>
                 <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">
-                  A few local businesses
+                  Local profiles with more to explore
                 </h2>
                 <p className="mt-3 max-w-2xl text-slate-600">
-                  Start with a profile for the details that are publicly
-                  available.
+                  A small sample with both a useful public detail and a direct
+                  contact path. Search and browse results remain neutral.
                 </p>
               </div>
               <Link
