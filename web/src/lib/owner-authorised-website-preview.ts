@@ -10,6 +10,12 @@ export type OwnerWebsitePreview = {
   tradingHours: string | null;
   facebookUrl: string | null;
   instagramUrl: string | null;
+  summary: string | null;
+  services: string[];
+  bookingUrl: string | null;
+  menuUrl: string | null;
+  areaServed: string[];
+  accessibilityFeatures: string[];
 };
 
 type JsonObject = Record<string, unknown>;
@@ -94,9 +100,74 @@ function firstValue<T>(values: Array<T | null>) {
   return values.find((value): value is T => value !== null) ?? null;
 }
 
+function cleanHttpsUrl(value: unknown) {
+  const raw = cleanText(value, 1000);
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" || url.username || url.password) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function cleanList(values: unknown[], maxItems = 12) {
+  return [...new Set(values
+    .map((value) => cleanText(value, 120))
+    .filter((value): value is string => Boolean(value)))]
+    .slice(0, maxItems);
+}
+
+function offerNames(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap(offerNames);
+  if (!isJsonObject(value)) return [];
+  const item = isJsonObject(value.itemOffered) ? value.itemOffered : value;
+  return cleanList([item.name, item.serviceType]);
+}
+
+function catalogOfferNames(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap(catalogOfferNames);
+  if (!isJsonObject(value)) return [];
+  const items = Array.isArray(value.itemListElement) ? value.itemListElement : [];
+  return items.flatMap((item) => offerNames(item));
+}
+
+function namedValues(value: unknown): string[] {
+  const values = Array.isArray(value) ? value : [value];
+  return cleanList(values.flatMap((item) => isJsonObject(item) ? [item.name] : [item]));
+}
+
+function actionTarget(value: unknown, acceptedTypes: string[]) {
+  const values = Array.isArray(value) ? value : [value];
+  for (const action of values) {
+    if (!isJsonObject(action)) continue;
+    const type = cleanText(action["@type"], 100);
+    if (!type || !acceptedTypes.includes(type)) continue;
+    const target = isJsonObject(action.target) ? action.target.urlTemplate ?? action.target.url : action.target;
+    const url = cleanHttpsUrl(target);
+    if (url) return url;
+  }
+  return null;
+}
+
+function factualSummary(services: string[], areaServed: string[]) {
+  const servicePart = services.length ? `Offers ${services.slice(0, 3).join(", ")}.` : null;
+  const areaPart = areaServed.length ? `Serves ${areaServed.slice(0, 3).join(", ")}.` : null;
+  const summary = [servicePart, areaPart].filter(Boolean).join(" ");
+  return summary && summary.length <= 500 ? summary : null;
+}
+
 export function extractOwnerWebsitePreview(html: string, sourceUrl: string, checkedAt: string): OwnerWebsitePreview {
   const records = readJsonLd(html);
   const sameAs = records.flatMap((record) => Array.isArray(record.sameAs) ? record.sameAs : [record.sameAs]);
+  const services = cleanList(records.flatMap((record) => [
+    ...offerNames(record.makesOffer),
+    ...offerNames(record.offers),
+    ...catalogOfferNames(record.hasOfferCatalog),
+  ]));
+  const areaServed = cleanList(records.flatMap((record) => namedValues(record.areaServed)));
+  const accessibilityFeatures = cleanList(records.flatMap((record) => namedValues(record.amenityFeature)));
   return {
     sourceUrl,
     checkedAt,
@@ -108,6 +179,12 @@ export function extractOwnerWebsitePreview(html: string, sourceUrl: string, chec
     ])),
     facebookUrl: firstValue(sameAs.map((item) => cleanSocialUrl(item, "facebook"))),
     instagramUrl: firstValue(sameAs.map((item) => cleanSocialUrl(item, "instagram"))),
+    summary: factualSummary(services, areaServed),
+    services,
+    bookingUrl: firstValue(records.map((record) => actionTarget(record.potentialAction, ["ReserveAction", "OrderAction"]))),
+    menuUrl: firstValue(records.map((record) => cleanHttpsUrl(record.menu))),
+    areaServed,
+    accessibilityFeatures,
   };
 }
 
@@ -156,12 +233,9 @@ async function readBoundedHtml(response: Response) {
   return `${html}${decoder.decode()}`;
 }
 
-/**
- * Reads only machine-readable JSON-LD after an owner explicitly authorises a
- * preview. No page text, HTML, media, cookies, or result is persisted here.
- */
-export async function previewOwnerAuthorisedWebsite(value: string): Promise<OwnerWebsitePreview> {
-  const initial = parseAllowedWebsite(value);
+type PreviewDocument = { sourceUrl: string; html: string };
+
+async function fetchOwnerAuthorisedDocument(initial: URL, requiredHost: string): Promise<PreviewDocument> {
   let current = initial;
   for (let redirect = 0; redirect <= 3; redirect += 1) {
     const response = await fetch(current, {
@@ -173,21 +247,56 @@ export async function previewOwnerAuthorisedWebsite(value: string): Promise<Owne
       const location = response.headers.get("location");
       if (!location || redirect === 3) throw new Error("The website redirect could not be previewed safely.");
       const next = parseAllowedWebsite(new URL(location, current).toString());
-      if (!sameHostOrWwwVariant(initial.hostname, next.hostname)) {
-        throw new Error("The website redirected away from its recorded domain.");
-      }
+      if (!sameHostOrWwwVariant(requiredHost, next.hostname)) throw new Error("The website redirected away from its recorded domain.");
       current = next;
       continue;
     }
     if (!response.ok) throw new Error("The website could not be reached for a profile preview.");
-    if (!response.headers.get("content-type")?.toLowerCase().includes("text/html")) {
-      throw new Error("The recorded website did not return an HTML page.");
-    }
-    return extractOwnerWebsitePreview(
-      await readBoundedHtml(response),
-      current.toString(),
-      new Date().toISOString(),
-    );
+    if (!response.headers.get("content-type")?.toLowerCase().includes("text/html")) throw new Error("The recorded website did not return an HTML page.");
+    return { sourceUrl: current.toString(), html: await readBoundedHtml(response) };
   }
   throw new Error("The website redirect could not be previewed safely.");
+}
+
+function approvedLinkedPages(html: string, base: URL) {
+  const pageHint = /(?:about|service|contact|menu|book|accessib)/i;
+  const links = [...html.matchAll(/<a\b[^>]*\bhref\s*=\s*["']([^"'#?]+)[^"']*["'][^>]*>/gi)]
+    .map((match) => match[1])
+    .filter((href): href is string => Boolean(href))
+    .flatMap((href) => {
+      try {
+        const url = parseAllowedWebsite(new URL(href, base).toString());
+        if (!sameHostOrWwwVariant(base.hostname, url.hostname) || !pageHint.test(url.pathname)) return [];
+        url.search = "";
+        url.hash = "";
+        return [url];
+      } catch {
+        return [];
+      }
+    });
+  return [...new Map(links.map((url) => [url.toString(), url])).values()].slice(0, 4);
+}
+
+/**
+ * Reads only machine-readable JSON-LD after an owner explicitly authorises a
+ * preview. No page text, HTML, media, cookies, or result is persisted here.
+ */
+export async function previewOwnerAuthorisedWebsite(value: string): Promise<OwnerWebsitePreview> {
+  const initial = parseAllowedWebsite(value);
+  const homepage = await fetchOwnerAuthorisedDocument(initial, initial.hostname);
+  const linkedPages = approvedLinkedPages(homepage.html, new URL(homepage.sourceUrl));
+  const extraPages = await Promise.all(linkedPages.map(async (url) => {
+    try {
+      return await fetchOwnerAuthorisedDocument(url, initial.hostname);
+    } catch {
+      // A linked page is optional. Its failure must not block an owner from
+      // using valid structured facts on the recorded homepage.
+      return null;
+    }
+  }));
+  return extractOwnerWebsitePreview(
+    [homepage.html, ...extraPages.flatMap((page) => page ? [page.html] : [])].join("\n"),
+    homepage.sourceUrl,
+    new Date().toISOString(),
+  );
 }

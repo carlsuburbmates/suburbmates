@@ -9,6 +9,8 @@ export const directoryObservabilityEvents = [
   "directory_search",
   "business_profile_view",
   "outbound_website",
+  "outbound_booking",
+  "outbound_menu",
   "outbound_phone",
   "outbound_email",
   "outbound_directions",

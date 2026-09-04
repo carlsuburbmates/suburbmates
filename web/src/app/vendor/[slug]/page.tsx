@@ -131,6 +131,9 @@ export default async function VendorWebsite({ params }: PageProps) {
   const profileFacts = extractPublicProfileFacts(profileDescription);
   const hasOnlyStructuredFacts = hasOnlyStructuredPublicProfileFacts(profileDescription);
   const tradingHours = vendor.trading_hours?.trim() || null;
+  const services = Array.isArray(vendor.services) ? vendor.services.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0) : [];
+  const areaServed = Array.isArray(vendor.area_served) ? vendor.area_served.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0) : [];
+  const accessibilityFeatures = Array.isArray(vendor.accessibility_features) ? vendor.accessibility_features.filter((item: unknown): item is string => typeof item === "string" && item.trim().length > 0) : [];
   const displayedStreetAddress = displayDirectoryStreetAddress(vendor.street_address);
   const profileSummary = describeKnownProfile({
     businessName: vendor.business_name,
@@ -214,6 +217,8 @@ export default async function VendorWebsite({ params }: PageProps) {
                   phone={vendor.phone}
                   email={vendor.contact_email}
                   website={vendor.website}
+                  bookingUrl={vendor.booking_url}
+                  menuUrl={vendor.menu_url}
                   facebookUrl={vendor.facebook_url}
                   instagramUrl={vendor.instagram_url}
                   directionsUrl={directionsUrl}
@@ -234,6 +239,7 @@ export default async function VendorWebsite({ params }: PageProps) {
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="min-w-0">
             <PublicMediaGallery media={photos} />
+            <PublicServiceDetails services={services} areaServed={areaServed} accessibilityFeatures={accessibilityFeatures} />
             <PublicProfileHighlights facts={profileFacts} />
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <h2 className="text-2xl font-black tracking-tight">
@@ -355,6 +361,8 @@ function ContactActions({
   phone,
   email,
   website,
+  bookingUrl,
+  menuUrl,
   facebookUrl,
   instagramUrl,
   directionsUrl,
@@ -362,11 +370,13 @@ function ContactActions({
   phone: string | null;
   email: string | null;
   website: string | null;
+  bookingUrl: string | null;
+  menuUrl: string | null;
   facebookUrl: string | null;
   instagramUrl: string | null;
   directionsUrl: string | null;
 }) {
-  const hasDirectContact = Boolean(phone || email || website || facebookUrl || instagramUrl);
+  const hasDirectContact = Boolean(phone || email || website || bookingUrl || menuUrl || facebookUrl || instagramUrl);
   const hasVisitAction = Boolean(directionsUrl);
   const hasAction = hasDirectContact || hasVisitAction;
   return (
@@ -402,6 +412,16 @@ function ContactActions({
               Website <ArrowUpRight size={14} aria-hidden="true" />
             </a>
           )}
+          {bookingUrl && (
+            <a href={bookingUrl} target="_blank" rel="noopener noreferrer" data-directory-action="booking" className="btn btn-primary min-h-11">
+              Book <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          )}
+          {menuUrl && (
+            <a href={menuUrl} target="_blank" rel="noopener noreferrer" data-directory-action="menu" className="btn btn-outline min-h-11">
+              Menu <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          )}
           {facebookUrl && (
             <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline min-h-11">
               <Globe size={16} aria-hidden="true" /> Facebook <ArrowUpRight size={14} aria-hidden="true" />
@@ -431,6 +451,15 @@ function ContactActions({
       )}
     </section>
   );
+}
+
+function PublicServiceDetails({ services, areaServed, accessibilityFeatures }: { services: string[]; areaServed: string[]; accessibilityFeatures: string[] }) {
+  if (services.length === 0 && areaServed.length === 0 && accessibilityFeatures.length === 0) return null;
+  return <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><h2 className="text-2xl font-black tracking-tight">What this business offers</h2><div className="mt-5 grid gap-6 sm:grid-cols-2">{services.length > 0 && <DetailList title="Services and specialties" values={services} />}{areaServed.length > 0 && <DetailList title="Areas served" values={areaServed} />}{accessibilityFeatures.length > 0 && <DetailList title="Accessibility" values={accessibilityFeatures} />}</div></section>;
+}
+
+function DetailList({ title, values }: { title: string; values: string[] }) {
+  return <div><h3 className="text-sm font-black uppercase tracking-[0.12em] text-slate-500">{title}</h3><ul className="mt-3 flex flex-wrap gap-2">{values.map((value) => <li key={value} className="rounded-full border border-teal-900/10 bg-teal-50 px-3 py-1.5 text-sm font-semibold text-teal-950">{value}</li>)}</ul></div>;
 }
 
 function ProfileIdentityVisual({

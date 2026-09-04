@@ -27,7 +27,11 @@ export function DirectoryObservabilityObserver() {
     const onClick = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
       if (!target || !isPublicDirectoryPath(location.pathname)) return;
-      const eventName = outboundEvent(target.href);
+      const eventName = target.dataset.directoryAction === "booking"
+        ? "outbound_booking"
+        : target.dataset.directoryAction === "menu"
+          ? "outbound_menu"
+          : outboundEvent(target.href);
       if (eventName) send(eventName);
     };
     const onSubmit = (event: Event) => {

@@ -22,6 +22,11 @@ type OwnerVendor = {
   instagram_url: string | null
   description: string | null
   trading_hours: string | null
+  services: string[]
+  booking_url: string | null
+  menu_url: string | null
+  area_served: string[]
+  accessibility_features: string[]
 }
 
 type RequestStatus = {
@@ -201,7 +206,7 @@ function ProfileReadiness({ vendor, mediaProposalCount }: { vendor: OwnerVendor;
   const hasDirectContact = Boolean(vendor.phone || vendor.contact_email || vendor.website)
   const cards = [
     { href: `#profile-editor-${vendor.id}`, Icon: Phone, title: "Direct contact", detail: hasDirectContact ? "A way for locals to contact you is on file." : "Add a phone number, email or website.", complete: hasDirectContact },
-    { href: `#profile-editor-${vendor.id}`, Icon: FileText, title: "Business story", detail: vendor.description?.trim() ? "Your public description is ready for review." : "Explain what you do and what makes you useful locally.", complete: Boolean(vendor.description?.trim()) },
+    { href: `#profile-editor-${vendor.id}`, Icon: FileText, title: "Business details", detail: vendor.description?.trim() || vendor.services.length > 0 ? "Your summary or useful services are ready for review." : "Add a factual summary and useful services for locals.", complete: Boolean(vendor.description?.trim()) || vendor.services.length > 0 },
     { href: `#media-${vendor.id}`, Icon: Camera, title: "Photos and logo", detail: mediaProposalCount > 0 ? "Your media proposal is visible in its review status below." : "Propose a logo or real business image you are allowed to use.", complete: mediaProposalCount > 0 },
   ]
   return <section className="rounded-2xl border border-teal-900/10 bg-teal-50/70 p-5 sm:p-6" aria-label={`Profile readiness for ${vendor.business_name}`}>

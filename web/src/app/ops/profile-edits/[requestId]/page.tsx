@@ -14,6 +14,11 @@ const fieldLabels: Record<string, string> = {
   instagram_url: "Instagram profile",
   description: "Description",
   trading_hours: "Opening hours",
+  services: "Services and specialties",
+  booking_url: "Booking link",
+  menu_url: "Menu or price-list link",
+  area_served: "Areas served",
+  accessibility_features: "Accessibility details",
 };
 
 type ProfileChange = {
@@ -24,9 +29,9 @@ type ProfileChange = {
   change_status: string;
   is_published: boolean;
   ownership_status: string;
-  base_values: Record<string, string | null>;
-  proposed_changes: Record<string, string | null>;
-  current_values: Record<string, string | null>;
+  base_values: Record<string, unknown>;
+  proposed_changes: Record<string, unknown>;
+  current_values: Record<string, unknown>;
   submitter_note: string | null;
   operator_note: string | null;
   created_at: string;
@@ -53,10 +58,10 @@ export default async function OpsProfileEditDetailPage({
   if (!request) notFound();
 
   const changedFields = Object.keys(request.proposed_changes).filter(
-    (key) => request.proposed_changes[key] !== request.base_values[key],
+    (key) => !sameValue(request.proposed_changes[key], request.base_values[key]),
   );
   const isStale = Object.keys(request.base_values).some(
-    (field) => request.current_values[field] !== request.base_values[field],
+    (field) => !sameValue(request.current_values[field], request.base_values[field]),
   );
   const successfulAction = ["approve", "reject"].includes(message.success ?? "");
 
@@ -81,8 +86,8 @@ export default async function OpsProfileEditDetailPage({
         {changedFields.map((field) => (
           <div key={field} className="grid grid-cols-[10rem_1fr_1fr] gap-4 border-t border-slate-200 px-5 py-4 text-sm">
             <span className="font-bold">{fieldLabels[field] ?? field}</span>
-            <span className="whitespace-pre-wrap text-slate-600">{request.current_values[field] || "—"}</span>
-            <span className="whitespace-pre-wrap font-semibold">{request.proposed_changes[field] || "—"}</span>
+            <span className="whitespace-pre-wrap text-slate-600">{displayValue(request.current_values[field])}</span>
+            <span className="whitespace-pre-wrap font-semibold">{displayValue(request.proposed_changes[field])}</span>
           </div>
         ))}
       </section>
@@ -114,4 +119,13 @@ export default async function OpsProfileEditDetailPage({
       <Link href={`/ops/profile-edits?status=${request.change_status}`} className="inline-block text-sm font-bold underline underline-offset-4">← Back to profile edits</Link>
     </div>
   );
+}
+
+function sameValue(left: unknown, right: unknown) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function displayValue(value: unknown) {
+  if (Array.isArray(value)) return value.length > 0 ? value.join(", ") : "—";
+  return typeof value === "string" && value.trim() ? value : "—";
 }

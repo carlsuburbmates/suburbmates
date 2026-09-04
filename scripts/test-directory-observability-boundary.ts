@@ -18,6 +18,8 @@ assert.match(observer, /credentials: "same-origin"/);
 assert.doesNotMatch(observer, /navigator\.sendBeacon/);
 assert.match(observer, /input\[name="q"\], #directory-search/);
 assert.match(observer, /outbound_directions/);
+assert.match(observer, /outbound_booking/);
+assert.match(observer, /directoryAction/);
 assert.match(observer, /const privateRouteRoots/);
 for (const privateRoute of ["api", "auth", "claim", "dashboard", "login", "ops", "reset-password"]) {
   assert.match(observer, new RegExp(`"${privateRoute}"`));

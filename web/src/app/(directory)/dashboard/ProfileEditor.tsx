@@ -16,6 +16,11 @@ type Vendor = {
   instagram_url: string | null;
   description: string | null;
   trading_hours: string | null;
+  services: string[];
+  booking_url: string | null;
+  menu_url: string | null;
+  area_served: string[];
+  accessibility_features: string[];
 };
 
 type ProfileChange = {
@@ -36,6 +41,11 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
   const [instagramUrl, setInstagramUrl] = useState(vendor.instagram_url || "");
   const [description, setDescription] = useState(vendor.description || "");
   const [tradingHours, setTradingHours] = useState(vendor.trading_hours || "");
+  const [services, setServices] = useState(vendor.services.join("\n"));
+  const [bookingUrl, setBookingUrl] = useState(vendor.booking_url || "");
+  const [menuUrl, setMenuUrl] = useState(vendor.menu_url || "");
+  const [areaServed, setAreaServed] = useState(vendor.area_served.join("\n"));
+  const [accessibilityFeatures, setAccessibilityFeatures] = useState(vendor.accessibility_features.join("\n"));
   
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -62,6 +72,11 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
       p_instagram_url: instagramUrl || null,
       p_description: description || null,
       p_trading_hours: tradingHours || null,
+      p_services: listFromText(services),
+      p_booking_url: bookingUrl || null,
+      p_menu_url: menuUrl || null,
+      p_area_served: listFromText(areaServed),
+      p_accessibility_features: listFromText(accessibilityFeatures),
       p_submitter_note: null,
     });
 
@@ -98,6 +113,12 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
     if (values.tradingHours && !tradingHours) setTradingHours(values.tradingHours);
     if (values.facebookUrl && !facebookUrl) setFacebookUrl(values.facebookUrl);
     if (values.instagramUrl && !instagramUrl) setInstagramUrl(values.instagramUrl);
+    if (values.summary && !description) setDescription(values.summary);
+    if (values.services.length && !services) setServices(values.services.join("\n"));
+    if (values.bookingUrl && !bookingUrl) setBookingUrl(values.bookingUrl);
+    if (values.menuUrl && !menuUrl) setMenuUrl(values.menuUrl);
+    if (values.areaServed.length && !areaServed) setAreaServed(values.areaServed.join("\n"));
+    if (values.accessibilityFeatures.length && !accessibilityFeatures) setAccessibilityFeatures(values.accessibilityFeatures.join("\n"));
   };
 
   return (
@@ -185,13 +206,14 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Business summary</label>
           <textarea 
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all"
           />
+          <p className="mt-1 text-xs leading-5 text-slate-500">Use a clear, factual summary of what you offer. It is reviewed before publication.</p>
         </div>
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-slate-700 mb-1">Opening hours</label>
@@ -204,11 +226,24 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
           />
           <p className="mt-1 text-xs leading-5 text-slate-500">Hours are reviewed before publication. Include any appointment-only or holiday notes that visitors should know.</p>
         </div>
+        <ProfileListField label="Services and specialties" value={services} onChange={setServices} placeholder="One service per line, for example: Emergency plumbing" help="Add up to 12 factual services or specialties. These help locals decide whether to contact you." />
+        <ProfileListField label="Areas you serve" value={areaServed} onChange={setAreaServed} placeholder="One suburb or area per line" help="Optional. Add only the areas you genuinely serve." />
+        <ProfileListField label="Accessibility details" value={accessibilityFeatures} onChange={setAccessibilityFeatures} placeholder="One practical detail per line, for example: Step-free entrance" help="Optional practical access details for visitors." />
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Booking link</label>
+          <input type="url" value={bookingUrl} onChange={(event) => setBookingUrl(event.target.value)} placeholder="https://…" className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all" />
+          <p className="mt-1 text-xs leading-5 text-slate-500">A direct https booking page, if you use one.</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Menu or price-list link</label>
+          <input type="url" value={menuUrl} onChange={(event) => setMenuUrl(event.target.value)} placeholder="https://…" className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all" />
+          <p className="mt-1 text-xs leading-5 text-slate-500">A direct https menu or price-list page, if relevant.</p>
+        </div>
       </div>
       <WebsiteProfilePreview
         vendorId={vendor.id}
         website={vendor.website}
-        currentValues={{ phone, email: contactEmail, tradingHours, facebookUrl, instagramUrl }}
+        currentValues={{ phone, email: contactEmail, tradingHours, facebookUrl, instagramUrl, summary: description, services: listFromText(services), bookingUrl, menuUrl, areaServed: listFromText(areaServed), accessibilityFeatures: listFromText(accessibilityFeatures) }}
         onApply={applyWebsitePreview}
       />
       
@@ -242,4 +277,12 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
       </div>
     </form>
   );
+}
+
+function listFromText(value: string) {
+  return [...new Set(value.split(/\n|,/).map((item) => item.trim()).filter(Boolean))].slice(0, 12);
+}
+
+function ProfileListField({ label, value, onChange, placeholder, help }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; help: string }) {
+  return <div className="sm:col-span-2"><label className="block text-sm font-medium text-slate-700 mb-1">{label}</label><textarea rows={3} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="block w-full border border-slate-300 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-teal-800 focus:border-teal-800 outline-none transition-all" /><p className="mt-1 text-xs leading-5 text-slate-500">{help}</p></div>;
 }
