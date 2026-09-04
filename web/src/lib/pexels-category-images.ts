@@ -38,13 +38,13 @@ const keywordByCategory: Record<string, string> = {
 // These terms keep a category visual from suggesting a particular person,
 // business, logo, premises or branded product. This is a conservative lexical
 // gate, not a claim that the asset depicts the listed business.
-const unsafeAlt = /\b(person|people|woman|women|man|men|child|children|baby|face|portrait|selfie|team|employee|customer|logo|brand|sign|storefront|shopfront|building|restaurant exterior|business exterior|text|lettering)\b/i;
+const unsafeAlt = /\b(person|people|woman|women|man|men|child|children|baby|face|portrait|selfie|team|employee|customer|worker|working|mechanic|technician|hand|hands|logo|brand|sign|storefront|shopfront|shop|store|workshop|garage|building|hotel|office|interior|restaurant exterior|business exterior|text|lettering)\b/i;
 
 export function categoryImageKeyword(categorySlug: string, services: string[] = []) {
   const direct = keywordByCategory[categorySlug];
   if (direct) return direct;
   const factualService = services.find((service) => /^[a-z][a-z -]{2,40}$/i.test(service) && !unsafeAlt.test(service));
-  return factualService ? `${factualService} still life` : "local service tools";
+  return factualService ? `${factualService} still life` : null;
 }
 
 export function selectPexelsCategoryImage(photos: PexelsPhoto[], keyword: string, excludedPhotoIds = new Set<number>()): LicensedCategoryImage | null {
@@ -63,6 +63,7 @@ export async function findPexelsCategoryImage(categorySlug: string, services: st
   const apiKey = process.env.PEXELS_API_KEY;
   if (!apiKey) return { state: "held" as const, reason: "Pexels provider key is not configured." };
   const keyword = categoryImageKeyword(categorySlug, services);
+  if (!keyword) return { state: "skipped" as const, reason: "No category-safe imagery query is defined." };
   const url = new URL("https://api.pexels.com/v1/search");
   url.searchParams.set("query", keyword);
   url.searchParams.set("orientation", "landscape");

@@ -7,6 +7,8 @@ assert.match(source, /orientation", "landscape"/);
 assert.match(source, /unsafeAlt/);
 assert.match(source, /photo\.alt\.trim\(\)\.length >= 5/);
 assert.match(source, /excludedPhotoIds/);
+assert.match(source, /No category-safe imagery query is defined/);
+assert.doesNotMatch(source, /"local service tools"/);
 assert.match(source, /providerPhotoId/);
 assert.match(source, /photographerUrl/);
 assert.match(source, /PEXELS_API_KEY/);
