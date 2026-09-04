@@ -9,6 +9,7 @@ const venueCoverage = fs.readFileSync("supabase/migrations/20260830143000_expand
 const specificityFix = fs.readFileSync("supabase/migrations/20260901100000_fix_directory_intent_specificity.sql", "utf8");
 const cardDetails = fs.readFileSync("supabase/migrations/20260902094000_include_hours_in_directory_search.sql", "utf8");
 const locationIntent = fs.readFileSync("supabase/migrations/20260904090000_parse_directory_location_intent.sql", "utf8");
+const taxAgentIntent = fs.readFileSync("supabase/migrations/20260904091000_add_tax_agent_directory_intent.sql", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
 assert.match(migration, /FROM public\.published_vendors AS vendor/);
@@ -76,4 +77,13 @@ assert.match(locationIntent, /FROM public\.published_vendors AS vendor/);
 assert.doesNotMatch(locationIntent, /FROM public\.vendors\b/);
 assert.match(locationIntent, /Query text is never retained/);
 assert.doesNotMatch(locationIntent, /INSERT INTO|UPDATE public\.|DELETE FROM/);
+assert.match(taxAgentIntent, /CREATE OR REPLACE FUNCTION public\.search_published_vendors/);
+assert.match(taxAgentIntent, /\('tax agent', 'tax-advisor'\), \('tax agent', 'accountant'\)/);
+assert.match(taxAgentIntent, /\('tax advice', 'tax-advisor'\), \('tax advice', 'accountant'\)/);
+assert.match(taxAgentIntent, /SECURITY INVOKER/);
+assert.match(taxAgentIntent, /SET search_path = ''/);
+assert.match(taxAgentIntent, /FROM public\.published_vendors AS vendor/);
+assert.doesNotMatch(taxAgentIntent, /FROM public\.vendors\b/);
+assert.match(taxAgentIntent, /Query text is never retained/);
+assert.doesNotMatch(taxAgentIntent, /INSERT INTO|UPDATE public\.|DELETE FROM/);
 console.log("Directory intent-search policy checks passed.");
