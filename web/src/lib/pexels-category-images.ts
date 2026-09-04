@@ -47,18 +47,19 @@ export function categoryImageKeyword(categorySlug: string, services: string[] = 
   return factualService ? `${factualService} still life` : "local service tools";
 }
 
-export function selectPexelsCategoryImage(photos: PexelsPhoto[], keyword: string): LicensedCategoryImage | null {
+export function selectPexelsCategoryImage(photos: PexelsPhoto[], keyword: string, excludedPhotoIds = new Set<number>()): LicensedCategoryImage | null {
   const eligible = photos
     .filter((photo) => Number.isInteger(photo.id) && photo.width >= photo.height && photo.height > 0)
     .filter((photo) => Boolean(photo.src?.large && photo.url && photo.photographer && photo.photographer_url))
+    .filter((photo) => typeof photo.alt === "string" && photo.alt.trim().length >= 5 && photo.alt.trim().length <= 180)
     .filter((photo) => !unsafeAlt.test(photo.alt ?? ""))
-    .sort((a, b) => a.id - b.id);
+    .filter((photo) => !excludedPhotoIds.has(photo.id));
   const photo = eligible[0];
   if (!photo) return null;
   return { provider: "pexels", providerPhotoId: photo.id, providerUrl: photo.url, photographer: photo.photographer, photographerUrl: photo.photographer_url, imageUrl: photo.src.large, alt: photo.alt?.trim() || `Licensed category context for ${keyword}`, keyword };
 }
 
-export async function findPexelsCategoryImage(categorySlug: string, services: string[] = []) {
+export async function findPexelsCategoryImage(categorySlug: string, services: string[] = [], excludedPhotoIds = new Set<number>()) {
   const apiKey = process.env.PEXELS_API_KEY;
   if (!apiKey) return { state: "held" as const, reason: "Pexels provider key is not configured." };
   const keyword = categoryImageKeyword(categorySlug, services);
@@ -70,5 +71,5 @@ export async function findPexelsCategoryImage(categorySlug: string, services: st
   const response = await fetch(url, { headers: { Authorization: apiKey, Accept: "application/json" }, signal: AbortSignal.timeout(10_000) });
   if (!response.ok) throw new Error(`Pexels category image search failed (${response.status}).`);
   const payload = await response.json() as { photos?: PexelsPhoto[] };
-  return { state: "selected" as const, image: selectPexelsCategoryImage(payload.photos ?? [], keyword), keyword };
+  return { state: "selected" as const, image: selectPexelsCategoryImage(payload.photos ?? [], keyword, excludedPhotoIds), keyword };
 }

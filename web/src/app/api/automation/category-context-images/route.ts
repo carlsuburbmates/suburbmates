@@ -13,11 +13,19 @@ export async function POST(request: NextRequest) {
 
   try {
     const admin = createAdminClient();
-    const { data: categories, error } = await admin.from("categories").select("slug").order("slug").limit(25);
+    const { count: categoryCount, error: countError } = await admin.from("categories").select("slug", { count: "exact", head: true });
+    if (countError || !categoryCount) throw new Error("Could not count category image targets.");
+    const weeklyBatch = 25;
+    const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+    const offset = (week * weeklyBatch) % categoryCount;
+    const { data: categories, error } = await admin.from("categories").select("slug").order("slug").range(offset, Math.min(offset + weeklyBatch - 1, categoryCount - 1));
     if (error) throw new Error("Could not load category image targets.");
+    const { data: existing, error: existingError } = await admin.from("licensed_category_context_images").select("provider_photo_id");
+    if (existingError) throw new Error("Could not read existing licensed category context.");
+    const usedPhotoIds = new Set((existing ?? []).map((image: { provider_photo_id: string }) => Number(image.provider_photo_id)).filter(Number.isInteger));
     let selected = 0;
     for (const category of categories ?? []) {
-      const result = await findPexelsCategoryImage(category.slug);
+      const result = await findPexelsCategoryImage(category.slug, [], usedPhotoIds);
       if (result.state !== "selected" || !result.image) continue;
       const image = result.image;
       const { error: writeError } = await admin.from("licensed_category_context_images").upsert({
@@ -26,6 +34,7 @@ export async function POST(request: NextRequest) {
         keyword: result.keyword, licence_snapshot: "Pexels API and licence verified 2026-09-05; public credit retained.", selection_version: "pexels-category-v1", selected_at: new Date().toISOString(), updated_at: new Date().toISOString(), active: true,
       }, { onConflict: "category_slug" });
       if (writeError) throw new Error("Could not retain licensed category context.");
+      usedPhotoIds.add(image.providerPhotoId);
       selected += 1;
     }
     return NextResponse.json({ state: "completed", selected });

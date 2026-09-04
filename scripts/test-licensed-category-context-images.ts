@@ -9,6 +9,8 @@ assert.match(migration, /provider.*pexels/i);
 assert.match(migration, /never business media or evidence/i);
 assert.match(route, /AUTOMATION_INGEST_TOKEN/);
 assert.match(route, /PEXELS_API_KEY/);
+assert.match(route, /weeklyBatch/);
+assert.match(route, /usedPhotoIds/);
 assert.match(route, /Pexels provider key is not configured/);
 assert.doesNotMatch(route, /Google|Maps|closed directory/i);
 assert.match(profile, /Licensed category image — does not depict this business/);

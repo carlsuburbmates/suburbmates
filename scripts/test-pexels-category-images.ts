@@ -5,6 +5,8 @@ const source = fs.readFileSync("web/src/lib/pexels-category-images.ts", "utf8");
 assert.match(source, /import "server-only"/);
 assert.match(source, /orientation", "landscape"/);
 assert.match(source, /unsafeAlt/);
+assert.match(source, /photo\.alt\.trim\(\)\.length >= 5/);
+assert.match(source, /excludedPhotoIds/);
 assert.match(source, /providerPhotoId/);
 assert.match(source, /photographerUrl/);
 assert.match(source, /PEXELS_API_KEY/);
