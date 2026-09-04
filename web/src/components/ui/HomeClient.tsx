@@ -22,6 +22,7 @@ interface HomeClientProps {
     description: string | null;
     street_address: string | null;
     trading_hours: string | null;
+    contact_email: string | null;
     phone: string | null;
     website: string | null;
   }>;

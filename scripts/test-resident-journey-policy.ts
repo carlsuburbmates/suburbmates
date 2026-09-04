@@ -156,7 +156,7 @@ async function run() {
   );
   assert.match(
     home,
-    /phone\.not\.is\.null,website\.not\.is\.null/,
+    /phone\.not\.is\.null,contact_email\.not\.is\.null,website\.not\.is\.null/,
     "home samples must have an existing direct-contact path",
   );
   assert.match(

@@ -20,7 +20,7 @@ export default async function Home() {
     supabase
       .from("published_vendors")
       .select(
-        "id, slug, business_name, suburb_slug, category_slug, description, street_address, trading_hours, phone, website",
+        "id, slug, business_name, suburb_slug, category_slug, description, street_address, trading_hours, contact_email, phone, website",
         { count: "exact" },
       )
       // The home is an invitation to explore, not a ranked result set. Show a
@@ -28,7 +28,7 @@ export default async function Home() {
       // public detail and a direct way to take the next step. The full
       // directory remains the neutral, alphabetical/intent-ranked browse path.
       .not("description", "is", null)
-      .or("phone.not.is.null,website.not.is.null")
+      .or("phone.not.is.null,contact_email.not.is.null,website.not.is.null")
       .order("trading_hours", { ascending: false, nullsFirst: false })
       .order("business_name", { ascending: true })
       .limit(6),
