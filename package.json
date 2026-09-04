@@ -24,6 +24,7 @@
     "owner-media:test": "tsx scripts/test-owner-media-boundary.ts",
     "owner-trading-hours:test": "tsx scripts/test-owner-trading-hours-boundary.ts",
     "owner-website-preview:test": "tsx scripts/test-owner-authorised-website-preview.ts",
+    "official-website-enrichment:test": "tsx scripts/test-official-website-enrichment.ts",
     "public-source-summary:test": "tsx scripts/test-public-source-summary-boundary.ts",
     "public-profile-facts:test": "tsx scripts/test-public-profile-facts.ts",
     "current-authority:test": "tsx scripts/test-current-authority-boundary.ts",
