@@ -37,6 +37,13 @@ type PublicMedia = {
   alt_text: string;
 };
 
+type CategoryContextImage = {
+  image_url: string;
+  provider_url: string;
+  photographer: string;
+  photographer_url: string;
+};
+
 type PublicSourceSummary = {
   source_key: string;
   source_name: string;
@@ -175,6 +182,12 @@ export default async function VendorWebsite({ params }: PageProps) {
     .order("business_name", { ascending: true })
     .limit(3);
   const relatedVendors = (relatedResult.data ?? []) as RelatedVendor[];
+  const { data: categoryContextImage } = await supabase
+    .from("licensed_category_context_images")
+    .select("image_url, provider_url, photographer, photographer_url")
+    .eq("category_slug", vendor.category_slug)
+    .eq("active", true)
+    .maybeSingle();
 
   return (
     <PublicDirectoryShell>
@@ -239,6 +252,9 @@ export default async function VendorWebsite({ params }: PageProps) {
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="min-w-0">
             <PublicMediaGallery media={photos} />
+            {vendor.is_claimed === false && photos.length === 0 && categoryContextImage && (
+              <LicensedCategoryContextImage image={categoryContextImage as CategoryContextImage} categoryName={categoryName} businessName={vendor.business_name} />
+            )}
             <PublicServiceDetails services={services} areaServed={areaServed} accessibilityFeatures={accessibilityFeatures} />
             <PublicProfileHighlights facts={profileFacts} />
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -517,6 +533,18 @@ function PublicMediaGallery({ media }: { media: PublicMedia[] }) {
         ))}
       </div>
     </section>
+  );
+}
+
+function LicensedCategoryContextImage({ image, categoryName, businessName }: { image: CategoryContextImage; categoryName: string; businessName: string }) {
+  return (
+    <figure className="mb-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <Image src={image.image_url} alt={`Licensed ${categoryName} category context. It does not depict ${businessName}.`} width={1600} height={900} unoptimized className="h-64 w-full object-cover sm:h-80" />
+      <figcaption className="space-y-1 p-4 text-xs leading-5 text-slate-600">
+        <p className="font-bold text-slate-800">Licensed category image — does not depict this business</p>
+        <p>Photo by <a href={image.photographer_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{image.photographer}</a> on <a href={image.provider_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Pexels</a>.</p>
+      </figcaption>
+    </figure>
   );
 }
 
