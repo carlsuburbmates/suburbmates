@@ -161,6 +161,16 @@ async function run() {
   );
   assert.match(
     home,
+    /select\("id", \{ count: "exact", head: true \}\)/,
+    "the homepage coverage cue must count every public listing, not only its rich-profile sample",
+  );
+  assert.match(
+    home,
+    /publishedCount=\{publishedCountResult\.count \?\? 0\}/,
+    "the homepage must pass the full public-directory count to its coverage cue",
+  );
+  assert.match(
+    home,
     /\.order\("business_name", \{ ascending: true \}\)/,
     "home samples must use a deterministic tie-breaker",
   );

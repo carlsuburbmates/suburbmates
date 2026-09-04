@@ -1,7 +1,9 @@
 # SuburbMates — Value-First Enhancement Offer Proposal
 
-**Status:** Proposal only. This document does not authorise billing, pricing, paid
-placement, a public offer, entitlement records, or a Stripe integration.
+**Status:** Paused proposal. This document does not authorise billing, pricing, paid
+placement, a public offer, entitlement records, or a Stripe integration. D-021 makes
+evidence-limited official-website enrichment and outcome validation the prerequisite
+to reopening commercial implementation.
 
 ## 1. Purpose
 
@@ -71,8 +73,8 @@ The owner must approve all of the following as one commercial specification:
 7. the data-retention, privacy and aggregate reporting rules;
 8. controlled acceptance, rollback and a real-production observation plan.
 
-Until that approval, the price is **unset**, Stripe stays disabled, and there is no
-public CTA or implied upgrade path.
+Until that approval and D-021's enrichment/outcome evidence, the price is **unset**,
+Stripe stays disabled, and there is no public CTA or implied upgrade path.
 
 ## 6. Future implementation gates
 
@@ -91,5 +93,6 @@ After approval, implementation must be split and independently verified:
 ## 7. Current state
 
 No part of this proposal is active. Existing owner-profile readiness, media review,
-and direct-contact controls are free directory capabilities, not a paid tier. D-004
-and D-018 remain the controlling authority for any later commercial decision.
+direct-contact controls and website enrichment are free directory capabilities, not a
+paid tier. D-004, D-018 and D-021 remain the controlling authority for any later
+commercial decision.

@@ -97,12 +97,13 @@ Stripe checkout, subscriptions, entitlement enforcement and webhook processing a
 The following are build commitments, not indefinite deferrals:
 
 - approved-source discovery, evidence capture, deduplication and the deterministic qualification policy for default unclaimed publication;
-- optional ABN and website evidence checks, presented as precise supporting signals rather than entry requirements;
+- optional ABN checks and an evidence-limited official-website enrichment lifecycle, presented as precise supporting facts rather than entry requirements;
 - a public missing-business submission path, protected by validation and abuse controls, that creates a candidate record rather than publishing raw input;
 - claim, ownership, request-status and moderated profile-update journeys;
 - the public contact path, private Ops handling and only the transactional communications genuinely needed by approved user workflows;
-- a safe, evidence-backed media/logo capability when it improves a public listing;
+- a safe, evidence-backed media/logo capability when it improves a public listing, including clearly labelled, licensed category-context imagery that an owner can replace;
 - a versioned multi-source enrichment and refresh lifecycle with field-level provenance, freshness and conflict handling;
+- bounded official-website fact extraction, factual-summary generation, owner-approved media conversion and aggregate outcome measurement before any commercial activation;
 - grounded intent-aware public search and visually useful directory/profile experiences; and
 - observable operational jobs, exception queues, audit history, mobile accessibility, SEO and public-route acceptance.
 
