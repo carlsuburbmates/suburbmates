@@ -21,15 +21,16 @@ type WebsitePilot = { source_enabled: boolean; source_automated: boolean; source
 
 export default async function OpsSystemPage() {
   const supabase = await createOpsDataClient();
-  const [healthResult, jobsResult, auditResult, directoryObservability, profileCoverage, websitePilotResult] = await Promise.all([
+  const [healthResult, jobsResult, auditResult, directoryObservability, profileCoverage, websitePilotResult, websiteDomainReviewsResult] = await Promise.all([
     supabase.rpc("ops_list_integration_health"),
     supabase.rpc("ops_list_automation_jobs", { p_limit: 200 }),
     supabase.rpc("ops_list_audit_events", { p_limit: 200 }),
     getDirectoryObservabilitySummary(),
     getPublicProfileCoverage(supabase),
     supabase.rpc("ops_get_official_website_pilot_summary"),
+    supabase.rpc("ops_list_official_website_domain_reviews", { p_status: null }),
   ]);
-  if (healthResult.error || jobsResult.error || auditResult.error || websitePilotResult.error) throw new Error("System health could not be loaded.");
+  if (healthResult.error || jobsResult.error || auditResult.error || websitePilotResult.error || websiteDomainReviewsResult.error) throw new Error("System health could not be loaded.");
   const health = (healthResult.data ?? []) as Health[];
   const jobs = (jobsResult.data ?? []) as Job[];
   const events = (auditResult.data ?? []) as Audit[];
@@ -37,6 +38,7 @@ export default async function OpsSystemPage() {
   const dormant = health.filter((item) => item.status === "disabled" || item.status === "unknown");
   const activeSourceRefreshes = health.filter((item) => item.status === "running" && item.integration_name.endsWith("_source"));
   const websitePilot = websitePilotResult.data?.[0] as WebsitePilot | undefined;
+  const approvedWebsiteDomains = (websiteDomainReviewsResult.data ?? []).filter((review: { review_status: string }) => review.review_status === "approved").length;
 
   return (
     <div className="space-y-8">
@@ -65,7 +67,7 @@ export default async function OpsSystemPage() {
 
       <DirectoryObservability summary={directoryObservability} />
       <PublicProfileCoverageSummary coverage={profileCoverage} />
-      <OfficialWebsitePilotSummary pilot={websitePilot} />
+      <OfficialWebsitePilotSummary pilot={websitePilot} approvedDomains={approvedWebsiteDomains} />
 
       <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <summary className="cursor-pointer p-5 text-lg font-bold">Technical details and recent checks</summary>
@@ -84,10 +86,10 @@ export default async function OpsSystemPage() {
   );
 }
 
-function OfficialWebsitePilotSummary({ pilot }: { pilot: WebsitePilot | undefined }) {
+function OfficialWebsitePilotSummary({ pilot, approvedDomains }: { pilot: WebsitePilot | undefined; approvedDomains: number }) {
   if (!pilot) return null;
-  const held = !pilot.source_enabled || !pilot.source_automated;
-  return <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-wrap items-baseline justify-between gap-3"><div><h3 className="text-xl font-bold">Official-website enrichment pilot</h3><p className="mt-1 text-sm text-slate-600">A quiet safety/readiness view. It does not start collection, create Work, or expose website pages or facts.</p></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${held ? "bg-slate-100 text-slate-700" : "bg-sky-100 text-sky-900"}`}>{held ? "Held for terms review" : "Controlled pilot active"}</span></div><div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5"><Metric label="Recorded inspections" value={String(pilot.inspection_count)} /><Metric label="Technically eligible" value={String(pilot.eligible_count)} /><Metric label="Safely blocked" value={String(pilot.blocked_count)} /><Metric label="Unsupported" value={String(pilot.unsupported_count)} /><Metric label="Terms review pending" value={String(pilot.terms_pending_count)} /></div><p className="mt-5 text-xs leading-5 text-slate-500">Contract {pilot.source_contract_version}. {pilot.last_checked_at ? `Last retained inspection ${date(pilot.last_checked_at)}.` : "No retained website inspection yet."} Robots and technical availability are not reuse permission; no website fact can become public until the separate terms and evidence gate is approved.</p><Link href="/ops/system/website-pilot" className="mt-5 inline-flex min-h-11 items-center text-sm font-bold text-teal-900 underline decoration-teal-800/40 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800">Review website-domain terms gate</Link></section>;
+  const held = !pilot.source_enabled || !pilot.source_automated || approvedDomains === 0;
+  return <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-wrap items-baseline justify-between gap-3"><div><h3 className="text-xl font-bold">Official-website enrichment pilot</h3><p className="mt-1 text-sm text-slate-600">A quiet safety/readiness view. It does not start collection, create Work, or expose website pages or facts.</p></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${held ? "bg-slate-100 text-slate-700" : "bg-sky-100 text-sky-900"}`}>{held ? "Held for terms review" : "Controlled pilot active"}</span></div><div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-6"><Metric label="Approved domains" value={String(approvedDomains)} /><Metric label="Recorded inspections" value={String(pilot.inspection_count)} /><Metric label="Technically eligible" value={String(pilot.eligible_count)} /><Metric label="Safely blocked" value={String(pilot.blocked_count)} /><Metric label="Unsupported" value={String(pilot.unsupported_count)} /><Metric label="Terms review pending" value={String(pilot.terms_pending_count)} /></div><p className="mt-5 text-xs leading-5 text-slate-500">Contract {pilot.source_contract_version}. {pilot.last_checked_at ? `Last retained inspection ${date(pilot.last_checked_at)}.` : "No retained website inspection yet."} The scheduled runner remains idle until at least one specific hostname has a documented approval; robots and technical availability are not reuse permission.</p><Link href="/ops/system/website-pilot" className="mt-5 inline-flex min-h-11 items-center text-sm font-bold text-teal-900 underline decoration-teal-800/40 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800">Review website-domain terms gate</Link></section>;
 }
 
 function DirectoryObservability({ summary }: { summary: DirectoryObservabilitySummary }) {

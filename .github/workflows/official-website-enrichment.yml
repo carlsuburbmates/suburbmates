@@ -1,0 +1,29 @@
+name: Official website factual enrichment
+
+on:
+  schedule:
+    - cron: "13 20 * * 4"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: official-website-enrichment
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run one bounded terms-approved factual batch
+        env:
+          AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
+        run: |
+          run_key=$(printf 'official-website:%s' '${{ github.run_id }}' | sha256sum | cut -d ' ' -f 1)
+          curl --fail-with-body --retry 3 --retry-all-errors --request POST \
+            --header "authorization: Bearer $AUTOMATION_INGEST_TOKEN" \
+            --header "content-type: application/json" \
+            --data "{\"runKey\":\"$run_key\",\"limit\":25}" \
+            https://suburbmates.com.au/api/automation/official-website-enrichment

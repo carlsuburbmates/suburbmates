@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-**Status:** in delivery. The factual-pilot source contract, private inspection ledger and bounded parser are live; the owner-rich factual import and review-first profile fields are in this release. The source remains disabled until the required terms/robots sample review, and provider-backed category imagery remains pending provider setup.
+**Status:** in delivery. The factual-pilot source contract, private inspection ledger, bounded parser and weekly authenticated application runner are live. The runner remains functionally idle until an operator records an approval for a specific website hostname; it can then inspect only that host and fill only empty factual fields on unclaimed published profiles. The owner-rich factual import and review-first profile fields are in this release. Provider-backed category imagery remains pending provider setup.
 
 This plan implements D-018 and D-021. It supersedes older wording that treated all business-owned websites as permanently owner-only or that implied immediate bulk enrichment. The Decision Log and Target State remain authoritative if this plan conflicts with them.
 
@@ -116,7 +116,7 @@ Test a target of 80% quality-gate completion with under two minutes of operator 
 ## Sequenced implementation
 
 1. Amend source strategy, D-021 and capability authority; inspect current schema, evidence, media and observability contracts.
-2. Implement and test the factual-pilot source contract, schema/RLS protections, bounded crawler/parser, evidence/conflict lifecycle and quiet `/ops/System` health reporting.
+2. Implement and test the factual-pilot source contract, schema/RLS protections, bounded crawler/parser, evidence/conflict lifecycle, terms-gated weekly runner and quiet `/ops/System` health reporting. **Implemented; live operation is intentionally waiting for a real per-domain terms decision.**
 3. Run controlled non-production acceptance. Deploy only after the first source contract is proven; live-check non-mutating routes without fabricating durable production content.
 4. Implement the owner-authorised rich-import review, exact-image permission attestation and existing-media-workflow integration. **In progress:** the owner preview now reads bounded same-domain structured pages and can add a neutral fact-derived summary, services, booking/menu links, areas served and accessibility details to the existing immutable-audit review request. Existing private owner upload/moderation remains the real-media route; selected website-image retrieval still needs its explicit source-URL attestation step.
 5. Implement licensed category-context image selection, credits, fallbacks and owner replacement options after provider setup.
