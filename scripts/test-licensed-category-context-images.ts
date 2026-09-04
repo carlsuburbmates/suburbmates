@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+const migration = fs.readFileSync("supabase/migrations/20260905020000_licensed_category_context_images.sql", "utf8");
+const route = fs.readFileSync("web/src/app/api/automation/category-context-images/route.ts", "utf8");
+assert.match(migration, /ENABLE ROW LEVEL SECURITY/);
+assert.match(migration, /active = true/);
+assert.match(migration, /provider.*pexels/i);
+assert.match(migration, /never business media or evidence/i);
+assert.match(route, /AUTOMATION_INGEST_TOKEN/);
+assert.match(route, /PEXELS_API_KEY/);
+assert.match(route, /Pexels provider key is not configured/);
+assert.doesNotMatch(route, /Google|Maps|closed directory/i);
+console.log("Licensed category context stays attributable, public-safe and held without a provider key.");
