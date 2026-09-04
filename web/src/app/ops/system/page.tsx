@@ -18,10 +18,11 @@ type Job = { job_id: string; job_type: string; status: string; attempt_count: nu
 type Audit = { event_id: string; actor_type: string; action: string; entity_type: string; reason: string | null; before_state: Record<string, unknown> | null; after_state: Record<string, unknown> | null; evidence_reference: string; created_at: string };
 type AttentionItem = { title: string; explanation: string; reference: string };
 type WebsitePilot = { source_enabled: boolean; source_automated: boolean; source_contract_version: string; inspection_count: number; eligible_count: number; blocked_count: number; unsupported_count: number; terms_pending_count: number; last_checked_at: string | null };
+type ClaimedProfilePilot = { claimed_profiles: number; profiles_with_direct_action: number; profiles_with_three_services: number; profiles_with_owner_summary: number; profiles_with_real_media: number; quality_gate_ready: number };
 
 export default async function OpsSystemPage() {
   const supabase = await createOpsDataClient();
-  const [healthResult, jobsResult, auditResult, directoryObservability, profileCoverage, websitePilotResult, websiteDomainReviewsResult] = await Promise.all([
+  const [healthResult, jobsResult, auditResult, directoryObservability, profileCoverage, websitePilotResult, websiteDomainReviewsResult, claimedProfilePilotResult] = await Promise.all([
     supabase.rpc("ops_list_integration_health"),
     supabase.rpc("ops_list_automation_jobs", { p_limit: 200 }),
     supabase.rpc("ops_list_audit_events", { p_limit: 200 }),
@@ -29,8 +30,9 @@ export default async function OpsSystemPage() {
     getPublicProfileCoverage(supabase),
     supabase.rpc("ops_get_official_website_pilot_summary"),
     supabase.rpc("ops_list_official_website_domain_reviews", { p_status: null }),
+    supabase.rpc("ops_get_claimed_profile_pilot_summary"),
   ]);
-  if (healthResult.error || jobsResult.error || auditResult.error || websitePilotResult.error || websiteDomainReviewsResult.error) throw new Error("System health could not be loaded.");
+  if (healthResult.error || jobsResult.error || auditResult.error || websitePilotResult.error || websiteDomainReviewsResult.error || claimedProfilePilotResult.error) throw new Error("System health could not be loaded.");
   const health = (healthResult.data ?? []) as Health[];
   const jobs = (jobsResult.data ?? []) as Job[];
   const events = (auditResult.data ?? []) as Audit[];
@@ -39,6 +41,7 @@ export default async function OpsSystemPage() {
   const activeSourceRefreshes = health.filter((item) => item.status === "running" && item.integration_name.endsWith("_source"));
   const websitePilot = websitePilotResult.data?.[0] as WebsitePilot | undefined;
   const approvedWebsiteDomains = (websiteDomainReviewsResult.data ?? []).filter((review: { review_status: string }) => review.review_status === "approved").length;
+  const claimedProfilePilot = claimedProfilePilotResult.data?.[0] as ClaimedProfilePilot | undefined;
 
   return (
     <div className="space-y-8">
@@ -68,6 +71,7 @@ export default async function OpsSystemPage() {
       <DirectoryObservability summary={directoryObservability} />
       <PublicProfileCoverageSummary coverage={profileCoverage} />
       <OfficialWebsitePilotSummary pilot={websitePilot} approvedDomains={approvedWebsiteDomains} />
+      <ClaimedProfilePilotSummary pilot={claimedProfilePilot} />
 
       <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <summary className="cursor-pointer p-5 text-lg font-bold">Technical details and recent checks</summary>
@@ -83,6 +87,30 @@ export default async function OpsSystemPage() {
         <div className="border-t border-slate-200 p-5"><RetentionDetails health={health.find((item) => item.integration_name === "contact_retention")} /><DecisionRecord events={events} /></div>
       </details>
     </div>
+  );
+}
+
+function ClaimedProfilePilotSummary({ pilot }: { pilot: ClaimedProfilePilot | undefined }) {
+  if (!pilot) return null;
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-bold">Claimed-profile pilot readiness</h3>
+          <p className="mt-1 text-sm text-slate-600">A real-owner cohort grows only through genuine claims and approved profile improvements. It never enrols an owner or creates Work.</p>
+        </div>
+        <p className="text-sm font-bold text-slate-700">Target: 25–50 quality-ready profiles</p>
+      </div>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <Metric label="Claimed profiles" value={String(pilot.claimed_profiles)} />
+        <Metric label="Direct action" value={String(pilot.profiles_with_direct_action)} />
+        <Metric label="3+ services" value={String(pilot.profiles_with_three_services)} />
+        <Metric label="Owner summary" value={String(pilot.profiles_with_owner_summary)} />
+        <Metric label="Real media" value={String(pilot.profiles_with_real_media)} />
+        <Metric label="Quality-gate ready" value={String(pilot.quality_gate_ready)} />
+      </div>
+      <p className="mt-5 text-xs leading-5 text-slate-500">Ready means direct action, reported hours, at least three services, a summary and approved real business media. It is a quality target, not a payment or publication gate.</p>
+    </section>
   );
 }
 
