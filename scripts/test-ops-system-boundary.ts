@@ -15,6 +15,8 @@ assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.ops_list_audit_events
 for (const privateField of ["contact_email", "requester_email", "requester_name", "message", "operator_note", "vendor_id", "entity_id"]) assert(!migration.includes(`'${privateField}'`), `Audit projection must not expose ${privateField}.`);
 assert.match(page, /Intentionally disabled/);
 assert.match(page, /Public profile coverage/, "System must expose the quiet aggregate profile-coverage summary.");
+assert.match(page, /Licensed category context/, "System must expose the quiet licensed-category context state.");
+assert.match(page, /licensed_category_context_images/, "Category context may count only its public-safe catalogue.");
 assert.match(page, /getPublicProfileCoverage\(supabase\)/, "Profile coverage must use the existing authenticated System data client.");
 assert.match(profileCoverage, /from\("published_vendors"\)/, "Profile coverage may read only the safe public projection.");
 assert.match(profileCoverage, /head: true/, "Profile coverage must count without loading individual profiles.");

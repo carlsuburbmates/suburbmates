@@ -22,7 +22,7 @@ type ClaimedProfilePilot = { claimed_profiles: number; profiles_with_direct_acti
 
 export default async function OpsSystemPage() {
   const supabase = await createOpsDataClient();
-  const [healthResult, jobsResult, auditResult, directoryObservability, profileCoverage, websitePilotResult, websiteDomainReviewsResult, claimedProfilePilotResult] = await Promise.all([
+  const [healthResult, jobsResult, auditResult, directoryObservability, profileCoverage, websitePilotResult, websiteDomainReviewsResult, claimedProfilePilotResult, categoryContextResult] = await Promise.all([
     supabase.rpc("ops_list_integration_health"),
     supabase.rpc("ops_list_automation_jobs", { p_limit: 200 }),
     supabase.rpc("ops_list_audit_events", { p_limit: 200 }),
@@ -31,8 +31,9 @@ export default async function OpsSystemPage() {
     supabase.rpc("ops_get_official_website_pilot_summary"),
     supabase.rpc("ops_list_official_website_domain_reviews", { p_status: null }),
     supabase.rpc("ops_get_claimed_profile_pilot_summary"),
+    supabase.from("licensed_category_context_images").select("category_slug", { count: "exact", head: true }).eq("active", true),
   ]);
-  if (healthResult.error || jobsResult.error || auditResult.error || websitePilotResult.error || websiteDomainReviewsResult.error || claimedProfilePilotResult.error) throw new Error("System health could not be loaded.");
+  if (healthResult.error || jobsResult.error || auditResult.error || websitePilotResult.error || websiteDomainReviewsResult.error || claimedProfilePilotResult.error || categoryContextResult.error) throw new Error("System health could not be loaded.");
   const health = (healthResult.data ?? []) as Health[];
   const jobs = (jobsResult.data ?? []) as Job[];
   const events = (auditResult.data ?? []) as Audit[];
@@ -72,6 +73,7 @@ export default async function OpsSystemPage() {
       <PublicProfileCoverageSummary coverage={profileCoverage} />
       <OfficialWebsitePilotSummary pilot={websitePilot} approvedDomains={approvedWebsiteDomains} />
       <ClaimedProfilePilotSummary pilot={claimedProfilePilot} />
+      <LicensedCategoryContextSummary activeCount={categoryContextResult.count ?? 0} providerConfigured={Boolean(process.env.PEXELS_API_KEY)} />
 
       <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <summary className="cursor-pointer p-5 text-lg font-bold">Technical details and recent checks</summary>
@@ -88,6 +90,11 @@ export default async function OpsSystemPage() {
       </details>
     </div>
   );
+}
+
+function LicensedCategoryContextSummary({ activeCount, providerConfigured }: { activeCount: number; providerConfigured: boolean }) {
+  const held = !providerConfigured || activeCount === 0;
+  return <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-wrap items-baseline justify-between gap-3"><div><h3 className="text-xl font-bold">Licensed category context</h3><p className="mt-1 text-sm text-slate-600">Credited category artwork for otherwise media-free unclaimed profiles. It never depicts, verifies or ranks a business.</p></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${held ? "bg-slate-100 text-slate-700" : "bg-green-100 text-green-800"}`}>{held ? "Held" : "Active"}</span></div><div className="mt-5 grid gap-4 sm:grid-cols-2"><Metric label="Active licensed category images" value={String(activeCount)} /><Metric label="Provider connection" value={providerConfigured ? "Configured" : "Awaiting key"} /></div><p className="mt-5 text-xs leading-5 text-slate-500">The weekly automated refresh runs quietly. A missing credential or empty catalogue creates no Work and changes no profile; owner-approved listing media always takes precedence.</p></section>;
 }
 
 function ClaimedProfilePilotSummary({ pilot }: { pilot: ClaimedProfilePilot | undefined }) {
