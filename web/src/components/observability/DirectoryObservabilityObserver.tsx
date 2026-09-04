@@ -51,8 +51,19 @@ export function DirectoryObservabilityObserver() {
   return null;
 }
 
-export function DirectoryProfileView() {
-  useEffect(() => send("business_profile_view"), []);
+export function DirectoryProfileView({ rich = false }: { rich?: boolean }) {
+  useEffect(() => {
+    send("business_profile_view");
+    send(rich ? "profile_cohort_rich_view" : "profile_cohort_baseline_view");
+    const onClick = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+      if (!target) return;
+      const action = target.dataset.directoryAction === "booking" || target.dataset.directoryAction === "menu" || outboundEvent(target.href);
+      if (action) send(rich ? "profile_cohort_rich_contact" : "profile_cohort_baseline_contact");
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [rich]);
   return null;
 }
 

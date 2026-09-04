@@ -178,7 +178,7 @@ export default async function VendorWebsite({ params }: PageProps) {
 
   return (
     <PublicDirectoryShell>
-      <DirectoryProfileView />
+      <DirectoryProfileView rich={Boolean(vendor.description?.trim()) && services.length >= 3 && photos.length > 0 && Boolean(vendor.trading_hours?.trim())} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
