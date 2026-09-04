@@ -38,7 +38,7 @@ const keywordByCategory: Record<string, string> = {
 // These terms keep a category visual from suggesting a particular person,
 // business, logo, premises or branded product. This is a conservative lexical
 // gate, not a claim that the asset depicts the listed business.
-const unsafeAlt = /\b(person|people|woman|women|man|men|child|children|baby|face|portrait|selfie|team|employee|customer|worker|working|mechanic|technician|electrician|hand|hands|logo|brand|sign|storefront|shopfront|shop|store|workshop|garage|building|hotel|office|interior|living room|restaurant exterior|business exterior|text|lettering)\b/i;
+const unsafeAlt = /\b(person|people|woman|women|man|men|child|children|baby|face|portrait|selfie|team|employee|customer|worker|working|mechanic|technician|electrician|hand|hands|logo|brand|sign|storefront|shopfront|shop|store|boutique|workshop|garage|building|hotel|office|interior|indoor|living room|room|scene|gym|restaurant exterior|business exterior|text|lettering)\b/i;
 
 export function categoryImageKeyword(categorySlug: string, services: string[] = []) {
   const direct = keywordByCategory[categorySlug];
