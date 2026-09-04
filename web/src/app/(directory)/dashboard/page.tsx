@@ -6,6 +6,7 @@ import { BadgeCheck, Camera, ExternalLink, FileText, Phone, Sparkles } from 'luc
 import ProfileEditor from './ProfileEditor'
 import ClaimRequests from './ClaimRequests'
 import MediaProposalForm from './MediaProposalForm'
+import WebsiteMediaProposalForm from './WebsiteMediaProposalForm'
 
 type OwnerVendor = {
   id: string
@@ -189,6 +190,7 @@ export default async function DashboardPage({
                   </div>
                   <div id={`media-${vendor.id}`}>
                     <MediaProposalForm vendorId={vendor.id} />
+                    <WebsiteMediaProposalForm vendorId={vendor.id} website={vendor.website} />
                   </div>
                   {mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).length > 0 && <div className="border-t border-slate-100 pt-5"><h4 className="font-bold">Image review status</h4><div className="mt-3 grid gap-3 sm:grid-cols-2">{mediaProposals.filter((proposal) => proposal.vendor_id === vendor.id).map((proposal) => <div key={proposal.proposal_id} className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-sm"><Image src={`/api/owner/media/${proposal.proposal_id}`} alt={proposal.alt_text} width={640} height={360} unoptimized className="h-36 w-full bg-white object-contain" /><div className="p-3"><span className="font-semibold">{proposal.media_kind === 'logo' ? 'Logo' : 'Listing image'}:</span> {proposal.proposal_status.replaceAll('_', ' ')}{proposal.operator_reason && <p className="mt-1 text-slate-600">{proposal.operator_reason}</p>}</div></div>)}</div></div>}
                 </div>
