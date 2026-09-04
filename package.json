@@ -32,6 +32,7 @@
     "official-website-terms-gate:test": "tsx scripts/test-official-website-domain-terms-gate.ts",
     "official-website-application:test": "tsx scripts/test-official-website-application.ts",
     "claimed-profile-pilot:test": "tsx scripts/test-claimed-profile-pilot-readiness.ts",
+    "pexels-category-images:test": "tsx scripts/test-pexels-category-images.ts",
     "public-source-summary:test": "tsx scripts/test-public-source-summary-boundary.ts",
     "public-profile-facts:test": "tsx scripts/test-public-profile-facts.ts",
     "current-authority:test": "tsx scripts/test-current-authority-boundary.ts",
