@@ -16,23 +16,26 @@ type Health = {
 type Job = { job_id: string; job_type: string; status: string; attempt_count: number; max_attempts: number; created_at: string };
 type Audit = { event_id: string; actor_type: string; action: string; entity_type: string; reason: string | null; before_state: Record<string, unknown> | null; after_state: Record<string, unknown> | null; evidence_reference: string; created_at: string };
 type AttentionItem = { title: string; explanation: string; reference: string };
+type WebsitePilot = { source_enabled: boolean; source_automated: boolean; source_contract_version: string; inspection_count: number; eligible_count: number; blocked_count: number; unsupported_count: number; terms_pending_count: number; last_checked_at: string | null };
 
 export default async function OpsSystemPage() {
   const supabase = await createOpsDataClient();
-  const [healthResult, jobsResult, auditResult, directoryObservability, profileCoverage] = await Promise.all([
+  const [healthResult, jobsResult, auditResult, directoryObservability, profileCoverage, websitePilotResult] = await Promise.all([
     supabase.rpc("ops_list_integration_health"),
     supabase.rpc("ops_list_automation_jobs", { p_limit: 200 }),
     supabase.rpc("ops_list_audit_events", { p_limit: 200 }),
     getDirectoryObservabilitySummary(),
     getPublicProfileCoverage(supabase),
+    supabase.rpc("ops_get_official_website_pilot_summary"),
   ]);
-  if (healthResult.error || jobsResult.error || auditResult.error) throw new Error("System health could not be loaded.");
+  if (healthResult.error || jobsResult.error || auditResult.error || websitePilotResult.error) throw new Error("System health could not be loaded.");
   const health = (healthResult.data ?? []) as Health[];
   const jobs = (jobsResult.data ?? []) as Job[];
   const events = (auditResult.data ?? []) as Audit[];
   const attention = attentionItems(health, jobs);
   const dormant = health.filter((item) => item.status === "disabled" || item.status === "unknown");
   const activeSourceRefreshes = health.filter((item) => item.status === "running" && item.integration_name.endsWith("_source"));
+  const websitePilot = websitePilotResult.data?.[0] as WebsitePilot | undefined;
 
   return (
     <div className="space-y-8">
@@ -61,6 +64,7 @@ export default async function OpsSystemPage() {
 
       <DirectoryObservability summary={directoryObservability} />
       <PublicProfileCoverageSummary coverage={profileCoverage} />
+      <OfficialWebsitePilotSummary pilot={websitePilot} />
 
       <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <summary className="cursor-pointer p-5 text-lg font-bold">Technical details and recent checks</summary>
@@ -77,6 +81,12 @@ export default async function OpsSystemPage() {
       </details>
     </div>
   );
+}
+
+function OfficialWebsitePilotSummary({ pilot }: { pilot: WebsitePilot | undefined }) {
+  if (!pilot) return null;
+  const held = !pilot.source_enabled || !pilot.source_automated;
+  return <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-wrap items-baseline justify-between gap-3"><div><h3 className="text-xl font-bold">Official-website enrichment pilot</h3><p className="mt-1 text-sm text-slate-600">A quiet safety/readiness view. It does not start collection, create Work, or expose website pages or facts.</p></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${held ? "bg-slate-100 text-slate-700" : "bg-sky-100 text-sky-900"}`}>{held ? "Held for terms review" : "Controlled pilot active"}</span></div><div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5"><Metric label="Recorded inspections" value={String(pilot.inspection_count)} /><Metric label="Technically eligible" value={String(pilot.eligible_count)} /><Metric label="Safely blocked" value={String(pilot.blocked_count)} /><Metric label="Unsupported" value={String(pilot.unsupported_count)} /><Metric label="Terms review pending" value={String(pilot.terms_pending_count)} /></div><p className="mt-5 text-xs leading-5 text-slate-500">Contract {pilot.source_contract_version}. {pilot.last_checked_at ? `Last retained inspection ${date(pilot.last_checked_at)}.` : "No retained website inspection yet."} Robots and technical availability are not reuse permission; no website fact can become public until the separate terms and evidence gate is approved.</p></section>;
 }
 
 function DirectoryObservability({ summary }: { summary: DirectoryObservabilitySummary }) {

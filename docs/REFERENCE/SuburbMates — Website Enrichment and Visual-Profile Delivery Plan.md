@@ -24,6 +24,10 @@ The system is autonomous for routine, low-risk work. It is not autonomous for le
 | `official_business_site` evidence records | 0 |
 | Media proposals | 0 |
 
+### First technical sample — 4 September 2026
+
+A read-only, deterministic 25-site sample across 20 categories and 8 suburbs completed without retaining website content, facts or identifiers. **12** sites passed the technical robots/structured-data inspection; **7** were safely blocked and **6** were unsupported. The most common safe holds were oversized pages (5), unavailable robots rules (3) and robots restrictions (3). The result is feasibility evidence only: terms/reuse review remains pending, the source contract remains disabled, and no website result is permission to retain, display or apply a fact.
+
 The directory cannot yet measure a 25–50 claimed-business rich-profile pilot. It must first make unclaimed profiles useful, make claiming compelling, and then build a claimed pilot cohort without creating fake production records.
 
 ## Non-negotiable boundaries
