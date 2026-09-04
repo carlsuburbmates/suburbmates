@@ -26,19 +26,19 @@ const keywordByCategory: Record<string, string> = {
   bakery: "fresh bread", cafe: "coffee cup", restaurant: "restaurant table", bar: "cocktail glass", pub: "pub interior",
   pet: "dog toy", "pet-grooming": "dog grooming tools", veterinary: "veterinary stethoscope",
   hairdresser: "hair styling tools", barber: "barber tools", beauty: "beauty products",
-  electrician: "electrical tools", plumber: "plumbing tools", builder: "construction tools", carpenter: "woodworking tools",
+  electrician: "electrical pliers isolated", plumber: "plumbing tools", builder: "construction tools", carpenter: "woodworking tools",
   garden: "garden plants", gardener: "garden tools", florist: "flowers still life",
   bicycle: "bicycle detail", "car-repair": "car repair tools", tyres: "car tyre detail",
   dentist: "dental tools", pharmacy: "pharmacy shelves", clinic: "medical equipment",
   accountant: "calculator desk", lawyer: "law books", "tax-advisor": "calculator documents",
   fitness: "gym equipment", dance: "dance studio", art: "artist paint brushes", books: "bookshelf",
-  fashion: "clothing rack", furniture: "furniture interior", homewares: "homeware objects",
+  fashion: "clothing rack", furniture: "wooden chair still life", homewares: "homeware objects",
 };
 
 // These terms keep a category visual from suggesting a particular person,
 // business, logo, premises or branded product. This is a conservative lexical
 // gate, not a claim that the asset depicts the listed business.
-const unsafeAlt = /\b(person|people|woman|women|man|men|child|children|baby|face|portrait|selfie|team|employee|customer|worker|working|mechanic|technician|hand|hands|logo|brand|sign|storefront|shopfront|shop|store|workshop|garage|building|hotel|office|interior|restaurant exterior|business exterior|text|lettering)\b/i;
+const unsafeAlt = /\b(person|people|woman|women|man|men|child|children|baby|face|portrait|selfie|team|employee|customer|worker|working|mechanic|technician|electrician|hand|hands|logo|brand|sign|storefront|shopfront|shop|store|workshop|garage|building|hotel|office|interior|living room|restaurant exterior|business exterior|text|lettering)\b/i;
 
 export function categoryImageKeyword(categorySlug: string, services: string[] = []) {
   const direct = keywordByCategory[categorySlug];
