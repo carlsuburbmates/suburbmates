@@ -23,16 +23,20 @@ type PexelsPhoto = {
 };
 
 const keywordByCategory: Record<string, string> = {
+  "advertising-agency": "creative advertising team meeting", appliance: "home appliance showroom", "baby-goods": "baby products store",
   bakery: "local bakery fresh bread", cafe: "local cafe coffee", restaurant: "local restaurant dining", bar: "local cocktail bar", pub: "local pub interior",
+  beverages: "unbranded drinks bottles", bookmaker: "horse racing finish", copyshop: "commercial printing shop",
   pet: "local pet care", "pet-grooming": "dog grooming salon", veterinary: "veterinarian caring for dog",
   hairdresser: "local hair salon", barber: "local barber at work", beauty: "local beauty salon",
-  electrician: "electrician at work", plumber: "plumber at work", builder: "local builder at work", carpenter: "carpenter workshop",
+  electrical: "electrical wiring installation", electrician: "electrician at work", plumber: "plumber at work", builder: "local builder at work", carpenter: "carpenter workshop",
   garden: "local garden plants", gardener: "gardener at work", florist: "local florist flowers",
-  bicycle: "local bicycle shop", "car-repair": "car repair workshop", tyres: "car tyre service",
+  bicycle: "local bicycle shop", "car-repair": "car repair workshop", fuel: "fuel pump nozzle", tyres: "car tyre service",
   dentist: "local dental clinic", pharmacy: "local pharmacy interior", clinic: "local health clinic",
   accountant: "local accountant office", lawyer: "local lawyer office", "tax-advisor": "tax advisor meeting",
   fitness: "local fitness class", dance: "local dance class", art: "local artist studio", books: "local bookshop interior",
   fashion: "local fashion boutique", furniture: "local furniture showroom", homewares: "local homewares shop",
+  glaziery: "glazier installing window", "hearing-aids": "hearing aid device", it: "computer technician working",
+  pawnbroker: "second hand valuables shop", signmaker: "sign maker workshop", tattoo: "tattoo artist at work", "travel-agency": "travel agent consultation",
 };
 
 const unsafeAlt = /\b(logo|brand|trademark|signage|watermark|text|lettering)\b/i;
