@@ -27,6 +27,7 @@ for (const privateRoute of ["api", "auth", "claim", "dashboard", "login", "ops",
 assert.match(route, /isDirectoryObservabilityEvent/);
 assert.match(route, /body\.length > 96/);
 assert.match(route, /request\.headers\.get\("origin"\)/);
+assert.match(route, /Object\.keys\(payload\)\.length !== 1/);
 assert.match(summary, /SUM\(_sample_interval\) AS count/);
 assert.match(summary, /rumPageloadEventsAdaptiveGroups/);
 assert.match(system, /Directory activity \(last 7 days\)/);

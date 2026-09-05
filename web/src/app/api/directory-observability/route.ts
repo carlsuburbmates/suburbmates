@@ -9,6 +9,7 @@ export async function POST(request: Request) {
   if (body.length > 96) return new Response(null, { status: 400 });
   try {
     const payload = JSON.parse(body) as { event?: unknown };
+    if (!payload || typeof payload !== "object" || Object.keys(payload).length !== 1 || !("event" in payload)) return new Response(null, { status: 400 });
     if (!isDirectoryObservabilityEvent(payload.event)) return new Response(null, { status: 400 });
     await recordDirectoryObservabilityEvent(payload.event);
   } catch {
