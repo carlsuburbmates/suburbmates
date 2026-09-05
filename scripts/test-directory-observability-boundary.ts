@@ -34,6 +34,10 @@ assert.match(system, /It creates no work or alerts/);
 assert.match(system, /not a person-level funnel/);
 assert.match(system, /Rich-profile pilot comparison/);
 assert.match(system, /profile_cohort_rich_view/);
+assert.match(system, /Official-website enrichment comparison/);
+assert.match(system, /profile_cohort_website_enriched_view/);
+assert.match(observer, /websiteEnriched/);
+assert.match(observer, /profile_cohort_website_unchanged_contact/);
 
 for (const source of [events, observer, route, summary]) {
   assert.doesNotMatch(source, /document\.cookie|localStorage|sessionStorage|clientIP|searchParams/);

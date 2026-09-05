@@ -129,6 +129,7 @@ export default async function VendorWebsite({ params }: PageProps) {
   if (vendorResult.error || !vendor) notFound();
   const media = (mediaResult.data ?? []) as PublicMedia[];
   const sourceSummaries = (sourceSummaryResult.data ?? []) as PublicSourceSummary[];
+  const websiteEnriched = sourceSummaries.some((source) => source.source_key === "official_business_site");
   const logo = media.find((item) => item.media_kind === "logo") ?? null;
   const photos = media.filter((item) => item.media_kind === "listing_image");
   const suburbName = vendor.suburbs?.name ?? vendor.suburb_slug;
@@ -191,7 +192,10 @@ export default async function VendorWebsite({ params }: PageProps) {
 
   return (
     <PublicDirectoryShell>
-      <DirectoryProfileView rich={Boolean(vendor.description?.trim()) && services.length >= 3 && photos.length > 0 && Boolean(vendor.trading_hours?.trim())} />
+      <DirectoryProfileView
+        rich={Boolean(vendor.description?.trim()) && services.length >= 3 && photos.length > 0 && Boolean(vendor.trading_hours?.trim())}
+        websiteEnriched={websiteEnriched}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
