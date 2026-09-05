@@ -8,6 +8,9 @@ const ownerRoute = fs.readFileSync(path.join(root, "web/src/app/api/owner/media/
 const ownerPreviewRoute = fs.readFileSync(path.join(root, "web/src/app/api/owner/media/[proposalId]/route.ts"), "utf8");
 const publicRoute = fs.readFileSync(path.join(root, "web/src/app/api/media/[mediaId]/route.ts"), "utf8");
 const proposalForm = fs.readFileSync(path.join(root, "web/src/app/(directory)/dashboard/MediaProposalForm.tsx"), "utf8");
+const websiteProposalForm = fs.readFileSync(path.join(root, "web/src/app/(directory)/dashboard/WebsiteMediaProposalForm.tsx"), "utf8");
+const websitePreviewRoute = fs.readFileSync(path.join(root, "web/src/app/api/owner/media/website-preview/route.ts"), "utf8");
+const websiteMediaUtility = fs.readFileSync(path.join(root, "web/src/lib/owner-website-media.ts"), "utf8");
 const browserAcceptance = fs.readFileSync(path.join(root, "scripts/d017-browser-acceptance.mjs"), "utf8");
 
 assert.match(migration, /'owner-media-proposals', 'owner-media-proposals', false, 2097152/);
@@ -26,6 +29,15 @@ assert.doesNotMatch(ownerPreviewRoute, /getPublicUrl/);
 assert.match(proposalForm, /const form = event\.currentTarget/);
 assert.match(proposalForm, /new FormData\(form\)/);
 assert.match(proposalForm, /form\.reset\(\)/);
+assert.match(websiteProposalForm, /Find website images/);
+assert.match(websiteProposalForm, /I am authorised to ask SuburbMates/);
+assert.match(websiteProposalForm, /Rights attestation/);
+assert.match(websitePreviewRoute, /supabase\.auth\.getUser\(\)/);
+assert.match(websitePreviewRoute, /list_current_owner_vendors_with_channels/);
+assert.match(websitePreviewRoute, /private, no-store/);
+assert.match(websiteMediaUtility, /MAX_BYTES = 2 \* 1024 \* 1024/);
+assert.match(websiteMediaUtility, /sameOwnerWebsiteHost/);
+assert.match(websiteMediaUtility, /redirect: "manual"/);
 assert.match(publicRoute, /NEXT_PUBLIC_PUBLIC_LAUNCH_ENABLED !== "true"/);
 assert.match(publicRoute, /resolve_public_media/);
 assert.doesNotMatch(ownerRoute, /getPublicUrl/);

@@ -16,6 +16,13 @@ export type OwnerWebsitePreview = {
   menuUrl: string | null;
   areaServed: string[];
   accessibilityFeatures: string[];
+  imageCandidates: OwnerWebsiteImageCandidate[];
+};
+
+export type OwnerWebsiteImageCandidate = {
+  url: string;
+  mediaKind: "logo" | "listing_image";
+  altText: string;
 };
 
 type JsonObject = Record<string, unknown>;
@@ -158,6 +165,64 @@ function factualSummary(services: string[], areaServed: string[]) {
   return summary && summary.length <= 500 ? summary : null;
 }
 
+function htmlAttributes(tag: string) {
+  const attributes = new Map<string, string>();
+  for (const match of tag.matchAll(/([:\w-]+)\s*=\s*(["'])(.*?)\2/gi)) {
+    attributes.set(match[1].toLowerCase(), match[3].replaceAll("&amp;", "&"));
+  }
+  return attributes;
+}
+
+function websiteImageUrl(value: unknown, sourceUrl: string) {
+  const raw = cleanText(value, 1500);
+  if (!raw) return null;
+  try {
+    const source = new URL(sourceUrl);
+    const url = new URL(raw, source);
+    if (url.protocol !== "https:" || url.username || url.password || !sameHostOrWwwVariant(source.hostname, url.hostname) || /\.svg(?:$|\?)/i.test(url.pathname + url.search)) return null;
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function structuredImageValues(value: unknown): Array<{ url: unknown; alt: unknown }> {
+  if (Array.isArray(value)) return value.flatMap(structuredImageValues);
+  if (typeof value === "string") return [{ url: value, alt: null }];
+  if (!isJsonObject(value)) return [];
+  return [{ url: value.contentUrl ?? value.url ?? value["@id"], alt: value.caption ?? value.name }];
+}
+
+function extractOwnerWebsiteImageCandidates(html: string, sourceUrl: string, records: JsonObject[]) {
+  const candidates: OwnerWebsiteImageCandidate[] = [];
+  const add = (value: unknown, mediaKind: "logo" | "listing_image", alt: unknown) => {
+    const url = websiteImageUrl(value, sourceUrl);
+    if (!url || candidates.some((candidate) => candidate.url === url)) return;
+    const altText = cleanText(alt, 160) ?? (mediaKind === "logo" ? "Business logo from the recorded website" : "Business image from the recorded website");
+    candidates.push({ url, mediaKind, altText });
+  };
+  for (const record of records) {
+    for (const image of structuredImageValues(record.logo)) add(image.url, "logo", image.alt);
+    for (const image of structuredImageValues(record.image)) add(image.url, "listing_image", image.alt);
+  }
+  for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
+    const attributes = htmlAttributes(tag);
+    const key = (attributes.get("property") ?? attributes.get("name") ?? "").toLowerCase();
+    if (!["og:image", "og:image:url", "twitter:image", "twitter:image:src"].includes(key)) continue;
+    add(attributes.get("content"), "listing_image", attributes.get("alt"));
+  }
+  for (const tag of (html.match(/<img\b[^>]*>/gi) ?? []).slice(0, 24)) {
+    const attributes = htmlAttributes(tag);
+    const width = Number(attributes.get("width") ?? 0);
+    const height = Number(attributes.get("height") ?? 0);
+    if ((width > 0 && width < 240) || (height > 0 && height < 160)) continue;
+    const kind = /logo/i.test(`${attributes.get("alt") ?? ""} ${attributes.get("class") ?? ""}`) ? "logo" : "listing_image";
+    add(attributes.get("src"), kind, attributes.get("alt"));
+  }
+  return candidates.slice(0, 6);
+}
+
 export function extractOwnerWebsitePreview(html: string, sourceUrl: string, checkedAt: string): OwnerWebsitePreview {
   const records = readJsonLd(html);
   const sameAs = records.flatMap((record) => Array.isArray(record.sameAs) ? record.sameAs : [record.sameAs]);
@@ -185,6 +250,7 @@ export function extractOwnerWebsitePreview(html: string, sourceUrl: string, chec
     menuUrl: firstValue(records.map((record) => cleanHttpsUrl(record.menu))),
     areaServed,
     accessibilityFeatures,
+    imageCandidates: extractOwnerWebsiteImageCandidates(html, sourceUrl, records),
   };
 }
 

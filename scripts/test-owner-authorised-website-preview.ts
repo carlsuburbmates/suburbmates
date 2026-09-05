@@ -4,8 +4,9 @@ import { extractOwnerWebsitePreview } from "../web/src/lib/owner-authorised-webs
 
 const preview = extractOwnerWebsitePreview(`
   <html><head>
+    <meta property="og:image" content="https://example.test/images/cafe-hero.jpg" />
     <script type="application/ld+json">
-      {"@context":"https://schema.org","@type":"LocalBusiness","name":"Example Cafe","description":"Do not copy this page text.","telephone":"03 9000 1234","email":"hello@example.test","openingHoursSpecification":[{"dayOfWeek":["https://schema.org/Monday","https://schema.org/Tuesday"],"opens":"08:00","closes":"16:00"}],"sameAs":["https://www.facebook.com/example/?tracking=1","https://www.instagram.com/example/#about","https://example.test/about"],"makesOffer":[{"itemOffered":{"name":"Breakfast catering"}},{"itemOffered":{"name":"Coffee beans"}}],"areaServed":[{"name":"Preston"},{"name":"Thornbury"}],"amenityFeature":{"name":"Step-free entrance"},"potentialAction":{"@type":"ReserveAction","target":"https://example.test/book"},"menu":"https://example.test/menu"}
+      {"@context":"https://schema.org","@type":"LocalBusiness","name":"Example Cafe","description":"Do not copy this page text.","logo":{"url":"https://example.test/images/logo.png","caption":"Example Cafe logo"},"telephone":"03 9000 1234","email":"hello@example.test","openingHoursSpecification":[{"dayOfWeek":["https://schema.org/Monday","https://schema.org/Tuesday"],"opens":"08:00","closes":"16:00"}],"sameAs":["https://www.facebook.com/example/?tracking=1","https://www.instagram.com/example/#about","https://example.test/about"],"makesOffer":[{"itemOffered":{"name":"Breakfast catering"}},{"itemOffered":{"name":"Coffee beans"}}],"areaServed":[{"name":"Preston"},{"name":"Thornbury"}],"amenityFeature":{"name":"Step-free entrance"},"potentialAction":{"@type":"ReserveAction","target":"https://example.test/book"},"menu":"https://example.test/menu"}
     </script>
   </head></html>
 `, "https://example.test/", "2026-09-04T00:00:00.000Z");
@@ -21,6 +22,10 @@ assert.deepEqual(preview.accessibilityFeatures, ["Step-free entrance"]);
 assert.equal(preview.bookingUrl, "https://example.test/book");
 assert.equal(preview.menuUrl, "https://example.test/menu");
 assert.equal(preview.summary, "Offers Breakfast catering, Coffee beans. Serves Preston, Thornbury.");
+assert.deepEqual(preview.imageCandidates, [
+  { url: "https://example.test/images/logo.png", mediaKind: "logo", altText: "Example Cafe logo" },
+  { url: "https://example.test/images/cafe-hero.jpg", mediaKind: "listing_image", altText: "Business image from the recorded website" },
+]);
 assert.equal("description" in preview, false, "Website copy must never be extracted into the owner preview.");
 
 const route = fs.readFileSync("web/src/app/api/owner/website-preview/route.ts", "utf8");
@@ -39,6 +44,9 @@ assert.match(utility, /sameHostOrWwwVariant/);
 assert.match(utility, /approvedLinkedPages/);
 assert.match(utility, /slice\(0, 4\)/);
 assert.match(utility, /No page text, HTML, media, cookies, or result is persisted here/);
+assert.match(utility, /imageCandidates/);
+assert.match(utility, /sameHostOrWwwVariant/);
+assert.match(utility, /slice\(0, 6\)/);
 assert.doesNotMatch(utility, /description:/);
 assert.match(utility, /factualSummary/);
 assert.match(component, /Factual business summary/);
