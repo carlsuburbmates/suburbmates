@@ -26,6 +26,10 @@ export type OfficialWebsiteInspection = {
   contentFingerprint: string | null;
   facts: WebsiteFact[];
   reason: string | null;
+  termsStatus: "automated_clear" | "manual_review" | "approved" | "blocked";
+  termsUrl: string | null;
+  termsFingerprint: string | null;
+  termsBasis: string;
 };
 
 type JsonObject = Record<string, unknown>;
@@ -256,8 +260,57 @@ async function fingerprint(value: string) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function result(outcome: OfficialWebsiteInspection["outcome"], checkedAt: string, reason: string): OfficialWebsiteInspection {
-  return { outcome, sourceUrl: null, checkedAt, contentFingerprint: null, facts: [], reason };
+function result(outcome: OfficialWebsiteInspection["outcome"], checkedAt: string, reason: string, termsStatus: OfficialWebsiteInspection["termsStatus"] = "manual_review"): OfficialWebsiteInspection {
+  return { outcome, sourceUrl: null, checkedAt, contentFingerprint: null, facts: [], reason, termsStatus, termsUrl: null, termsFingerprint: null, termsBasis: "inspection_not_eligible" };
+}
+
+function linkedTermsUrl(html: string, sourceUrl: URL) {
+  for (const match of html.matchAll(/<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a\s*>/gi)) {
+    const label = match[3].replace(/<[^>]+>/g, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim();
+    if (!/(terms(?:\s+(?:of use|and conditions|conditions))?|legal|acceptable use)/i.test(`${label} ${match[2]}`)) continue;
+    try {
+      const url = new URL(match[2], sourceUrl);
+      if (url.protocol === "https:" && !url.username && !url.password && !url.port && sameHostOrWwwVariant(sourceUrl.hostname, url.hostname)) {
+        url.hash = "";
+        return url;
+      }
+    } catch { /* Ignore malformed links. */ }
+  }
+  return null;
+}
+
+function termsRestrictionSignal(html: string) {
+  const text = html.replace(/<script\b[\s\S]*?<\/script\s*>/gi, " ").replace(/<style\b[\s\S]*?<\/style\s*>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").toLowerCase();
+  const automation = /(scrap(?:e|ing)|crawl(?:er|ing)?|data\s*mining|automated\s+(?:means|system|tool)|robot|spider|systematic\s+(?:collection|extraction))/;
+  const restriction = /(must\s+not|may\s+not|not\s+permitted|prohibit(?:ed|s)?|without\s+(?:our\s+)?(?:prior\s+)?(?:written\s+)?permission|unauthori[sz]ed)/;
+  const windowSize = 240;
+  for (const match of text.matchAll(new RegExp(automation.source, "g"))) {
+    const start = Math.max(0, (match.index ?? 0) - windowSize);
+    const end = Math.min(text.length, (match.index ?? 0) + match[0].length + windowSize);
+    if (restriction.test(text.slice(start, end))) return true;
+  }
+  return false;
+}
+
+async function assessLinkedTerms(html: string, sourceUrl: URL, robotsText: string | null, fetchImpl: FetchLike, userAgent: string) {
+  const termsUrl = linkedTermsUrl(html, sourceUrl);
+  if (!termsUrl) return { status: "automated_clear" as const, url: null, fingerprint: null, basis: "no_linked_terms_restriction_found" };
+  if (robotsText !== null && !isRobotsPathAllowed(robotsText, userAgent, `${termsUrl.pathname}${termsUrl.search}`)) {
+    return { status: "manual_review" as const, url: termsUrl.toString(), fingerprint: null, basis: "linked_terms_disallowed_by_robots" };
+  }
+  try {
+    const response = await fetchImpl(termsUrl, { redirect: "manual", signal: AbortSignal.timeout(12_000), headers: { "user-agent": userAgent } });
+    if (!response.ok || !response.headers.get("content-type")?.toLowerCase().includes("text/html")) {
+      return { status: "manual_review" as const, url: termsUrl.toString(), fingerprint: null, basis: "linked_terms_unavailable" };
+    }
+    const termsHtml = await readBoundedHtml(response);
+    const termsFingerprint = await fingerprint(termsHtml);
+    return termsRestrictionSignal(termsHtml)
+      ? { status: "manual_review" as const, url: termsUrl.toString(), fingerprint: termsFingerprint, basis: "possible_automation_restriction" }
+      : { status: "automated_clear" as const, url: termsUrl.toString(), fingerprint: termsFingerprint, basis: "linked_terms_checked_no_restriction_found" };
+  } catch {
+    return { status: "manual_review" as const, url: termsUrl.toString(), fingerprint: null, basis: "linked_terms_unavailable" };
+  }
 }
 
 /**
@@ -268,10 +321,12 @@ export async function inspectOfficialWebsite(value: string, options: {
   fetchImpl?: FetchLike;
   now?: () => Date;
   userAgent?: string;
+  termsOverride?: "approved" | "blocked";
 } = {}): Promise<OfficialWebsiteInspection> {
   const checkedAt = (options.now ?? (() => new Date()))().toISOString();
   const fetchImpl = options.fetchImpl ?? fetch;
   const userAgent = options.userAgent ?? "SuburbMates-official-website-enrichment/1.0";
+  if (options.termsOverride === "blocked") return result("blocked", checkedAt, "The operator blocked factual reuse for this domain.", "blocked");
   let initial: URL;
   try {
     initial = parseAllowedWebsite(value);
@@ -289,8 +344,9 @@ export async function inspectOfficialWebsite(value: string, options: {
   if (robots.status >= 500 || robots.status === 401 || robots.status === 403 || (robots.status >= 300 && robots.status < 500 && robots.status !== 404 && robots.status !== 410)) {
     return result("blocked", checkedAt, "Robots rules do not permit a safe inspection.");
   }
+  let robotsText: string | null = null;
   if (robots.ok) {
-    const robotsText = await robots.text();
+    robotsText = await robots.text();
     if (!isRobotsPathAllowed(robotsText, userAgent, initial.pathname || "/")) {
       return result("blocked", checkedAt, "Robots rules disallow the recorded page.");
     }
@@ -320,6 +376,12 @@ export async function inspectOfficialWebsite(value: string, options: {
     if (!response.headers.get("content-type")?.toLowerCase().includes("text/html")) return result("unsupported", checkedAt, "The recorded website did not return HTML.");
     try {
       const html = await readBoundedHtml(response);
+      const terms = options.termsOverride === "approved"
+        ? { status: "approved" as const, url: null, fingerprint: null, basis: "operator_approved" }
+        : await assessLinkedTerms(html, current, robotsText, fetchImpl, userAgent);
+      if (terms.status === "manual_review") {
+        return { outcome: "blocked", sourceUrl: current.toString(), checkedAt, contentFingerprint: await fingerprint(html), facts: [], reason: "Linked website terms require operator review.", termsStatus: terms.status, termsUrl: terms.url, termsFingerprint: terms.fingerprint, termsBasis: terms.basis };
+      }
       return {
         outcome: "eligible",
         sourceUrl: current.toString(),
@@ -327,6 +389,10 @@ export async function inspectOfficialWebsite(value: string, options: {
         contentFingerprint: await fingerprint(html),
         facts: extractOfficialWebsiteFacts(html),
         reason: null,
+        termsStatus: terms.status,
+        termsUrl: terms.url,
+        termsFingerprint: terms.fingerprint,
+        termsBasis: terms.basis,
       };
     } catch (error) {
       return result("unsupported", checkedAt, error instanceof Error ? error.message : "The website could not be read safely.");

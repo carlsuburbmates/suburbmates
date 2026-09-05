@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { factualSummary, planOfficialWebsiteApplication } from "../web/src/lib/official-website-application-plan";
 
 const vendor = { id: "vendor", business_name: "Example", website: "https://example.test", ownership_status: "unclaimed", description: null, contact_email: null, phone: "03 9000 0000", street_address: null, trading_hours: null, services: [], booking_url: null, menu_url: null, area_served: [], accessibility_features: [] };
@@ -10,4 +11,11 @@ assert.equal(plan.updates.booking_url, "https://example.test/book");
 assert.ok(plan.conflictFields.includes("phone"));
 assert.match(factualSummary(facts) ?? "", /Services include Sourdough baking, Wedding cakes\. Serves Darebin\./);
 assert.doesNotMatch(JSON.stringify(plan), /image|marketing|testimonial/i);
+const runner = fs.readFileSync("web/src/lib/official-website-application.ts", "utf8");
+assert.match(runner, /official-business-site-application-v3/);
+assert.match(runner, /official_website_inspections/);
+assert.match(runner, /freshness_due_at/);
+assert.match(runner, /currentVendorIds/);
+assert.match(runner, /termsOverride/);
+assert.doesNotMatch(runner, /if \(!approvedHosts\.size\)/);
 console.log("Official website application plans only factual empty-field enrichment and conflicts.");

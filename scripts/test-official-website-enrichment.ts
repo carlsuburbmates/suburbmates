@@ -36,6 +36,25 @@ assert.equal(inspection.outcome, "eligible");
 assert.equal(inspection.sourceUrl, "https://example.test/");
 assert.match(inspection.contentFingerprint ?? "", /^[0-9a-f]{64}$/);
 assert.equal(inspection.facts.length, 9);
+assert.equal(inspection.termsStatus, "automated_clear");
+assert.equal(inspection.termsBasis, "no_linked_terms_restriction_found");
+
+const termsResponses = [
+  new Response("User-agent: *\nAllow: /", { status: 200, headers: { "content-type": "text/plain" } }),
+  new Response(`${html}<a href="/terms">Terms of use</a>`, { status: 200, headers: { "content-type": "text/html" } }),
+  new Response("<h1>Terms</h1><p>You must not use an automated tool to scrape or extract content without our written permission.</p>", { status: 200, headers: { "content-type": "text/html" } }),
+];
+const termsHeld = await inspectOfficialWebsite("https://example.test/", { fetchImpl: async () => termsResponses.shift() ?? new Response(null, { status: 500 }) });
+assert.equal(termsHeld.outcome, "blocked");
+assert.equal(termsHeld.termsStatus, "manual_review");
+assert.equal(termsHeld.termsBasis, "possible_automation_restriction");
+assert.equal(termsHeld.termsUrl, "https://example.test/terms");
+assert.match(termsHeld.termsFingerprint ?? "", /^[0-9a-f]{64}$/);
+assert.deepEqual(termsHeld.facts, []);
+
+const operatorBlocked = await inspectOfficialWebsite("https://example.test/", { termsOverride: "blocked", fetchImpl: async () => { throw new Error("must not fetch"); } });
+assert.equal(operatorBlocked.termsStatus, "blocked");
+assert.equal(operatorBlocked.outcome, "blocked");
 
 const blocked = await inspectOfficialWebsite("https://example.test/private", {
   fetchImpl: async () => new Response("User-agent: *\nDisallow: /private", { status: 200 }),

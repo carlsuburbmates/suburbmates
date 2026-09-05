@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Run one bounded terms-approved factual batch
+      - name: Run one bounded robots-and-terms-aware factual batch
         env:
           AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
         run: |

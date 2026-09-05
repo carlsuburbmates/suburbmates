@@ -4,6 +4,7 @@ import fs from "node:fs";
 const migration = fs.readFileSync("supabase/migrations/20260904183000_official_website_domain_terms_gate.sql", "utf8");
 const page = fs.readFileSync("web/src/app/ops/system/website-pilot/page.tsx", "utf8");
 const action = fs.readFileSync("web/src/app/ops/system/website-pilot/actions.ts", "utf8");
+const autonomousMigration = fs.readFileSync("supabase/migrations/20260905045911_autonomous_official_website_terms_assessment.sql", "utf8");
 
 assert.match(migration, /CREATE TABLE public\.official_website_domain_reviews/);
 assert.match(migration, /review_status IN \('pending', 'approved', 'blocked'\)/);
@@ -15,9 +16,13 @@ assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.ops_decide_official_w
 assert.doesNotMatch(migration, /UPDATE public\.vendors/);
 assert.doesNotMatch(migration, /INSERT INTO public\.listing_field_evidence/);
 assert.match(page, /ops_list_official_website_domain_reviews/);
-assert.match(page, /bounded runner may then inspect only that approved host/);
-assert.match(page, /never creates a business, publishes one, imports media or page copy, or creates Work/);
-assert.match(page, /automatic runner remains safely idle/);
+assert.match(page, /automatically checks robots and clearly linked same-domain terms/);
+assert.match(page, /never creates or publishes a business, imports media or page copy, or creates Work/);
+assert.match(page, /operator block always wins/);
+assert.match(autonomousMigration, /official-business-site-application-v3/);
+assert.match(autonomousMigration, /automated_clear/);
+assert.match(autonomousMigration, /terms_fingerprint/);
+assert.doesNotMatch(autonomousMigration, /UPDATE public\.vendors/);
 assert.match(action, /verifyOpsAdmin/);
 assert.match(action, /ops_decide_official_website_domain_review/);
 assert.match(action, /revalidatePath\("\/ops\/system"\)/);
