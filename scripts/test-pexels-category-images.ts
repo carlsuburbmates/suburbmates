@@ -15,6 +15,8 @@ assert.match(source, /local fashion boutique/);
 assert.match(source, /hearing aid device/);
 assert.match(source, /tattoo artist at work/);
 assert.match(source, /commercial printing shop/);
+assert.match(source, /requiredAltSignalsByCategory/);
+assert.match(source, /requiredAltSignals\.some/);
 assert.doesNotMatch(source, /electrical pliers isolated|wooden chair still life/);
 assert.match(source, /providerPhotoId/);
 assert.match(source, /photographerUrl/);
