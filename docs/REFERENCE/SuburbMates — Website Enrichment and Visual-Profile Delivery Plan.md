@@ -80,7 +80,7 @@ The resulting image is clearly business media, unlike licensed category artwork.
 
 Licensed stock imagery gives unclaimed profiles and discovery pages visual richness while real media is absent. It is contextual design material and never evidence that the pictured people, place, products or work belong to the listed business.
 
-Use one provider contract at first. Pexels is active because its API supports free search, landscape orientation, image metadata, visible provider linking and photographer credit within the anticipated workload. Its API key is retained only as a server-side Worker secret and never sent to the browser or GitHub Actions.
+Use one provider contract at first. Pexels is active because its API supports free search, landscape orientation, image metadata, visible provider linking and photographer credit within the anticipated workload. Its API key is retained only as a server-side Worker secret and never sent to the browser or GitHub Actions. A daily bounded batch fills missing category coverage; active selections remain stable for at least 90 days before becoming eligible for refresh.
 
 ### C2. Autonomous relevance and quality rules
 

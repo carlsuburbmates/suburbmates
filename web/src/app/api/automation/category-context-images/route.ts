@@ -13,19 +13,23 @@ export async function POST(request: NextRequest) {
 
   try {
     const admin = createAdminClient();
-    const { count: categoryCount, error: countError } = await admin.from("categories").select("slug", { count: "exact", head: true });
-    if (countError || !categoryCount) throw new Error("Could not count category image targets.");
-    const weeklyBatch = 25;
-    const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
-    const offset = (week * weeklyBatch) % categoryCount;
-    const { data: categories, error } = await admin.from("categories").select("slug").order("slug").range(offset, Math.min(offset + weeklyBatch - 1, categoryCount - 1));
+    const batchSize = 25;
+    const { data: categories, error } = await admin.from("categories").select("slug").order("slug");
     if (error) throw new Error("Could not load category image targets.");
-    const { data: existing, error: existingError } = await admin.from("licensed_category_context_images").select("provider_photo_id");
+    const { data: existing, error: existingError } = await admin.from("licensed_category_context_images").select("category_slug, provider_photo_id, selected_at, active");
     if (existingError) throw new Error("Could not read existing licensed category context.");
     const usedPhotoIds = new Set((existing ?? []).map((image: { provider_photo_id: string }) => Number(image.provider_photo_id)).filter(Number.isInteger));
+    const refreshBefore = Date.now() - (90 * 24 * 60 * 60 * 1000);
+    const freshCategorySlugs = new Set((existing ?? [])
+      .filter((image: { active: boolean; selected_at: string }) => image.active && Date.parse(image.selected_at) >= refreshBefore)
+      .map((image: { category_slug: string }) => image.category_slug));
+    const dueCategories = (categories ?? []).filter((category) => !freshCategorySlugs.has(category.slug));
+    const targets = dueCategories.slice(0, batchSize);
     let selected = 0;
+    const skippedFresh = freshCategorySlugs.size;
+    const deferred = Math.max(0, dueCategories.length - targets.length);
     const failures: Array<{ category: string; stage: "provider" | "write"; code?: string }> = [];
-    for (const category of categories ?? []) {
+    for (const category of targets) {
       let result;
       try {
         result = await findPexelsCategoryImage(category.slug, [], usedPhotoIds);
@@ -49,10 +53,10 @@ export async function POST(request: NextRequest) {
       usedPhotoIds.add(image.providerPhotoId);
       selected += 1;
     }
-    if (failures.length === (categories ?? []).length) {
-      return NextResponse.json({ state: "failed", selected, failures }, { status: 503 });
+    if (targets.length > 0 && failures.length === targets.length) {
+      return NextResponse.json({ state: "failed", selected, skippedFresh, deferred, failures }, { status: 503 });
     }
-    return NextResponse.json({ state: failures.length > 0 ? "partial" : "completed", selected, failures });
+    return NextResponse.json({ state: failures.length > 0 ? "partial" : "completed", selected, skippedFresh, deferred, failures });
   } catch (error) {
     console.error("Licensed category image refresh failed", error);
     return NextResponse.json({ error: "Licensed category image refresh did not complete" }, { status: 500 });
