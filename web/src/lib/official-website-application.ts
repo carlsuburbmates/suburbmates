@@ -34,7 +34,7 @@ export async function runOfficialWebsiteEnrichment(runKey: string, requestedLimi
   const { data: reviews, error: reviewError } = await admin.from("official_website_domain_reviews").select("host_name, review_status");
   if (reviewError) throw new Error("Could not read approved website-domain terms reviews.");
   const domainDecisions = new Map((reviews ?? []).map((review: { host_name: string; review_status: "approved" | "blocked" | "pending" }) => [review.host_name, review.review_status]));
-  const { data: currentInspections, error: inspectionReadError } = await admin.from("official_website_inspections").select("vendor_id").gt("freshness_due_at", new Date().toISOString());
+  const { data: currentInspections, error: inspectionReadError } = await admin.from("official_website_inspections").select("vendor_id, catalogue_enrichment_runs!inner(status)").eq("catalogue_enrichment_runs.status", "completed").gt("freshness_due_at", new Date().toISOString());
   if (inspectionReadError) throw new Error("Could not read official-website inspection freshness.");
   const currentVendorIds = new Set((currentInspections ?? []).map((inspection: { vendor_id: string }) => inspection.vendor_id));
   const { data: possible, error: candidatesError } = await admin.from("vendors").select("id, business_name, website, ownership_status, description, contact_email, phone, street_address, trading_hours, services, booking_url, menu_url, area_served, accessibility_features").eq("is_published", true).eq("is_claimed", false).eq("ownership_status", "unclaimed").like("website", "https://%").order("updated_at", { ascending: true }).limit(2000);

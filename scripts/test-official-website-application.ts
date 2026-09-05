@@ -21,6 +21,8 @@ assert.match(runner, /official-business-site-application-v3/);
 assert.match(runner, /official_website_inspections/);
 assert.match(runner, /freshness_due_at/);
 assert.match(runner, /currentVendorIds/);
+assert.match(runner, /catalogue_enrichment_runs!inner\(status\)/);
+assert.match(runner, /catalogue_enrichment_runs\.status.*completed/);
 assert.match(runner, /termsOverride/);
 assert.match(runner, /staleBefore/);
 assert.match(runner, /Execution ended before the bounded batch completed/);
