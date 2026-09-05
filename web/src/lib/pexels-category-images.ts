@@ -23,28 +23,25 @@ type PexelsPhoto = {
 };
 
 const keywordByCategory: Record<string, string> = {
-  bakery: "fresh bread", cafe: "coffee cup", restaurant: "restaurant table", bar: "cocktail glass", pub: "pub interior",
-  pet: "dog toy", "pet-grooming": "dog grooming tools", veterinary: "veterinary stethoscope",
-  hairdresser: "hair styling tools", barber: "barber tools", beauty: "beauty products",
-  electrician: "electrical pliers isolated", plumber: "plumbing tools", builder: "construction tools", carpenter: "woodworking tools",
-  garden: "garden plants", gardener: "garden tools", florist: "flowers still life",
-  bicycle: "bicycle detail", "car-repair": "car repair tools", tyres: "car tyre detail",
-  dentist: "dental tools", pharmacy: "pharmacy shelves", clinic: "medical equipment",
-  accountant: "calculator desk", lawyer: "law books", "tax-advisor": "calculator documents",
-  fitness: "gym equipment", dance: "dance studio", art: "artist paint brushes", books: "bookshelf",
-  fashion: "clothing rack", furniture: "wooden chair still life", homewares: "homeware objects",
+  bakery: "local bakery fresh bread", cafe: "local cafe coffee", restaurant: "local restaurant dining", bar: "local cocktail bar", pub: "local pub interior",
+  pet: "local pet care", "pet-grooming": "dog grooming salon", veterinary: "veterinarian caring for dog",
+  hairdresser: "local hair salon", barber: "local barber at work", beauty: "local beauty salon",
+  electrician: "electrician at work", plumber: "plumber at work", builder: "local builder at work", carpenter: "carpenter workshop",
+  garden: "local garden plants", gardener: "gardener at work", florist: "local florist flowers",
+  bicycle: "local bicycle shop", "car-repair": "car repair workshop", tyres: "car tyre service",
+  dentist: "local dental clinic", pharmacy: "local pharmacy interior", clinic: "local health clinic",
+  accountant: "local accountant office", lawyer: "local lawyer office", "tax-advisor": "tax advisor meeting",
+  fitness: "local fitness class", dance: "local dance class", art: "local artist studio", books: "local bookshop interior",
+  fashion: "local fashion boutique", furniture: "local furniture showroom", homewares: "local homewares shop",
 };
 
-// These terms keep a category visual from suggesting a particular person,
-// business, logo, premises or branded product. This is a conservative lexical
-// gate, not a claim that the asset depicts the listed business.
 const unsafeAlt = /\b(logo|brand|trademark|signage|watermark|text|lettering)\b/i;
 
 export function categoryImageKeyword(categorySlug: string, services: string[] = []) {
   const direct = keywordByCategory[categorySlug];
   if (direct) return direct;
   const factualService = services.find((service) => /^[a-z][a-z -]{2,40}$/i.test(service) && !unsafeAlt.test(service));
-  return factualService ? `${factualService} still life` : categorySlug.replaceAll("-", " ");
+  return factualService ? `${factualService} local service` : `local ${categorySlug.replaceAll("-", " ")}`;
 }
 
 export function selectPexelsCategoryImage(photos: PexelsPhoto[], keyword: string, excludedPhotoIds = new Set<number>()): LicensedCategoryImage | null {

@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-**Status:** in delivery. The factual-pilot source contract, private inspection ledger, bounded parser and weekly authenticated application runner are live. The runner remains functionally idle until an operator records an approval for a specific website hostname; it can then inspect only that host and fill only empty factual fields on unclaimed published profiles. The owner-rich factual import and review-first profile fields are in this release. Provider-backed category imagery remains pending provider setup.
+**Status:** in delivery. The factual-pilot source contract, private inspection ledger, bounded parser and weekly authenticated application runner are live. The runner remains functionally idle until an operator records an approval for a specific website hostname; it can then inspect only that host and fill only empty factual fields on unclaimed published profiles. The owner-rich factual import and review-first profile fields are in this release. Pexels-backed category imagery is configured and operating through the server-only provider contract; live public acceptance remains part of the delivery evidence.
 
 This plan implements D-018 and D-021. It supersedes older wording that treated all business-owned websites as permanently owner-only or that implied immediate bulk enrichment. The Decision Log and Target State remain authoritative if this plan conflicts with them.
 
@@ -78,15 +78,15 @@ The resulting image is clearly business media, unlike licensed category artwork.
 
 ### C1. Purpose and provider
 
-Licensed stock imagery gives unclaimed profiles and discovery pages visual richness while real media is absent. It is contextual design material, never evidence that a business, person, product, premises or service is depicted.
+Licensed stock imagery gives unclaimed profiles and discovery pages visual richness while real media is absent. It is contextual design material and never evidence that the pictured people, place, products or work belong to the listed business.
 
-Use one provider contract at first. Pexels is the initial candidate because its API supports free search, landscape orientation, image metadata, visible provider linking and photographer credit within the anticipated workload. Creating the external provider account/API key is the only provider setup step; no provider account, API key or image retrieval is assumed until that is completed.
+Use one provider contract at first. Pexels is active because its API supports free search, landscape orientation, image metadata, visible provider linking and photographer credit within the anticipated workload. Its API key is retained only as a server-side Worker secret and never sent to the browser or GitHub Actions.
 
 ### C2. Autonomous relevance and quality rules
 
 Use the existing category taxonomy, augmented by retained factual service signals, to map each listing to a small curated keyword set. This avoids a taxonomy migration and avoids raw marketing text. The selector automatically chooses only landscape images, applies category-specific exclusions and varies the chosen image across neighbouring cards.
 
-Category-relevant people, tools, products and generic premises may be used as licensed context when the public label and credit make clear that they do not depict the listed business. Reject recognisable business brands, logos, watermarks, prominent signage, text-heavy imagery, misleading products or a caption implying endorsement. Do not add visual-AI tagging, dominant-colour crawling or another paid image-analysis platform merely to automate this licensed visual-context selection.
+Relevant generic people, services in action, tools, products, workplaces and premises may be used as licensed context when the public label and credit make clear that they do not depict the listed business. Prefer natural, locally plausible scenes over sterile objects where the category supports them. Reject recognisable business brands, logos, watermarks, prominent signage, text-heavy imagery, clearly mismatched subjects or a caption implying endorsement. Do not add visual-AI tagging, dominant-colour crawling or another paid image-analysis platform merely to automate this licensed visual-context selection.
 
 Each public image displays: **“Licensed category image — does not depict this business”**, the provider and photographer credit, and a provider link. Retain provider photo ID, original URL, photographer, licence snapshot, keyword map version, selection date and crop metadata. A stock image never counts as an owner-approved image or as a monetisation quality-gate success.
 
