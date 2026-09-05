@@ -24,8 +24,16 @@ export async function POST(request: NextRequest) {
     if (existingError) throw new Error("Could not read existing licensed category context.");
     const usedPhotoIds = new Set((existing ?? []).map((image: { provider_photo_id: string }) => Number(image.provider_photo_id)).filter(Number.isInteger));
     let selected = 0;
+    const failures: Array<{ category: string; stage: "provider" | "write"; code?: string }> = [];
     for (const category of categories ?? []) {
-      const result = await findPexelsCategoryImage(category.slug, [], usedPhotoIds);
+      let result;
+      try {
+        result = await findPexelsCategoryImage(category.slug, [], usedPhotoIds);
+      } catch (error) {
+        console.error("Licensed category image provider request failed", { category: category.slug, error });
+        failures.push({ category: category.slug, stage: "provider" });
+        continue;
+      }
       if (result.state !== "selected" || !result.image) continue;
       const image = result.image;
       const { error: writeError } = await admin.from("licensed_category_context_images").upsert({
@@ -33,11 +41,18 @@ export async function POST(request: NextRequest) {
         photographer: image.photographer, photographer_url: image.photographerUrl, image_url: image.imageUrl, alt_text: image.alt,
         keyword: result.keyword, licence_snapshot: "Pexels API and licence verified 2026-09-05; public credit retained.", selection_version: "pexels-category-v1", selected_at: new Date().toISOString(), updated_at: new Date().toISOString(), active: true,
       }, { onConflict: "category_slug" });
-      if (writeError) throw new Error("Could not retain licensed category context.");
+      if (writeError) {
+        console.error("Licensed category image write failed", { category: category.slug, code: writeError.code, message: writeError.message });
+        failures.push({ category: category.slug, stage: "write", code: writeError.code });
+        continue;
+      }
       usedPhotoIds.add(image.providerPhotoId);
       selected += 1;
     }
-    return NextResponse.json({ state: "completed", selected });
+    if (failures.length === (categories ?? []).length) {
+      return NextResponse.json({ state: "failed", selected, failures }, { status: 503 });
+    }
+    return NextResponse.json({ state: failures.length > 0 ? "partial" : "completed", selected, failures });
   } catch (error) {
     console.error("Licensed category image refresh failed", error);
     return NextResponse.json({ error: "Licensed category image refresh did not complete" }, { status: 500 });
