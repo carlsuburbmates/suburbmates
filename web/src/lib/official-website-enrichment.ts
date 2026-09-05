@@ -95,7 +95,7 @@ function hoursFromSpecification(value: unknown) {
     if (!isJsonObject(entry)) return [];
     const opens = cleanText(entry.opens, 20);
     const closes = cleanText(entry.closes, 20);
-    if (!opens || !closes) return [];
+    if (!opens || !closes || !safeClockRange(opens, closes)) return [];
     const days = Array.isArray(entry.dayOfWeek) ? entry.dayOfWeek : [entry.dayOfWeek];
     const labels = days
       .map((day) => cleanText(day, 100)?.replace(/^https?:\/\/schema\.org\//, ""))
@@ -104,6 +104,43 @@ function hoursFromSpecification(value: unknown) {
   });
   const result = formatted.join("; ");
   return result.length > 0 && result.length <= 300 ? result : null;
+}
+
+function clockMinutes(value: string) {
+  const match = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  return hours <= 23 && minutes <= 59 ? hours * 60 + minutes : null;
+}
+
+function safeClockRange(opens: string, closes: string) {
+  const open = clockMinutes(opens);
+  const close = clockMinutes(closes);
+  return open !== null && close !== null && close > open;
+}
+
+function cleanOpeningHours(value: unknown) {
+  const entries = stringValues(value, 300).filter((entry) => {
+    const ranges = [...entry.matchAll(/(\d{1,2}:\d{2}(?::\d{2})?)\s*[-–]\s*(\d{1,2}:\d{2}(?::\d{2})?)/g)];
+    return ranges.length > 0 && ranges.every((range) => safeClockRange(range[1], range[2]));
+  });
+  const result = entries.join("; ");
+  return result.length > 0 && result.length <= 300 ? result : null;
+}
+
+function identityNames(records: JsonObject[]) {
+  return [...new Set(records.map((record) => cleanText(record.name, 200)).filter((name): name is string => Boolean(name)))];
+}
+
+function normalizedIdentity(value: string) {
+  return value.toLowerCase().replace(/&/g, " and ").replace(/['’]/g, "").replace(/\b(?:pty|limited|ltd|inc|llc|company|co)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function identityMatches(expected: string, candidate: string) {
+  const left = normalizedIdentity(expected);
+  const right = normalizedIdentity(candidate);
+  return Boolean(left && right && (left === right || left.includes(right) || right.includes(left)));
 }
 
 function stringValues(value: unknown, maxLength: number) {
@@ -162,7 +199,7 @@ function uniqueFacts(facts: WebsiteFact[]) {
 export function extractOfficialWebsiteFacts(html: string): WebsiteFact[] {
   const records = readJsonLd(html);
   const facts = records.flatMap((record) => {
-    const hours = cleanText(Array.isArray(record.openingHours) ? record.openingHours.join("; ") : record.openingHours, 300)
+    const hours = cleanOpeningHours(record.openingHours)
       ?? hoursFromSpecification(record.openingHoursSpecification);
     return [
       cleanPhone(record.telephone) ? { fieldName: "phone" as const, value: cleanPhone(record.telephone)! } : null,
@@ -322,6 +359,7 @@ export async function inspectOfficialWebsite(value: string, options: {
   now?: () => Date;
   userAgent?: string;
   termsOverride?: "approved" | "blocked";
+  expectedBusinessName?: string;
 } = {}): Promise<OfficialWebsiteInspection> {
   const checkedAt = (options.now ?? (() => new Date()))().toISOString();
   const fetchImpl = options.fetchImpl ?? fetch;
@@ -376,6 +414,10 @@ export async function inspectOfficialWebsite(value: string, options: {
     if (!response.headers.get("content-type")?.toLowerCase().includes("text/html")) return result("unsupported", checkedAt, "The recorded website did not return HTML.");
     try {
       const html = await readBoundedHtml(response);
+      const names = identityNames(readJsonLd(html));
+      if (options.expectedBusinessName && names.length > 0 && !names.some((name) => identityMatches(options.expectedBusinessName!, name))) {
+        return { outcome: "unsupported", sourceUrl: current.toString(), checkedAt, contentFingerprint: await fingerprint(html), facts: [], reason: "Structured website identity does not match the listed business.", termsStatus: "manual_review", termsUrl: null, termsFingerprint: null, termsBasis: "inspection_not_eligible" };
+      }
       const terms = options.termsOverride === "approved"
         ? { status: "approved" as const, url: null, fingerprint: null, basis: "operator_approved" }
         : await assessLinkedTerms(html, current, robotsText, fetchImpl, userAgent);

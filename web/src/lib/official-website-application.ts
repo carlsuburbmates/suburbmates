@@ -12,7 +12,7 @@ function hostname(value: string) { try { return new URL(value).hostname.toLowerC
 function reasonCode(inspection: OfficialWebsiteInspection) {
   const reason = inspection.reason ?? ""; if (inspection.outcome === "eligible") return "eligible";
   if (/robots.*disallow/i.test(reason)) return "robots_disallowed"; if (/robots/i.test(reason)) return "robots_unavailable";
-  if (/terms require operator review/i.test(reason)) return "terms_pending";
+  if (/terms require operator review/i.test(reason)) return "terms_pending"; if (/identity/i.test(reason)) return "unsupported_content";
   if (/redirected away/i.test(reason)) return "redirect_outside_domain"; if (/redirect/i.test(reason)) return "redirect_unsupported";
   if (/not return HTML/i.test(reason)) return "non_html"; if (/too large/i.test(reason)) return "page_too_large"; if (/eligible/i.test(reason)) return "invalid_url"; return "site_unavailable";
 }
@@ -37,7 +37,7 @@ export async function runOfficialWebsiteEnrichment(runKey: string, requestedLimi
   const { data: currentInspections, error: inspectionReadError } = await admin.from("official_website_inspections").select("vendor_id, catalogue_enrichment_runs!inner(status)").eq("catalogue_enrichment_runs.status", "completed").gt("freshness_due_at", new Date().toISOString());
   if (inspectionReadError) throw new Error("Could not read official-website inspection freshness.");
   const currentVendorIds = new Set((currentInspections ?? []).map((inspection: { vendor_id: string }) => inspection.vendor_id));
-  const { data: possible, error: candidatesError } = await admin.from("vendors").select("id, business_name, website, ownership_status, description, contact_email, phone, street_address, trading_hours, services, booking_url, menu_url, area_served, accessibility_features").eq("is_published", true).eq("is_claimed", false).eq("ownership_status", "unclaimed").like("website", "https://%").order("updated_at", { ascending: true }).limit(2000);
+  const { data: possible, error: candidatesError } = await admin.from("vendors").select("id, business_name, website, suburb_slug, ownership_status, description, contact_email, phone, street_address, trading_hours, services, booking_url, menu_url, area_served, accessibility_features").eq("is_published", true).eq("is_claimed", false).eq("ownership_status", "unclaimed").like("website", "https://%").order("updated_at", { ascending: true }).limit(2000);
   if (candidatesError) throw new Error("Could not select eligible official-website listings.");
   const candidates = ((possible ?? []) as Vendor[]).filter((vendor) => { const host = hostname(vendor.website); return host !== null && !currentVendorIds.has(vendor.id) && domainDecisions.get(host) !== "blocked"; }).slice(0, limit);
   const { data: created, error: createdError } = await admin.from("catalogue_enrichment_runs").insert({ source_key: SOURCE_KEY, source_contract_version: SOURCE_CONTRACT_VERSION, artifact_sha256: runKey, status: "processing", input_count: candidates.length }).select("id, correlation_id").maybeSingle();
@@ -48,7 +48,7 @@ export async function runOfficialWebsiteEnrichment(runKey: string, requestedLimi
     for (const vendor of candidates) {
       const host = hostname(vendor.website); if (!host) throw new Error("An enrichment candidate has an invalid website host.");
       const decision = domainDecisions.get(host);
-      const inspection = await inspectOfficialWebsite(vendor.website, { termsOverride: decision === "approved" ? "approved" : undefined });
+      const inspection = await inspectOfficialWebsite(vendor.website, { termsOverride: decision === "approved" ? "approved" : undefined, expectedBusinessName: vendor.business_name });
       const { error: inspectionError } = await admin.from("official_website_inspections").insert({ vendor_id: vendor.id, source_key: SOURCE_KEY, source_contract_version: SOURCE_CONTRACT_VERSION, requested_url: vendor.website, resolved_url: inspection.sourceUrl, host_name: host, outcome: inspection.outcome, reason_code: reasonCode(inspection), robots_status: robotsStatus(inspection), terms_review_status: inspection.termsStatus, terms_url: inspection.termsUrl, terms_fingerprint: inspection.termsFingerprint, terms_assessment_basis: inspection.termsBasis, content_fingerprint: inspection.contentFingerprint, extracted_fact_count: inspection.facts.length, checked_at: inspection.checkedAt, freshness_due_at: freshnessDueAt(inspection.checkedAt), enrichment_run_id: created.id });
       if (inspectionError) throw new Error("Could not retain official-website inspection evidence."); if (inspection.outcome !== "eligible") continue;
       const plan = planOfficialWebsiteApplication(vendor, inspection.facts); const sourceRecordKey = `website:${host}:${inspection.contentFingerprint ?? inspection.checkedAt}`;

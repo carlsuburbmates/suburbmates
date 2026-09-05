@@ -19,6 +19,8 @@ assert.deepEqual(facts, [
   { fieldName: "booking_url", value: "https://example.test/book" },
 ]);
 assert.doesNotMatch(JSON.stringify(facts), /promotional copy|image\.jpg/i, "Copy and images must not leave the extractor.");
+const unsafeHours = extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","openingHours":["", "", "Mo 11:30-10:00"]}</script>`);
+assert.ok(!unsafeHours.some((fact) => fact.fieldName === "trading_hours"), "Blank or ambiguous overnight hours must not publish.");
 
 assert.equal(isRobotsPathAllowed("User-agent: *\nDisallow: /private\nAllow: /private/about", "SuburbMates-official-website-enrichment/1.0", "/"), true);
 assert.equal(isRobotsPathAllowed("User-agent: *\nDisallow: /private\nAllow: /private/about", "SuburbMates-official-website-enrichment/1.0", "/private"), false);
@@ -38,6 +40,14 @@ assert.match(inspection.contentFingerprint ?? "", /^[0-9a-f]{64}$/);
 assert.equal(inspection.facts.length, 9);
 assert.equal(inspection.termsStatus, "automated_clear");
 assert.equal(inspection.termsBasis, "no_linked_terms_restriction_found");
+
+const mismatchResponses = [
+  new Response("User-agent: *\nAllow: /", { status: 200 }),
+  new Response(`<script type="application/ld+json">{"name":"Different Company","telephone":"03 9000 9999"}</script>`, { status: 200, headers: { "content-type": "text/html" } }),
+];
+const mismatch = await inspectOfficialWebsite("https://example.test/", { expectedBusinessName: "Example Bakery", fetchImpl: async () => mismatchResponses.shift()! });
+assert.equal(mismatch.outcome, "unsupported");
+assert.deepEqual(mismatch.facts, []);
 
 const termsResponses = [
   new Response("User-agent: *\nAllow: /", { status: 200, headers: { "content-type": "text/plain" } }),
