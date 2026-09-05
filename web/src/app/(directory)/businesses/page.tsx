@@ -78,15 +78,14 @@ export default async function BusinessesPage({
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase.from("categories").select("name, slug").order("name"),
     searchQuery ? searchPage(requestedPage) : browsePage(requestedPage),
-    supabase.from("licensed_category_context_images").select("category_slug, image_url, provider_url, photographer, photographer_url").eq("active", true),
   ]);
-  let [suburbsRes, categoriesRes, vendorsRes, categoryImagesRes] = await loadDirectoryData();
-  if (suburbsRes.error || categoriesRes.error || vendorsRes.error || categoryImagesRes.error) {
+  let [suburbsRes, categoriesRes, vendorsRes] = await loadDirectoryData();
+  if (suburbsRes.error || categoriesRes.error || vendorsRes.error) {
     await new Promise((resolve) => setTimeout(resolve, 150));
-    [suburbsRes, categoriesRes, vendorsRes, categoryImagesRes] = await loadDirectoryData();
+    [suburbsRes, categoriesRes, vendorsRes] = await loadDirectoryData();
   }
 
-  if (suburbsRes.error || categoriesRes.error || vendorsRes.error || categoryImagesRes.error) {
+  if (suburbsRes.error || categoriesRes.error || vendorsRes.error) {
     throw new Error("The directory could not be loaded.");
   }
 
@@ -106,6 +105,14 @@ export default async function BusinessesPage({
     if (correctedPage.error) throw new Error("The directory could not be loaded.");
     resolvedVendors = correctedPage.data ?? [];
   }
+  const visibleCategorySlugs = [...new Set(resolvedVendors.map((vendor: { category_slug: string | null }) => vendor.category_slug).filter(Boolean))] as string[];
+  const categoryImagesRes = visibleCategorySlugs.length
+    ? await supabase
+        .from("licensed_category_context_images")
+        .select("category_slug, image_url, provider_url, photographer, photographer_url")
+        .in("category_slug", visibleCategorySlugs)
+        .eq("active", true)
+    : { data: [] };
 
   return (
     <DirectoryBrowseClient
