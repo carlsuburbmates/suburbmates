@@ -7,6 +7,7 @@ import {
   canonicalCategorySlug,
   loadCategoryAliasMap,
 } from "@/lib/category-aliases";
+import { LicensedCategoryVisual } from "@/components/ui/LicensedCategoryVisual";
 
 export async function generateMetadata({
   params,
@@ -58,10 +59,16 @@ export default async function CategoryPage({
     notFound();
   }
 
-  const { data: vendorSuburbs } = await supabase
-    .from("published_vendors")
-    .select("suburb_slug")
-    .eq("category_slug", categorySlug);
+  const [vendorSuburbsResult, categoryImageResult] = await Promise.all([
+    supabase.from("published_vendors").select("suburb_slug").eq("category_slug", categorySlug),
+    supabase
+      .from("licensed_category_context_images")
+      .select("category_slug, image_url, provider_url, photographer, photographer_url")
+      .eq("category_slug", categorySlug)
+      .eq("active", true)
+      .maybeSingle(),
+  ]);
+  const vendorSuburbs = vendorSuburbsResult.data;
   const suburbSlugs = [
     ...new Set(
       (vendorSuburbs ?? []).map((vendor) => vendor.suburb_slug).filter(Boolean),
@@ -93,6 +100,9 @@ export default async function CategoryPage({
       <p className="mt-4 max-w-2xl text-slate-600">
         Choose an area to view the available public business profiles.
       </p>
+      {categoryImageResult.data && (
+        <LicensedCategoryVisual image={categoryImageResult.data} categoryName={categoryData.name} className="mt-8 h-56 rounded-3xl sm:h-72" />
+      )}
       {!suburbs?.length && (
         <p className="rounded-xl bg-slate-100 p-6 text-slate-600">
           No published listings are available in this category yet.

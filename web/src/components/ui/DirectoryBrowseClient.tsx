@@ -21,6 +21,7 @@ import {
   Building2,
 } from "lucide-react";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
+import { LicensedCategoryVisual, type LicensedCategoryImage } from "@/components/ui/LicensedCategoryVisual";
 import { displayDirectoryStreetAddress } from "@/lib/directory-location";
 
 type DirectoryVendor = {
@@ -48,6 +49,7 @@ interface DirectoryBrowseClientProps {
   initialQ: string;
   initialSuburb: string;
   initialCategory: string;
+  categoryImages: LicensedCategoryImage[];
 }
 
 export function DirectoryBrowseClient({
@@ -60,6 +62,7 @@ export function DirectoryBrowseClient({
   initialQ,
   initialSuburb,
   initialCategory,
+  categoryImages,
 }: DirectoryBrowseClientProps) {
   const router = useRouter();
   const [q, setQ] = useState(initialQ);
@@ -81,6 +84,10 @@ export function DirectoryBrowseClient({
     ["cafe", "restaurant", "electrician", "plumber", "hairdresser"].includes(
       item.slug,
     ),
+  );
+  const categoryImageBySlug = useMemo(
+    () => new Map(categoryImages.map((image) => [image.category_slug, image])),
+    [categoryImages],
   );
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -405,6 +412,7 @@ export function DirectoryBrowseClient({
               const detail = vendor.description?.replace(/\s+/g, " ").trim();
               const hours = vendor.trading_hours?.replace(/\s+/g, " ").trim();
               const displayedAddress = displayDirectoryStreetAddress(vendor.street_address);
+              const categoryImage = categoryImageBySlug.get(vendor.category_slug);
 
               return (
                 <article
@@ -412,11 +420,11 @@ export function DirectoryBrowseClient({
                   className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-[border-color,box-shadow,transform] hover:border-slate-400 hover:shadow-md"
                 >
                   {viewMode === "grid" && (
-                    <DirectoryCategoryVisual
-                      categorySlug={vendor.category_slug}
-                      label={catName}
-                      className="h-20"
-                    />
+                    categoryImage ? (
+                      <LicensedCategoryVisual image={categoryImage} categoryName={catName} className="h-32" businessContext />
+                    ) : (
+                      <DirectoryCategoryVisual categorySlug={vendor.category_slug} label={catName} className="h-20" />
+                    )
                   )}
                   {/* Card Header & Compact Info */}
                   <div className="p-5 sm:p-6 flex-1">

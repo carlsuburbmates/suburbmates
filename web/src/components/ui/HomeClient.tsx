@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Clock3, MapPin, Phone, Search, Store } from "lucide-react";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
+import { LicensedCategoryVisual, type LicensedCategoryImage } from "@/components/ui/LicensedCategoryVisual";
 import { displayDirectoryStreetAddress } from "@/lib/directory-location";
 import { HeroSearch } from "@/components/ui/HeroSearch";
 import { createClient } from "@/utils/supabase/client";
@@ -27,6 +28,7 @@ interface HomeClientProps {
     website: string | null;
   }>;
   publishedCount: number;
+  categoryImages: LicensedCategoryImage[];
 }
 
 const valueProps = [
@@ -60,6 +62,7 @@ export function HomeClient({
   suburbs,
   sampleVendors,
   publishedCount,
+  categoryImages,
 }: HomeClientProps) {
   const router = useRouter();
   const categoryNames = new Map(
@@ -67,6 +70,9 @@ export function HomeClient({
   );
   const suburbNames = new Map(
     suburbs.map((suburb) => [suburb.slug, suburb.name]),
+  );
+  const categoryImageBySlug = new Map(
+    categoryImages.map((image) => [image.category_slug, image]),
   );
 
   useEffect(() => {
@@ -195,12 +201,17 @@ export function HomeClient({
                 const detail = conciseDetail(vendor.description);
                 const hours = conciseDetail(vendor.trading_hours);
                 const displayedAddress = displayDirectoryStreetAddress(vendor.street_address);
+                const categoryImage = vendor.category_slug ? categoryImageBySlug.get(vendor.category_slug) : null;
                 return (
                   <article
                     key={vendor.id}
                     className="group flex min-h-72 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-xl"
                   >
-                    <DirectoryCategoryVisual categorySlug={vendor.category_slug} label={categoryName ?? "Local business"} className="h-24" />
+                    {categoryImage ? (
+                      <LicensedCategoryVisual image={categoryImage} categoryName={categoryName ?? "Local business"} className="h-36" businessContext />
+                    ) : (
+                      <DirectoryCategoryVisual categorySlug={vendor.category_slug} label={categoryName ?? "Local business"} className="h-24" />
+                    )}
                     <div className="flex flex-1 flex-col p-5">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="min-w-0 break-words text-xl font-black leading-tight tracking-tight text-slate-950">

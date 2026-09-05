@@ -18,6 +18,7 @@ import {
   canonicalCategorySlug,
   loadCategoryAliasMap,
 } from "@/lib/category-aliases";
+import { LicensedCategoryVisual } from "@/components/ui/LicensedCategoryVisual";
 
 interface PageProps {
   params: Promise<{
@@ -69,7 +70,7 @@ export default async function Page({ params }: PageProps) {
   }
 
   // Fetch suburb, category and active vendors matching the route parameters
-  const [suburbRes, categoryRes, vendorsRes] = await Promise.all([
+  const [suburbRes, categoryRes, vendorsRes, categoryImageRes] = await Promise.all([
     supabase
       .from("suburbs")
       .select("name, seo_description")
@@ -88,6 +89,12 @@ export default async function Page({ params }: PageProps) {
       .eq("suburb_slug", suburbSlug)
       .eq("category_slug", categorySlug)
       .order("business_name", { ascending: true }),
+    supabase
+      .from("licensed_category_context_images")
+      .select("category_slug, image_url, provider_url, photographer, photographer_url")
+      .eq("category_slug", categorySlug)
+      .eq("active", true)
+      .maybeSingle(),
   ]);
 
   // If the category or suburb does not exist, return a 404
@@ -145,6 +152,12 @@ export default async function Page({ params }: PageProps) {
           </p>
         </div>
       </section>
+
+      {categoryImageRes.data && (
+        <div className="mx-auto -mb-4 mt-8 max-w-5xl px-6">
+          <LicensedCategoryVisual image={categoryImageRes.data} categoryName={category.name} className="h-56 rounded-3xl sm:h-72" />
+        </div>
+      )}
 
       {/* ── Vendors List ── */}
       <div className="max-w-5xl mx-auto px-6 py-12">

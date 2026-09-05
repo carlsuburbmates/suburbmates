@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { isTaxonomyPageEligible } from "@/lib/taxonomy-eligibility";
+import { LicensedCategoryVisual } from "@/components/ui/LicensedCategoryVisual";
 
 export async function generateMetadata({
   params,
@@ -70,6 +71,14 @@ export default async function SuburbPage({
         .in("slug", categorySlugs)
         .order("name")
     : { data: [] };
+  const { data: categoryImages } = categorySlugs.length
+    ? await supabase
+        .from("licensed_category_context_images")
+        .select("category_slug, image_url, provider_url, photographer, photographer_url")
+        .in("category_slug", categorySlugs)
+        .eq("active", true)
+    : { data: [] };
+  const categoryImageBySlug = new Map((categoryImages ?? []).map((image) => [image.category_slug, image]));
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6 sm:py-16">
@@ -88,26 +97,23 @@ export default async function SuburbPage({
         </p>
       )}
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {categories?.map((category) => (
-          <Link
-            key={category.slug}
-            href={`/${suburbData.slug}/${category.slug}`}
-            className="block min-h-36 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-teal-500 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800"
-          >
-            <h2 className="text-xl font-black tracking-tight text-slate-950">
-              {category.name}
-            </h2>
-            <p className="mt-3 text-sm text-slate-600">
-              {(listingCountByCategory.get(category.slug) ?? 0).toLocaleString(
-                "en-AU",
-              )}{" "}
-              published listings
-            </p>
-            <p className="mt-4 text-sm font-bold underline underline-offset-4">
-              View businesses
-            </p>
-          </Link>
-        ))}
+        {categories?.map((category) => {
+          const categoryImage = categoryImageBySlug.get(category.slug);
+          return (
+            <article key={category.slug} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-teal-500 hover:shadow-md">
+              {categoryImage && <LicensedCategoryVisual image={categoryImage} categoryName={category.name} className="h-32" />}
+              <div className="p-5">
+                <h2 className="text-xl font-black tracking-tight text-slate-950">{category.name}</h2>
+                <p className="mt-3 text-sm text-slate-600">
+                  {(listingCountByCategory.get(category.slug) ?? 0).toLocaleString("en-AU")} published listings
+                </p>
+                <Link href={`/${suburbData.slug}/${category.slug}`} className="mt-4 inline-flex min-h-11 items-center text-sm font-bold underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800">
+                  View businesses
+                </Link>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </div>
   );

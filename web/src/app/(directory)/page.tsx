@@ -14,7 +14,7 @@ export default async function Home() {
   }
 
   const supabase = await createClient();
-  const [categoriesResult, suburbsResult, listingsResult, publishedCountResult, aliases] = await Promise.all([
+  const [categoriesResult, suburbsResult, listingsResult, publishedCountResult, categoryImagesResult, aliases] = await Promise.all([
     supabase.from("categories").select("name, slug").order("name"),
     supabase.from("suburbs").select("name, slug").order("name"),
     supabase
@@ -35,10 +35,14 @@ export default async function Home() {
     // The hero's coverage cue must describe the full public directory, not
     // the deliberately smaller rich-profile sample above.
     supabase.from("published_vendors").select("id", { count: "exact", head: true }),
+    supabase
+      .from("licensed_category_context_images")
+      .select("category_slug, image_url, provider_url, photographer, photographer_url")
+      .eq("active", true),
     loadCategoryAliasMap(supabase),
   ]);
 
-  if (categoriesResult.error || suburbsResult.error || listingsResult.error || publishedCountResult.error) {
+  if (categoriesResult.error || suburbsResult.error || listingsResult.error || publishedCountResult.error || categoryImagesResult.error) {
     throw new Error("The directory home could not be loaded.");
   }
 
@@ -48,6 +52,7 @@ export default async function Home() {
       suburbs={suburbsResult.data ?? []}
       sampleVendors={listingsResult.data ?? []}
       publishedCount={publishedCountResult.count ?? 0}
+      categoryImages={categoryImagesResult.data ?? []}
     />
   );
 }

@@ -3,6 +3,12 @@ import fs from "node:fs";
 const migration = fs.readFileSync("supabase/migrations/20260905020000_licensed_category_context_images.sql", "utf8");
 const route = fs.readFileSync("web/src/app/api/automation/category-context-images/route.ts", "utf8");
 const profile = fs.readFileSync("web/src/app/vendor/[slug]/page.tsx", "utf8");
+const home = fs.readFileSync("web/src/app/(directory)/page.tsx", "utf8");
+const businesses = fs.readFileSync("web/src/app/(directory)/businesses/page.tsx", "utf8");
+const suburb = fs.readFileSync("web/src/app/(directory)/[suburb]/page.tsx", "utf8");
+const category = fs.readFileSync("web/src/app/(directory)/categories/[slug]/page.tsx", "utf8");
+const pair = fs.readFileSync("web/src/app/(directory)/[suburb]/[service]/page.tsx", "utf8");
+const visual = fs.readFileSync("web/src/components/ui/LicensedCategoryVisual.tsx", "utf8");
 assert.match(migration, /ENABLE ROW LEVEL SECURITY/);
 assert.match(migration, /active = true/);
 assert.match(migration, /provider.*pexels/i);
@@ -24,4 +30,11 @@ assert.doesNotMatch(route, /Google|Maps|closed directory/i);
 assert.match(profile, /Licensed category image — does not depict this business/);
 assert.match(profile, /vendor\.is_claimed === false && photos\.length === 0/);
 assert.match(profile, /photographer_url/);
+for (const discoveryPage of [home, businesses, suburb, category, pair]) {
+  assert.match(discoveryPage, /licensed_category_context_images|LicensedCategoryVisual/);
+}
+assert.match(visual, /Category image · not this business/);
+assert.match(visual, /Licensed category context/);
+assert.match(visual, /photographer_url/);
+assert.match(visual, /provider_url/);
 console.log("Licensed category context stays attributable, public-safe and held without a provider key.");
