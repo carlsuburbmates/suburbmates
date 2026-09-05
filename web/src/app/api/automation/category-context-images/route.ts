@@ -23,7 +23,16 @@ export async function POST(request: NextRequest) {
     const freshCategorySlugs = new Set((existing ?? [])
       .filter((image: { active: boolean; selected_at: string }) => image.active && Date.parse(image.selected_at) >= refreshBefore)
       .map((image: { category_slug: string }) => image.category_slug));
-    const dueCategories = (categories ?? []).filter((category) => !freshCategorySlugs.has(category.slug));
+    const priorityCategorySlugs = [
+      "restaurant", "cafe", "bakery", "bar", "pub", "pet", "pet-grooming", "veterinary",
+      "hairdresser", "barber", "beauty", "electrician", "plumber", "builder", "carpenter",
+      "gardener", "florist", "car-repair", "dentist", "pharmacy", "clinic", "accountant",
+      "lawyer", "tax-advisor", "fitness", "fashion", "furniture", "mall",
+    ];
+    const priorityBySlug = new Map(priorityCategorySlugs.map((slug, index) => [slug, index]));
+    const dueCategories = (categories ?? [])
+      .filter((category) => !freshCategorySlugs.has(category.slug))
+      .sort((left, right) => (priorityBySlug.get(left.slug) ?? Number.MAX_SAFE_INTEGER) - (priorityBySlug.get(right.slug) ?? Number.MAX_SAFE_INTEGER));
     const targets = dueCategories.slice(0, batchSize);
     let selected = 0;
     const skippedFresh = freshCategorySlugs.size;

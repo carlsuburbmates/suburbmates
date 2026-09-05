@@ -18,6 +18,8 @@ assert.match(route, /PEXELS_API_KEY/);
 assert.match(route, /batchSize = 25/);
 assert.match(route, /90 \* 24 \* 60 \* 60 \* 1000/);
 assert.match(route, /freshCategorySlugs/);
+assert.match(route, /priorityCategorySlugs/);
+assert.match(route, /"restaurant", "cafe", "bakery"/);
 assert.match(route, /dueCategories\.slice\(0, batchSize\)/);
 assert.match(route, /skippedFresh/);
 assert.match(route, /deferred/);
