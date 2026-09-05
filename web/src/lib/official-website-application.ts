@@ -25,7 +25,10 @@ async function recordHealth(status: "running" | "healthy" | "failed", error: str
 }
 
 export async function runOfficialWebsiteEnrichment(runKey: string, requestedLimit: number) {
-  const admin = createAdminClient(); const limit = Math.min(Math.max(requestedLimit, 1), 25);
+  const admin = createAdminClient(); const limit = Math.min(Math.max(requestedLimit, 1), 1);
+  const staleBefore = new Date(Date.now() - 5 * 60_000).toISOString();
+  const { error: recoveryError } = await admin.from("catalogue_enrichment_runs").update({ status: "failed", error_message: "Execution ended before the bounded batch completed; a later batch may safely continue.", completed_at: new Date().toISOString() }).eq("source_key", SOURCE_KEY).eq("source_contract_version", SOURCE_CONTRACT_VERSION).eq("status", "processing").lt("received_at", staleBefore);
+  if (recoveryError) throw new Error("Could not recover stale official-website enrichment runs.");
   const { data: source, error: sourceError } = await admin.from("catalogue_sources").select("enabled, automated, permitted_use, contract_version").eq("source_key", SOURCE_KEY).maybeSingle();
   if (sourceError || !source || !source.enabled || !source.automated || source.permitted_use !== "store_and_display" || source.contract_version !== SOURCE_CONTRACT_VERSION) throw new Error("Official website enrichment is not enabled under its approved source contract.");
   const { data: reviews, error: reviewError } = await admin.from("official_website_domain_reviews").select("host_name, review_status");

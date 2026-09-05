@@ -21,9 +21,11 @@ jobs:
         env:
           AUTOMATION_INGEST_TOKEN: ${{ secrets.AUTOMATION_INGEST_TOKEN }}
         run: |
-          run_key=$(printf 'official-website:%s' '${{ github.run_id }}' | sha256sum | cut -d ' ' -f 1)
-          curl --fail-with-body --retry 3 --retry-all-errors --request POST \
-            --header "authorization: Bearer $AUTOMATION_INGEST_TOKEN" \
-            --header "content-type: application/json" \
-            --data "{\"runKey\":\"$run_key\",\"limit\":25}" \
-            https://suburbmates.com.au/api/automation/official-website-enrichment
+          for batch in $(seq 1 25); do
+            run_key=$(printf 'official-website:%s:%s' '${{ github.run_id }}' "$batch" | sha256sum | cut -d ' ' -f 1)
+            curl --fail-with-body --max-time 45 --request POST \
+              --header "authorization: Bearer $AUTOMATION_INGEST_TOKEN" \
+              --header "content-type: application/json" \
+              --data "{\"runKey\":\"$run_key\",\"limit\":1}" \
+              https://suburbmates.com.au/api/automation/official-website-enrichment
+          done

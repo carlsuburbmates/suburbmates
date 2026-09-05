@@ -299,7 +299,7 @@ async function assessLinkedTerms(html: string, sourceUrl: URL, robotsText: strin
     return { status: "manual_review" as const, url: termsUrl.toString(), fingerprint: null, basis: "linked_terms_disallowed_by_robots" };
   }
   try {
-    const response = await fetchImpl(termsUrl, { redirect: "manual", signal: AbortSignal.timeout(12_000), headers: { "user-agent": userAgent } });
+    const response = await fetchImpl(termsUrl, { redirect: "manual", signal: AbortSignal.timeout(8_000), headers: { "user-agent": userAgent } });
     if (!response.ok || !response.headers.get("content-type")?.toLowerCase().includes("text/html")) {
       return { status: "manual_review" as const, url: termsUrl.toString(), fingerprint: null, basis: "linked_terms_unavailable" };
     }
@@ -337,7 +337,7 @@ export async function inspectOfficialWebsite(value: string, options: {
   const robotsUrl = new URL("/robots.txt", initial);
   let robots: Response;
   try {
-    robots = await fetchImpl(robotsUrl, { redirect: "manual", signal: AbortSignal.timeout(12_000), headers: { "user-agent": userAgent } });
+    robots = await fetchImpl(robotsUrl, { redirect: "manual", signal: AbortSignal.timeout(8_000), headers: { "user-agent": userAgent } });
   } catch {
     return result("blocked", checkedAt, "Robots rules could not be retrieved safely.");
   }
@@ -356,7 +356,7 @@ export async function inspectOfficialWebsite(value: string, options: {
   for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect += 1) {
     let response: Response;
     try {
-      response = await fetchImpl(current, { redirect: "manual", signal: AbortSignal.timeout(12_000), headers: { "user-agent": userAgent } });
+      response = await fetchImpl(current, { redirect: "manual", signal: AbortSignal.timeout(8_000), headers: { "user-agent": userAgent } });
     } catch {
       return result("unsupported", checkedAt, "The recorded website could not be reached.");
     }
