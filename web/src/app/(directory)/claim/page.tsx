@@ -38,9 +38,9 @@ export default async function ClaimPage({ searchParams }: { searchParams: Promis
               <Link href={`/login?next=${encodeURIComponent(claimPath)}`} className="btn btn-primary mt-6 min-h-11">Sign in to claim</Link>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-black">Need claim access?</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Ask for private claim help and explain your connection to the business. An operator can review it; this does not create an account, change the listing or publish anything automatically.</p>
-              <Link href="/contact?topic=claim_help" className="btn btn-outline mt-6 min-h-11">Ask for claim help</Link>
+              <h2 className="text-xl font-black">New to SuburbMates?</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Create secure owner access with an email code, then submit your claim for review. An account identifies you; it does not grant ownership, edit the listing or publish anything.</p>
+              <Link href={`/claim/access${selectedListingId ? `?listing=${selectedListingId}` : ""}`} className="btn btn-outline mt-6 min-h-11">Create owner access</Link>
             </div>
           </section>
         </div>

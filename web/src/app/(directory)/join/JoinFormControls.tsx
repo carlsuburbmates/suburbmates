@@ -162,7 +162,7 @@ export function TurnstileField({
   action = "business_submission",
 }: {
   siteKey: string;
-  action?: "business_submission" | "contact";
+  action?: "business_submission" | "contact" | "owner_access";
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);

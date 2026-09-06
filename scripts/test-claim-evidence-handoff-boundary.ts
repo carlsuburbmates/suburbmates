@@ -8,8 +8,8 @@ const page = fs.readFileSync("web/src/app/(directory)/claim/page.tsx", "utf8");
 
 assert.match(join, /\/claim\?listing=/);
 assert.match(page, /Already authorised\?/);
-assert.match(page, /Need claim access\?/);
-assert.match(page, /does not create an account, change the listing or publish anything automatically/);
+assert.match(page, /New to SuburbMates\?/);
+assert.match(page, /does not grant ownership, edit the listing or publish anything/);
 assert.match(client, /selectedListingId/);
 assert.match(client, /Selected profile/);
 assert.match(client, /p_abn/);
