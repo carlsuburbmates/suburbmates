@@ -122,6 +122,10 @@ function safeClockRange(opens: string, closes: string) {
 
 function cleanOpeningHours(value: unknown) {
   const entries = stringValues(value, 300).filter((entry) => {
+    // Some sites serialize a missing weekday as an empty comma/semicolon
+    // segment inside one otherwise valid hours string. Reject the entire
+    // value rather than publishing a visibly broken schedule or summary.
+    if (/(?:^|[,;])\s*[,;]|[,;]\s*$/.test(entry)) return false;
     const ranges = [...entry.matchAll(/(\d{1,2}:\d{2}(?::\d{2})?)\s*[-–]\s*(\d{1,2}:\d{2}(?::\d{2})?)/g)];
     return ranges.length > 0 && ranges.every((range) => safeClockRange(range[1], range[2]));
   });

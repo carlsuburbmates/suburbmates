@@ -21,6 +21,8 @@ assert.deepEqual(facts, [
 assert.doesNotMatch(JSON.stringify(facts), /promotional copy|image\.jpg/i, "Copy and images must not leave the extractor.");
 const unsafeHours = extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","openingHours":["", "", "Mo 11:30-10:00"]}</script>`);
 assert.ok(!unsafeHours.some((fact) => fact.fieldName === "trading_hours"), "Blank or ambiguous overnight hours must not publish.");
+const missingDayHours = extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","openingHours":"Mo 11:00-18:00, , We 11:00-18:00"}</script>`);
+assert.ok(!missingDayHours.some((fact) => fact.fieldName === "trading_hours"), "An empty weekday segment inside an otherwise valid schedule must not publish.");
 
 assert.equal(isRobotsPathAllowed("User-agent: *\nDisallow: /private\nAllow: /private/about", "SuburbMates-official-website-enrichment/1.0", "/"), true);
 assert.equal(isRobotsPathAllowed("User-agent: *\nDisallow: /private\nAllow: /private/about", "SuburbMates-official-website-enrichment/1.0", "/private"), false);
