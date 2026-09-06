@@ -15,6 +15,8 @@ assert.doesNotMatch(reconciler, /event=schedule/);
 assert.match(reconciler, /run\.conclusion !== "success"/);
 assert.match(reconciler, /ageHours > expected\.maximumAgeHours/);
 assert.match(reconciler, /state: "closed"/);
+assert.match(reconciler, /issues\?state=all/);
+assert.match(reconciler, /body, state: "open"/);
 assert.match(reconciler, /Public and owner data were not changed/);
 assert.match(reconciler, /Re-run failed jobs/);
 assert.match(hubspot, /cron: "7 \* \* \* \*"/);

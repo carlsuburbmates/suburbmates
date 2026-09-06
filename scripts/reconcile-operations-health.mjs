@@ -58,7 +58,9 @@ for (const expected of monitored) {
   }
 }
 
-const search = await github(`/repos/${repository}/issues?state=open&per_page=100`);
+// Reuse one durable operator record across failure/recovery cycles so /ops can
+// link to a stable place instead of accumulating or chasing issue numbers.
+const search = await github(`/repos/${repository}/issues?state=all&per_page=100`);
 const existing = search.find((issue) => issue.title === issueTitle && !issue.pull_request);
 
 if (problems.length === 0) {
@@ -84,8 +86,8 @@ const body = [
 ].join("\n");
 
 if (existing) {
-  await github(`/repos/${repository}/issues/${existing.number}`, { method: "PATCH", body: JSON.stringify({ body }) });
-  console.log(`Updated operations health issue #${existing.number}.`);
+  await github(`/repos/${repository}/issues/${existing.number}`, { method: "PATCH", body: JSON.stringify({ body, state: "open" }) });
+  console.log(`Updated and opened operations health issue #${existing.number}.`);
 } else {
   const created = await github(`/repos/${repository}/issues`, { method: "POST", body: JSON.stringify({ title: issueTitle, body }) });
   console.log(`Created operations health issue #${created.number}.`);
