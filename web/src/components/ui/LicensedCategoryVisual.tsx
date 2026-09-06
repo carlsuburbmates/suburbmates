@@ -24,7 +24,7 @@ export function LicensedCategoryVisual({
       <Image
         src={image.image_url}
         alt={businessContext
-          ? `Licensed ${categoryName} category context. It does not depict the listed business.`
+          ? `Representative licensed image for the ${categoryName} category; not supplied by the listed business.`
           : `Licensed ${categoryName} category context.`}
         fill
         unoptimized
@@ -33,7 +33,7 @@ export function LicensedCategoryVisual({
       />
       <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-transparent px-3 pb-2 pt-8 text-[10px] leading-4 text-white">
         <span className="block font-bold">
-          {businessContext ? "Category image · not this business" : "Licensed category context"}
+          {businessContext ? "Representative category image" : "Licensed category context"}
         </span>
         <span className="block text-white/85">
           Photo by{" "}
@@ -45,6 +45,7 @@ export function LicensedCategoryVisual({
             Pexels
           </a>
         </span>
+        {businessContext && <span className="block text-white/85">Licensed context; not supplied by or specific to this business.</span>}
       </figcaption>
     </figure>
   );

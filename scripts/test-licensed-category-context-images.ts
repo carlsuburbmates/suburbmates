@@ -29,13 +29,15 @@ assert.match(route, /state: failures\.length > 0 \? "partial" : "completed"/);
 assert.match(route, /failures\.length === targets\.length/);
 assert.match(route, /Licensed category image write failed/);
 assert.doesNotMatch(route, /Google|Maps|closed directory/i);
-assert.match(profile, /Licensed category image — does not depict this business/);
+assert.match(profile, /Representative image for this category/);
+assert.match(profile, /not supplied by or specific to/);
 assert.match(profile, /vendor\.is_claimed === false && photos\.length === 0/);
 assert.match(profile, /photographer_url/);
 for (const discoveryPage of [home, businesses, suburb, category, pair]) {
   assert.match(discoveryPage, /licensed_category_context_images|LicensedCategoryVisual/);
 }
-assert.match(visual, /Category image · not this business/);
+assert.match(visual, /Representative category image/);
+assert.match(visual, /not supplied by or specific to this business/);
 assert.match(visual, /Licensed category context/);
 assert.match(visual, /photographer_url/);
 assert.match(visual, /provider_url/);

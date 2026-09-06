@@ -88,7 +88,7 @@ Use the existing category taxonomy, augmented by retained factual service signal
 
 Relevant generic people, services in action, tools, products, workplaces and premises may be used as licensed context when the public label and credit make clear that they do not depict the listed business. Prefer natural, locally plausible scenes over sterile objects where the category supports them. Reject recognisable business brands, logos, watermarks, prominent signage, text-heavy imagery, clearly mismatched subjects or a caption implying endorsement. Do not add visual-AI tagging, dominant-colour crawling or another paid image-analysis platform merely to automate this licensed visual-context selection.
 
-Each public image displays: **“Licensed category image — does not depict this business”**, the provider and photographer credit, and a provider link. Retain provider photo ID, original URL, photographer, licence snapshot, keyword map version, selection date and crop metadata. A stock image never counts as an owner-approved image or as a monetisation quality-gate success.
+Each business-profile use displays **“Representative image for this category”**, explains that the licensed context is not supplied by or specific to the business, and includes the provider and photographer credit plus provider link. Retain provider photo ID, original URL, photographer, licence snapshot, keyword map version, selection date and crop metadata. A stock image never counts as an owner-approved image or as a monetisation quality-gate success.
 
 ## Presentation, search and accessibility
 

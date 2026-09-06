@@ -543,9 +543,10 @@ function PublicMediaGallery({ media }: { media: PublicMedia[] }) {
 function LicensedCategoryContextImage({ image, categoryName, businessName }: { image: CategoryContextImage; categoryName: string; businessName: string }) {
   return (
     <figure className="mb-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <Image src={image.image_url} alt={`Licensed ${categoryName} category context. It does not depict ${businessName}.`} width={1600} height={900} unoptimized className="h-64 w-full object-cover sm:h-80" />
+      <Image src={image.image_url} alt={`Representative licensed image for the ${categoryName} category; not supplied by ${businessName}.`} width={1600} height={900} unoptimized className="h-64 w-full object-cover sm:h-80" />
       <figcaption className="space-y-1 p-4 text-xs leading-5 text-slate-600">
-        <p className="font-bold text-slate-800">Licensed category image — does not depict this business</p>
+        <p className="font-bold text-slate-800">Representative image for this category</p>
+        <p>Licensed visual context selected for relevance. It is not supplied by or specific to {businessName}.</p>
         <p>Photo by <a href={image.photographer_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{image.photographer}</a> on <a href={image.provider_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Pexels</a>.</p>
       </figcaption>
     </figure>
