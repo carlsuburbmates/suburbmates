@@ -10,12 +10,16 @@ import {
 import { getTodayAest } from "../web/src/lib/automation/victorian-liquor-licences";
 
 const MAX_RESOURCE_BYTES = 40 * 1024 * 1024;
+const SOURCE_REQUEST_HEADERS = {
+  accept: "text/html,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;q=0.9,*/*;q=0.5",
+  "user-agent": "SuburbMates-catalogue-evidence/1.0 (+https://suburbmates.com.au)",
+};
 
 export async function acquireTaxPractitionersBoard(fetchImpl: typeof fetch = fetch) {
-  const resourcePage = await fetchImpl(TPB_RESOURCE_PAGE_URL, { signal: AbortSignal.timeout(20_000) });
+  const resourcePage = await fetchImpl(TPB_RESOURCE_PAGE_URL, { signal: AbortSignal.timeout(20_000), headers: SOURCE_REQUEST_HEADERS });
   if (!resourcePage.ok) throw new Error(`Tax Practitioners Board resource page returned ${resourcePage.status}.`);
   const resourceUrl = extractTaxPractitionersBoardResourceUrl(await resourcePage.text());
-  const workbookResponse = await fetchImpl(resourceUrl, { signal: AbortSignal.timeout(30_000) });
+  const workbookResponse = await fetchImpl(resourceUrl, { signal: AbortSignal.timeout(30_000), headers: SOURCE_REQUEST_HEADERS });
   if (!workbookResponse.ok) throw new Error(`Tax Practitioners Board workbook returned ${workbookResponse.status}.`);
   const length = Number(workbookResponse.headers.get("content-length") ?? 0);
   if (length > MAX_RESOURCE_BYTES) throw new Error("Tax Practitioners Board workbook exceeds the safe acquisition size limit.");

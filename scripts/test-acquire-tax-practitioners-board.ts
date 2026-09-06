@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { strToU8, zipSync } from "fflate";
 import {
   extractTaxPractitionersBoardResourceUrl,
@@ -33,4 +34,7 @@ assert.doesNotMatch(JSON.stringify(candidates), /Jane Personal|Personal Tax|opaq
 assert.equal(extractTaxPractitionersBoardResourceUrl('<a href="https://data.gov.au/data/dataset/tpb-register/resource/example/download/tpb-public-register-2026.xlsx">file</a>'), "https://data.gov.au/data/dataset/tpb-register/resource/example/download/tpb-public-register-2026.xlsx");
 assert.throws(() => extractTaxPractitionersBoardResourceUrl('<a href="https://example.com/tpb-public-register-2026.xlsx">file</a>'), /permitted XLSX/);
 assert.throws(() => parseTaxPractitionersBoardWorkbook(zipSync({ "xl/worksheets/sheet1.xml": strToU8("<worksheet><sheetData/></worksheet>") })), /unexpected organisation-register header/);
+const acquisition = fs.readFileSync("scripts/acquire-tax-practitioners-board.ts", "utf8");
+assert.match(acquisition, /SuburbMates-catalogue-evidence\/1\.0/);
+assert.match(acquisition, /headers: SOURCE_REQUEST_HEADERS/g);
 console.log("Tax Practitioners Board source acquisition checks passed.");
