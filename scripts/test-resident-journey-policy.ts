@@ -19,6 +19,7 @@ async function run() {
     locality,
     categoryVisual,
     imageAttribution,
+    ownerPilot,
   ] = await Promise.all([
     source("web/src/app/(directory)/page.tsx"),
     source("web/src/components/ui/HomeClient.tsx"),
@@ -32,6 +33,7 @@ async function run() {
     source("web/src/app/(directory)/[suburb]/page.tsx"),
     source("web/src/components/ui/DirectoryCategoryVisual.tsx"),
     source("web/public/images/ATTRIBUTION.md"),
+    source("web/src/components/ui/OwnerPilotInvitation.tsx"),
   ]);
 
   assert.match(
@@ -99,6 +101,12 @@ async function run() {
     /Find your business/,
     "home must direct owners to the search-first claim journey",
   );
+  assert.match(homeClient, /OwnerPilotInvitation/, "home must explain the founding rich-profile pilot to owners");
+  assert.match(ownerPilot, /Free founding profile pilot/);
+  assert.match(ownerPilot, /services, hours and a factual summary/);
+  assert.match(ownerPilot, /rights-cleared real media/);
+  assert.match(ownerPilot, /does not buy placement or change neutral search ranking/);
+  assert.match(ownerPilot, /nothing changes publicly until it is reviewed/);
   assert.match(
     homeClient,
     /href="\/join#find-business"/,
@@ -331,6 +339,7 @@ async function run() {
     /Own this business\? Claim and improve this profile/,
     "unclaimed profiles must make the owner improvement journey discoverable without competing with direct contact",
   );
+  assert.match(profile, /OwnerPilotInvitation/, "unclaimed profiles must explain the free rich-profile pilot");
   assert.match(
     locality,
     /published local business listings in \$\{name\}/,

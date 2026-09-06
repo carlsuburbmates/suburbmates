@@ -17,6 +17,7 @@ import { resolvePublicVendorRoute } from "@/lib/public-vendor-route";
 import { DirectoryProfileView } from "@/components/observability/DirectoryObservabilityObserver";
 import { PublicDirectoryShell } from "@/components/ui/PublicDirectoryShell";
 import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual";
+import { OwnerPilotInvitation } from "@/components/ui/OwnerPilotInvitation";
 import { displayDirectoryStreetAddress, isDirectoryCatchment } from "@/lib/directory-location";
 import {
   extractPublicProfileFacts,
@@ -315,21 +316,7 @@ export default async function VendorWebsite({ params }: PageProps) {
             </section>
             <PublicSourceSummaries summaries={sourceSummaries} />
             {vendor.is_claimed === false && (
-              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-black">Is this your business?</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Claim it to propose a better description, direct contact details
-                  and owner-authorised images. Every change is reviewed before it
-                  appears publicly.
-                </p>
-                <Link
-                  href={`/claim?listing=${encodeURIComponent(vendor.id)}`}
-                  className="btn btn-outline mt-5 w-full"
-                >
-                  <Camera size={16} aria-hidden="true" />
-                  Claim and improve profile
-                </Link>
-              </section>
+              <OwnerPilotInvitation href={`/claim?listing=${encodeURIComponent(vendor.id)}`} compact />
             )}
             <Link
               href={`/contact?topic=listing_correction&business=${encodeURIComponent(vendor.business_name)}`}

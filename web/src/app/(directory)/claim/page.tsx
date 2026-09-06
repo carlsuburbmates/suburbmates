@@ -3,6 +3,7 @@ import ClaimClient from "./ClaimClient";
 import Link from "next/link";
 import { ArrowLeft, BadgeCheck, Camera, Search } from "lucide-react";
 import type { ReactNode } from "react";
+import { OwnerPilotInvitation } from "@/components/ui/OwnerPilotInvitation";
 
 export const metadata = {
   title: "Claim Your Business | SuburbMates",
@@ -31,7 +32,10 @@ export default async function ClaimPage({ searchParams }: { searchParams: Promis
             <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Ready to claim this business?</h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-teal-50 sm:text-base">Claims are review-first. They never change a public profile or grant ownership automatically.</p>
           </section>
-          <section className="mt-6 grid gap-4 sm:grid-cols-2" aria-label="Claim access options">
+          <div className="mt-6">
+            <OwnerPilotInvitation href="#claim-access" />
+          </div>
+          <section id="claim-access" className="mt-6 grid scroll-mt-6 gap-4 sm:grid-cols-2" aria-label="Claim access options">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-xl font-black">Already authorised?</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">Sign in with the existing account linked to the business email. An email match supports review; it does not approve a claim by itself.</p>
@@ -77,7 +81,11 @@ export default async function ClaimPage({ searchParams }: { searchParams: Promis
           </div>
         </section>
 
-        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+        <div className="mt-6">
+          <OwnerPilotInvitation href="#claim-workspace" />
+        </div>
+
+        <section id="claim-workspace" className="mt-6 scroll-mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           <ClaimClient selectedListingId={selectedListingId} />
         </section>
       </div>

@@ -9,6 +9,7 @@ import { DirectoryCategoryVisual } from "@/components/ui/DirectoryCategoryVisual
 import { LicensedCategoryVisual, type LicensedCategoryImage } from "@/components/ui/LicensedCategoryVisual";
 import { displayDirectoryStreetAddress } from "@/lib/directory-location";
 import { HeroSearch } from "@/components/ui/HeroSearch";
+import { OwnerPilotInvitation } from "@/components/ui/OwnerPilotInvitation";
 import { createClient } from "@/utils/supabase/client";
 
 interface HomeClientProps {
@@ -303,17 +304,14 @@ export function HomeClient({
             missing business only when there is no match, and every submission
             is reviewed privately.
           </p>
-          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/join"
-              className="btn btn-inverse min-h-11"
-              aria-label="Find your business on SuburbMates"
-            >
-              Find your business <ArrowRight size={18} aria-hidden="true" />
-            </Link>
+          <div className="mt-8 text-left text-slate-950">
+            <OwnerPilotInvitation href="/join#find-business" />
+          </div>
+          <div className="mt-6 flex flex-col items-center justify-center gap-2 text-sm text-slate-300 sm:flex-row">
+            <span>Already searched and confirmed it is absent?</span>
             <Link
               href="/join#find-business"
-              className="btn min-h-11 border-2 border-white/70 bg-transparent text-white hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-white"
+              className="inline-flex min-h-11 items-center font-bold text-white underline decoration-white/50 underline-offset-4 hover:decoration-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Add a genuinely missing business to SuburbMates"
             >
               Add a missing business
