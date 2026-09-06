@@ -2,7 +2,9 @@ name: Official website factual enrichment
 
 on:
   schedule:
-    - cron: "13 20 * * 4"
+    # One bounded daily cohort advances initial coverage in weeks, while the
+    # 31-day freshness gate prevents repeat inspection of current profiles.
+    - cron: "13 20 * * *"
   workflow_dispatch:
 
 permissions:

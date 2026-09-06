@@ -129,8 +129,16 @@ function cleanOpeningHours(value: unknown) {
   return result.length > 0 && result.length <= 300 ? result : null;
 }
 
-function identityNames(records: JsonObject[]) {
-  return [...new Set(records.map((record) => cleanText(record.name, 200)).filter((name): name is string => Boolean(name)))];
+function identitySignals(html: string, sourceUrl: URL) {
+  const records = readJsonLd(html);
+  const signals = records.map((record) => cleanText(record.name, 200));
+  for (const match of html.matchAll(/<meta\b[^>]*(?:property|name)\s*=\s*["'](?:og:site_name|application-name)["'][^>]*content\s*=\s*(["'])(.*?)\1/gi)) signals.push(cleanText(match[2], 200));
+  const title = html.match(/<title\b[^>]*>([\s\S]*?)<\/title\s*>/i)?.[1]?.replace(/<[^>]+>/g, " ");
+  signals.push(cleanText(title, 200));
+  signals.push(sourceUrl.hostname.replace(/^www\./, "").split(".")[0]);
+  return [...new Set(signals
+    .filter((name): name is string => Boolean(name))
+    .filter((name) => !/^(?:home|welcome|official site)$/i.test(name)))];
 }
 
 function normalizedIdentity(value: string) {
@@ -140,7 +148,10 @@ function normalizedIdentity(value: string) {
 function identityMatches(expected: string, candidate: string) {
   const left = normalizedIdentity(expected);
   const right = normalizedIdentity(candidate);
-  return Boolean(left && right && (left === right || left.includes(right) || right.includes(left)));
+  if (!left || !right) return false;
+  if (left === right || left.replaceAll(" ", "") === right.replaceAll(" ", "")) return true;
+  const candidateTokens = new Set(right.split(" "));
+  return left.split(" ").every((token) => candidateTokens.has(token));
 }
 
 function stringValues(value: unknown, maxLength: number) {
@@ -414,8 +425,8 @@ export async function inspectOfficialWebsite(value: string, options: {
     if (!response.headers.get("content-type")?.toLowerCase().includes("text/html")) return result("unsupported", checkedAt, "The recorded website did not return HTML.");
     try {
       const html = await readBoundedHtml(response);
-      const names = identityNames(readJsonLd(html));
-      if (options.expectedBusinessName && names.length > 0 && !names.some((name) => identityMatches(options.expectedBusinessName!, name))) {
+      const names = identitySignals(html, current);
+      if (options.expectedBusinessName && !names.some((name) => identityMatches(options.expectedBusinessName!, name))) {
         return { outcome: "unsupported", sourceUrl: current.toString(), checkedAt, contentFingerprint: await fingerprint(html), facts: [], reason: "Structured website identity does not match the listed business.", termsStatus: "manual_review", termsUrl: null, termsFingerprint: null, termsBasis: "inspection_not_eligible" };
       }
       const terms = options.termsOverride === "approved"

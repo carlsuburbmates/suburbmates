@@ -49,6 +49,13 @@ const mismatch = await inspectOfficialWebsite("https://example.test/", { expecte
 assert.equal(mismatch.outcome, "unsupported");
 assert.deepEqual(mismatch.facts, []);
 
+const hostMatchResponses = [
+  new Response("User-agent: *\nAllow: /", { status: 200 }),
+  new Response(`<title>Welcome</title><script type="application/ld+json">{"telephone":"03 9000 9999"}</script>`, { status: 200, headers: { "content-type": "text/html" } }),
+];
+const hostMatch = await inspectOfficialWebsite("https://example-bakery.test/", { expectedBusinessName: "Example Bakery", fetchImpl: async () => hostMatchResponses.shift()! });
+assert.equal(hostMatch.outcome, "eligible", "A matching official hostname can verify identity when structured name metadata is absent.");
+
 const termsResponses = [
   new Response("User-agent: *\nAllow: /", { status: 200, headers: { "content-type": "text/plain" } }),
   new Response(`${html}<a href="/terms">Terms of use</a>`, { status: 200, headers: { "content-type": "text/html" } }),

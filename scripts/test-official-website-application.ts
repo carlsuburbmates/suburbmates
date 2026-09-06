@@ -30,6 +30,7 @@ assert.match(runner, /staleBefore/);
 assert.match(runner, /Execution ended before the bounded batch completed/);
 assert.doesNotMatch(runner, /if \(!approvedHosts\.size\)/);
 assert.match(route, /limit !== 1/);
+assert.match(workflow, /cron: "13 20 \* \* \*"/);
 assert.match(workflow, /seq 1 25/);
 assert.match(workflow, /"\$batch"/);
 assert.ok(workflow.includes('\\"limit\\":1'));
