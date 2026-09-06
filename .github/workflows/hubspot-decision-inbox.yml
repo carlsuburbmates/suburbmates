@@ -2,7 +2,9 @@ name: HubSpot Decision Inbox
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    # One-person, low-volume queue: hourly reconciliation is prompt enough
+    # without running an optional mirror 96 times every day.
+    - cron: "7 * * * *"
   workflow_dispatch:
 
 permissions:

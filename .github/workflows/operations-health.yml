@@ -1,0 +1,38 @@
+name: Operations health reconciliation
+
+on:
+  schedule:
+    - cron: "37 */6 * * *"
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Catalogue candidate discovery
+      - ASIC Credit Licensee catalogue discovery
+      - Tax Practitioners Board catalogue discovery
+      - Victorian liquor-licence catalogue discovery
+      - HubSpot Decision Inbox
+      - Licensed category-context images
+      - Official website factual enrichment
+      - Production smoke
+      - Website safety evidence
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+concurrency:
+  group: operations-health-reconciliation
+  cancel-in-progress: true
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconcile one plain-language operations health issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/reconcile-operations-health.mjs

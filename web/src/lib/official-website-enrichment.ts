@@ -2,6 +2,7 @@ const MAX_HTML_BYTES = 512_000;
 const MAX_JSON_LD_BLOCK_BYTES = 64_000;
 const MAX_JSON_LD_BLOCKS = 12;
 const MAX_REDIRECTS = 3;
+const MAX_FACTUAL_LINKED_PAGES = 4;
 
 export type WebsiteFactName =
   | "phone"
@@ -17,6 +18,7 @@ export type WebsiteFactName =
 export type WebsiteFact = {
   fieldName: WebsiteFactName;
   value: string;
+  sourceUrl?: string;
 };
 
 export type OfficialWebsiteInspection = {
@@ -211,7 +213,7 @@ function uniqueFacts(facts: WebsiteFact[]) {
  * Extracts explicit structured business facts only. It deliberately has no
  * description, review, testimonial, logo, image, HTML, or page-copy output.
  */
-export function extractOfficialWebsiteFacts(html: string): WebsiteFact[] {
+export function extractOfficialWebsiteFacts(html: string, sourceUrl?: string): WebsiteFact[] {
   const records = readJsonLd(html);
   const facts = records.flatMap((record) => {
     const hours = cleanOpeningHours(record.openingHours)
@@ -229,7 +231,7 @@ export function extractOfficialWebsiteFacts(html: string): WebsiteFact[] {
       ...actionUrls(record.potentialAction),
     ].filter((fact): fact is WebsiteFact => Boolean(fact));
   });
-  return uniqueFacts(facts).slice(0, 40);
+  return uniqueFacts(facts).slice(0, 40).map((fact) => sourceUrl ? { ...fact, sourceUrl } : fact);
 }
 
 function parseAllowedWebsite(value: string) {
@@ -331,6 +333,50 @@ function linkedTermsUrl(html: string, sourceUrl: URL) {
   return null;
 }
 
+export function linkedFactualPageUrls(html: string, sourceUrl: URL) {
+  const urls: URL[] = [];
+  const seen = new Set<string>();
+  for (const match of html.matchAll(/<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a\s*>/gi)) {
+    const label = match[3].replace(/<[^>]+>/g, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim();
+    if (!/(?:services?|what we do|contact(?: us)?|book(?:ing| now)?|appointments?|menus?|order online)/i.test(`${label} ${match[2]}`)) continue;
+    try {
+      const url = parseAllowedWebsite(new URL(match[2], sourceUrl).toString());
+      if (!sameHostOrWwwVariant(sourceUrl.hostname, url.hostname)) continue;
+      url.hash = "";
+      const key = url.toString();
+      if (key === sourceUrl.toString() || seen.has(key)) continue;
+      seen.add(key);
+      urls.push(url);
+      if (urls.length === MAX_FACTUAL_LINKED_PAGES) break;
+    } catch { /* Ignore malformed, non-HTTPS, credentialed or external links. */ }
+  }
+  return urls;
+}
+
+async function readLinkedFactualPage(target: URL, initialHost: string, robotsText: string | null, fetchImpl: FetchLike, userAgent: string) {
+  let current = target;
+  for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect += 1) {
+    if (robotsText !== null && !isRobotsPathAllowed(robotsText, userAgent, `${current.pathname}${current.search}`)) return null;
+    let response: Response;
+    try {
+      response = await fetchImpl(current, { redirect: "manual", signal: AbortSignal.timeout(8_000), headers: { "user-agent": userAgent } });
+    } catch { return null; }
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location || redirect === MAX_REDIRECTS) return null;
+      try {
+        const next = parseAllowedWebsite(new URL(location, current).toString());
+        if (!sameHostOrWwwVariant(initialHost, next.hostname)) return null;
+        current = next;
+        continue;
+      } catch { return null; }
+    }
+    if (!response.ok || !response.headers.get("content-type")?.toLowerCase().includes("text/html")) return null;
+    try { return { url: current, html: await readBoundedHtml(response) }; } catch { return null; }
+  }
+  return null;
+}
+
 function termsRestrictionSignal(html: string) {
   const text = html.replace(/<script\b[\s\S]*?<\/script\s*>/gi, " ").replace(/<style\b[\s\S]*?<\/style\s*>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").toLowerCase();
   const automation = /(scrap(?:e|ing)|crawl(?:er|ing)?|data\s*mining|automated\s+(?:means|system|tool)|robot|spider|systematic\s+(?:collection|extraction))/;
@@ -407,6 +453,9 @@ export async function inspectOfficialWebsite(value: string, options: {
 
   let current = initial;
   for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect += 1) {
+    if (robotsText !== null && !isRobotsPathAllowed(robotsText, userAgent, `${current.pathname}${current.search}`)) {
+      return result("blocked", checkedAt, "Robots rules disallow the recorded page.");
+    }
     let response: Response;
     try {
       response = await fetchImpl(current, { redirect: "manual", signal: AbortSignal.timeout(8_000), headers: { "user-agent": userAgent } });
@@ -439,12 +488,18 @@ export async function inspectOfficialWebsite(value: string, options: {
       if (terms.status === "manual_review") {
         return { outcome: "blocked", sourceUrl: current.toString(), checkedAt, contentFingerprint: await fingerprint(html), facts: [], reason: "Linked website terms require operator review.", termsStatus: terms.status, termsUrl: terms.url, termsFingerprint: terms.fingerprint, termsBasis: terms.basis };
       }
+      const linkedPages = await Promise.all(
+        linkedFactualPageUrls(html, current).map((url) => readLinkedFactualPage(url, initial.hostname, robotsText, fetchImpl, userAgent)),
+      );
+      const inspectedPages = [{ url: current, html }, ...linkedPages.filter((page): page is { url: URL; html: string } => Boolean(page))];
+      const facts = uniqueFacts(inspectedPages.flatMap((page) => extractOfficialWebsiteFacts(page.html, page.url.toString()))).slice(0, 40);
+      const fingerprintMaterial = inspectedPages.map((page) => `${page.url.toString()}\n${page.html}`).join("\n---suburbmates-page---\n");
       return {
         outcome: "eligible",
         sourceUrl: current.toString(),
         checkedAt,
-        contentFingerprint: await fingerprint(html),
-        facts: extractOfficialWebsiteFacts(html),
+        contentFingerprint: await fingerprint(fingerprintMaterial),
+        facts,
         reason: null,
         termsStatus: terms.status,
         termsUrl: terms.url,

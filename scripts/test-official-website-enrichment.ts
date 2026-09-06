@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { extractOfficialWebsiteFacts, inspectOfficialWebsite, isRobotsPathAllowed } from "../web/src/lib/official-website-enrichment";
+import { extractOfficialWebsiteFacts, inspectOfficialWebsite, isRobotsPathAllowed, linkedFactualPageUrls } from "../web/src/lib/official-website-enrichment";
 
 const html = `
   <script type="application/ld+json">
@@ -42,6 +42,26 @@ assert.match(inspection.contentFingerprint ?? "", /^[0-9a-f]{64}$/);
 assert.equal(inspection.facts.length, 9);
 assert.equal(inspection.termsStatus, "automated_clear");
 assert.equal(inspection.termsBasis, "no_linked_terms_restriction_found");
+
+assert.deepEqual(
+  linkedFactualPageUrls('<a href="/services">Our services</a><a href="https://other.test/menu">Menu</a><a href="/about">About</a>', new URL("https://example.test/"))
+    .map((url) => url.toString()),
+  ["https://example.test/services"],
+  "Only bounded, same-domain factual links are eligible.",
+);
+
+const linkedResponses = [
+  new Response("User-agent: *\nAllow: /", { status: 200, headers: { "content-type": "text/plain" } }),
+  new Response(`${html}<a href="/services">Services</a>`, { status: 200, headers: { "content-type": "text/html" } }),
+  new Response('<script type="application/ld+json">{"name":"Example Bakery","serviceType":["Bread delivery"]}</script>', { status: 200, headers: { "content-type": "text/html" } }),
+];
+const linkedInspection = await inspectOfficialWebsite("https://example.test/", {
+  expectedBusinessName: "Example Bakery",
+  fetchImpl: async () => linkedResponses.shift() ?? new Response(null, { status: 500 }),
+});
+const linkedFact = linkedInspection.facts.find((fact) => fact.value === "Bread delivery");
+assert.equal(linkedFact?.sourceUrl, "https://example.test/services");
+assert.equal(linkedInspection.facts.find((fact) => fact.value === "Sourdough baking")?.sourceUrl, "https://example.test/");
 
 const mismatchResponses = [
   new Response("User-agent: *\nAllow: /", { status: 200 }),
