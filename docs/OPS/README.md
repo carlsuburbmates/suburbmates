@@ -17,12 +17,12 @@ Write the reason in the decision note. The system keeps it as permanent audit ev
 
 Open `/ops` and sign in with `admin@suburbmates.com.au` using the normal password form. If the password is unavailable, use **Set or reset password**. The eight-digit email code is a fallback: request it, then enter the newest code in the browser you are using. The email can be opened on another device. If a code fails, wait for the stated email limit before requesting another.
 
-## Daily order
+## Daily review — 5 to 15 minutes
 
 1. **HubSpot Decision Inbox (optional)** — use it as your short to-do list when it has tasks. Open the linked SuburbMates page; do not make the decision in HubSpot. It never contains private messages or evidence.
 2. **Work** — open only the genuine decisions that need judgment; use its priority groups rather than treating background evidence as a queue.
 3. **Businesses** — find a vendor, its authorised evidence and its protected detail/actions when Work links you there or you need to look something up.
-4. **System** — act only on a plain-language warning; otherwise leave background evidence and routine health alone.
+4. When Work is empty, stop. Do not inspect background evidence or provider dashboards to create work for yourself.
 
 When an Ops decision reaches its final state, its matching HubSpot task closes automatically. If HubSpot is unavailable, complete the protected Ops decision anyway; the next reconciliation catches up. See [the HubSpot Decision Inbox contract](HUBSPOT_DECISION_INBOX.md).
 
@@ -43,7 +43,17 @@ When uncertain, leave a listing unpublished, save a draft, request information, 
 
 ## System warnings
 
-System warnings are supporting information, not permission to change a listing. If a warning says it needs technical help, record it and ask for help. You do not need provider dashboards for routine operations.
+System warnings are supporting information, not permission to change a listing. Follow the warning's exact recovery step once; never edit a business record to compensate for failed automation. The stable [Operations Health issue](https://github.com/carlsuburbmates/suburbmates/issues/104) links the affected workflow and reopens or closes automatically. If a bounded retry fails again, leave the warning open and the affected source paused. Existing public and owner-approved information remains unchanged.
+
+## Weekly review — 10 to 20 minutes
+
+1. Open **System** and read **This week at a glance**.
+2. If **Action needed now** is zero, review the directory-activity and profile-coverage summaries, then stop.
+3. If a recovery card appears, follow its exact safe step and use **Open Operations Health**. Retry only once.
+4. Check whether visitors are progressing from search to profiles and direct contact, and whether the claimed-profile pilot is gaining complete profiles.
+5. Leave routine inspections, blocked website domains, repeat discoveries and historic evidence alone unless System explicitly surfaces a threshold or owner-impact warning.
+
+Normal operation never requires a terminal, database console, deployment command, raw provider log or Codex. GitHub is used only through the linked Operations Health page for a bounded workflow retry.
 
 ## Boundaries
 

@@ -8,6 +8,7 @@
 - System status and decision history use plain English and do not display raw provider errors, metadata, or internal reference IDs.
 - The owner-status feed is read-only and returns only request type, status, controlled explanation, next step, and dates for the signed-in owner’s own claim and profile-change requests.
 - The one-way HubSpot Decision Inbox may mirror a genuine decision as a low-detail task, but the protected Ops action remains the only place that changes SuburbMates data.
+- System provides one seven-day operator summary and source-specific recovery cards. The stable Operations Health record consolidates scheduled failure, cancellation and staleness evidence and closes after recovery.
 
 ## What remains for acceptance
 
@@ -17,4 +18,4 @@ The owner-status feed is a data boundary for User Workflows to display; this Ops
 
 - No listing publication, ownership change, import, deploy, Stripe, pricing, or billing change is included.
 - The released public directory, public owner dashboard display, and automation presentation belong to their respective lanes.
-- Technical repair remains exceptional. The operator should record a warning and ask for help, not use provider dashboards.
+- Technical repair remains exceptional. The operator follows one bounded recovery step from System and the stable Operations Health record; normal work never requires a terminal, database console, deployment command or raw provider log.

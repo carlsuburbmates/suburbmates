@@ -37,3 +37,5 @@ Credentials are server-only and least-privilege within HubSpot's available model
 2. Open the linked `/ops` page.
 3. Read the protected evidence and make the bounded decision there.
 4. The corresponding HubSpot task closes automatically; background evidence remains out of sight.
+
+Reconciliation runs hourly. That is intentionally sufficient for this low-volume one-person operation; `/ops` remains authoritative if the optional mirror is delayed.

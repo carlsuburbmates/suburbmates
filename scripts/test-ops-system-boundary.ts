@@ -6,6 +6,7 @@ const abnHealthCorrection = fs.readFileSync("supabase/migrations/20260725210822_
 const candidateHealthCorrection = fs.readFileSync("supabase/migrations/20260830130000_ignore_superseded_candidate_jobs_in_ops_health.sql", "utf8");
 const page = fs.readFileSync("web/src/app/ops/system/page.tsx", "utf8");
 const profileCoverage = fs.readFileSync("web/src/lib/public-profile-coverage.ts", "utf8");
+const operatorGuide = fs.readFileSync("docs/OPS/README.md", "utf8");
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION private\.redact_ops_audit_state/);
 assert.match(migration, /DROP FUNCTION IF EXISTS public\.ops_list_audit_events\(INTEGER\)/);
@@ -50,4 +51,8 @@ assert.match(abnHealthCorrection, /Bulk ABN checks are intentionally disabled/);
 assert.match(candidateHealthCorrection, /job\.job_type <> 'candidate_handoff'/);
 assert.match(candidateHealthCorrection, /candidate_handoff_health/);
 assert.match(candidateHealthCorrection, /SELECT public\.refresh_internal_operations_health\(\)/);
+assert.match(operatorGuide, /Daily review — 5 to 15 minutes/);
+assert.match(operatorGuide, /Weekly review — 10 to 20 minutes/);
+assert.match(operatorGuide, /never requires a terminal, database console, deployment command, raw provider log or Codex/i);
+assert.doesNotMatch(operatorGuide, /record it and ask for help/i);
 console.log("Ops System explanation and audit boundary checks passed.");
