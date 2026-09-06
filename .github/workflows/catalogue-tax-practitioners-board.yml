@@ -53,6 +53,13 @@ jobs:
     needs: [discover, mark-handoff-running]
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      # Separate bounded jobs prevent a growing public register from exhausting
+      # one runner timeout. Keep them serial to avoid a database/Worker burst.
+      max-parallel: 1
+      matrix:
+        shard_index: [0, 1, 2, 3]
     steps:
       - uses: actions/checkout@v7
 
@@ -69,7 +76,7 @@ jobs:
           path: data
 
       - name: Send organisation-only candidates to the private qualification handoff
-        run: npm run candidate:handoff -- data/vendor-candidates-tax-practitioners-board.csv
+        run: npm run candidate:handoff -- data/vendor-candidates-tax-practitioners-board.csv --shard-index ${{ matrix.shard_index }} --shard-count 4
         env:
           CATALOGUE_SOURCE: tax_practitioners_board
           CANDIDATE_HANDOFF_URL: https://suburbmates.com.au/api/automation/candidates

@@ -35,6 +35,10 @@ assert.equal(extractTaxPractitionersBoardResourceUrl('<a href="https://data.gov.
 assert.throws(() => extractTaxPractitionersBoardResourceUrl('<a href="https://example.com/tpb-public-register-2026.xlsx">file</a>'), /permitted XLSX/);
 assert.throws(() => parseTaxPractitionersBoardWorkbook(zipSync({ "xl/worksheets/sheet1.xml": strToU8("<worksheet><sheetData/></worksheet>") })), /unexpected organisation-register header/);
 const acquisition = fs.readFileSync("scripts/acquire-tax-practitioners-board.ts", "utf8");
+const workflow = fs.readFileSync(".github/workflows/catalogue-tax-practitioners-board.yml", "utf8");
 assert.match(acquisition, /SuburbMates-catalogue-evidence\/1\.0/);
 assert.match(acquisition, /headers: SOURCE_REQUEST_HEADERS/g);
+assert.match(workflow, /max-parallel: 1/);
+assert.match(workflow, /shard_index: \[0, 1, 2, 3\]/);
+assert.match(workflow, /--shard-index \$\{\{ matrix\.shard_index \}\} --shard-count 4/);
 console.log("Tax Practitioners Board source acquisition checks passed.");

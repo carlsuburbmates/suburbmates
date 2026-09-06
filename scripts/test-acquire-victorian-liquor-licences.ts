@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { strToU8, zipSync } from "fflate";
 import {
   extractVictorianLiquorResourceUrl,
@@ -20,4 +21,8 @@ assert.deepEqual(candidates, [{
 assert.equal(extractVictorianLiquorResourceUrl('<a href="https://www.vic.gov.au/sites/default/files/Current.xlsx">file</a>'), "https://www.vic.gov.au/sites/default/files/Current.xlsx");
 assert.throws(() => extractVictorianLiquorResourceUrl('<a href="https://example.com/file.xlsx">file</a>'), /permitted XLSX/);
 assert.throws(() => parseVictorianLiquorWorkbook(zipSync({ "xl/worksheets/sheet1.xml": strToU8("<worksheet><sheetData/></worksheet>") })), /unexpected header/);
+const workflow = fs.readFileSync(".github/workflows/catalogue-victorian-liquor-licences.yml", "utf8");
+assert.match(workflow, /max-parallel: 1/);
+assert.match(workflow, /shard_index: \[0, 1, 2, 3\]/);
+assert.match(workflow, /--shard-index \$\{\{ matrix\.shard_index \}\} --shard-count 4/);
 console.log("Victorian liquor source acquisition checks passed.");
