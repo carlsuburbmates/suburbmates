@@ -21,3 +21,20 @@ export async function decideOfficialWebsiteDomainAction(formData: FormData) {
   revalidatePath(path);
   redirect(`${path}?success=${action}`);
 }
+
+export async function rollbackOfficialWebsiteEnrichmentAction(formData: FormData) {
+  const enrichmentRunId = String(formData.get("enrichmentRunId") ?? "").trim();
+  const vendorId = String(formData.get("vendorId") ?? "").trim();
+  const reason = String(formData.get("reason") ?? "").trim();
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const { supabase } = await verifyOpsAdmin(path);
+  if (!uuid.test(enrichmentRunId) || !uuid.test(vendorId) || reason.length < 8 || reason.length > 2000) redirect(`${path}?error=rollback-invalid`);
+  const { error } = await supabase.rpc("ops_rollback_official_website_enrichment", {
+    p_enrichment_run_id: enrichmentRunId, p_vendor_id: vendorId, p_reason: reason,
+  });
+  if (error) redirect(`${path}?error=rollback-guard`);
+  revalidatePath("/ops/system");
+  revalidatePath(path);
+  revalidatePath("/businesses");
+  redirect(`${path}?success=rollback`);
+}

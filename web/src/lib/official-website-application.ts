@@ -65,12 +65,25 @@ export async function runOfficialWebsiteEnrichment(runKey: string, requestedLimi
         ...plan.facts.map((fact) => ({ vendor_id: vendor.id, field_name: fact.fieldName, value_text: fact.value, source_key: SOURCE_KEY, source_record_key: sourceRecordKey, source_url: fact.sourceUrl ?? inspection.sourceUrl, observed_at: inspection.checkedAt, freshness_due_at: freshnessDueAt(inspection.checkedAt), confidence: fact.fieldName === "description" ? 70 : 85, evidence_state: fact.conflict ? "conflict" : "active", application_state: fact.applied ? "applied" : fact.conflict ? "conflict" : "observed", applied_at: fact.applied ? inspection.checkedAt : null, enrichment_run_id: created.id })),
         ...linkedFacts.map((fact) => ({ vendor_id: vendor.id, field_name: evidenceFieldName(fact.fieldName), value_text: fact.value, source_key: SOURCE_KEY, source_record_key: sourceRecordKey, source_url: fact.sourceUrl!, observed_at: inspection.checkedAt, freshness_due_at: freshnessDueAt(inspection.checkedAt), confidence: 70, evidence_state: "active", application_state: "observed", applied_at: null, enrichment_run_id: created.id })),
       ];
-      const { data: evidence, error: evidenceError } = rows.length ? await admin.from("listing_field_evidence").upsert(rows, { onConflict: "vendor_id,field_name,source_key,source_record_key,value_text,observed_at" }).select("id, field_name") : { data: [], error: null };
-      if (evidenceError) throw new Error("Could not retain official-website field evidence.");
-      for (const conflictField of plan.conflictFields) { const incoming = (evidence ?? []).find((row: { field_name: string }) => row.field_name === conflictField); if (!incoming) continue; const current = conflictField === "service" ? (vendor.services ?? []).join(", ") : conflictField === "area_served" ? (vendor.area_served ?? []).join(", ") : conflictField === "accessibility" ? (vendor.accessibility_features ?? []).join(", ") : String(vendor[conflictField as keyof Vendor] ?? ""); const { error } = await admin.from("catalogue_field_conflicts").upsert({ vendor_id: vendor.id, field_name: conflictField, incoming_evidence_id: incoming.id, current_value: current }, { onConflict: "incoming_evidence_id", ignoreDuplicates: true }); if (error) throw new Error("Could not retain official-website field conflict."); }
-      if (Object.keys(plan.updates).length) { const { error } = await admin.from("vendors").update({ ...plan.updates, source_checked_on: inspection.checkedAt.slice(0, 10), updated_at: inspection.checkedAt }).eq("id", vendor.id).eq("ownership_status", "unclaimed").eq("is_claimed", false); if (error) throw new Error("Could not apply safe official-website facts."); }
-      applied += plan.appliedFields.length; conflicts += plan.conflictFields.length;
-      const { error: auditError } = await admin.from("audit_events").insert({ actor_type: "service", action: "official_website_factual_enrichment", entity_type: "vendor", entity_id: vendor.id, reason: "Terms-aware, robots-aware structured factual inspection applied only empty unclaimed fields.", after_data: { applied_fields: plan.appliedFields, conflict_fields: plan.conflictFields, linked_page_fact_count: linkedFacts.length, linked_page_application: "evidence_only", terms_basis: inspection.termsBasis, owner_control_preserved: true, media_or_page_copy_retained: false }, correlation_id: created.correlation_id }); if (auditError) throw new Error("Could not audit official-website factual enrichment.");
+      const { data: committed, error: commitError } = await admin.rpc("apply_official_website_enrichment_atomic", {
+        p_vendor_id: vendor.id,
+        p_enrichment_run_id: created.id,
+        p_evidence: rows,
+        p_updates: plan.updates,
+        p_checked_at: inspection.checkedAt,
+        p_correlation_id: created.correlation_id,
+        p_audit_metadata: {
+          applied_fields: plan.appliedFields,
+          conflict_fields: plan.conflictFields,
+          linked_page_fact_count: linkedFacts.length,
+          linked_page_application: "evidence_only",
+          terms_basis: inspection.termsBasis,
+          media_or_page_copy_retained: false,
+        },
+      });
+      if (commitError || !committed?.[0]) throw new Error("Could not atomically retain and apply official-website evidence.");
+      applied += committed[0].applied_count;
+      conflicts += committed[0].conflict_count;
     }
     const { error } = await admin.from("catalogue_enrichment_runs").update({ status: "completed", applied_count: applied, conflict_count: conflicts, completed_at: new Date().toISOString() }).eq("id", created.id); if (error) throw new Error("Could not complete official-website enrichment run."); await recordHealth("healthy", null, created.id); return { state: "completed" as const, inspected: candidates.length, applied, conflicts };
   } catch (error) { const message = error instanceof Error ? error.message.slice(0, 500) : "Official-website enrichment failed."; await admin.from("catalogue_enrichment_runs").update({ status: "failed", error_message: message, completed_at: new Date().toISOString() }).eq("id", created.id); await recordHealth("failed", message, created.id); throw error; }
