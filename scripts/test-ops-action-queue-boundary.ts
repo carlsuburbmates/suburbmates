@@ -3,6 +3,8 @@ import fs from "node:fs";
 
 const migration = fs.readFileSync("supabase/migrations/20260723155744_distinguish_bulk_automation_from_operator_actions.sql", "utf8");
 const work = fs.readFileSync("web/src/lib/ops/work.ts", "utf8");
+assert.doesNotMatch(work, /Ask for technical help/);
+assert.match(work, /Follow the safe recovery step/);
 const catalogue = fs.readFileSync("web/src/app/ops/catalogue-review/page.tsx", "utf8");
 const candidateRoute = fs.readFileSync("web/src/app/api/automation/candidates/route.ts", "utf8");
 

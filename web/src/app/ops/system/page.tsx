@@ -54,8 +54,10 @@ export default async function OpsSystemPage() {
 
       <section className={`rounded-2xl border p-6 shadow-sm ${attention.length === 0 ? "border-green-200 bg-green-50" : "border-amber-300 bg-amber-50"}`}>
         <h3 className="text-xl font-bold">{attention.length === 0 ? "All clear" : `${attention.length} item${attention.length === 1 ? "" : "s"} need attention`}</h3>
-        {attention.length === 0 ? <><p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p>{activeSourceRefreshes.length > 0 && <p className="mt-3 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm font-semibold text-sky-950">{activeSourceRefreshes.map((item) => label(item.integration_name)).join(", ")} refresh {activeSourceRefreshes.length === 1 ? "is" : "are"} in progress. It does not need an operator decision.</p>}</> : <div className="mt-4 space-y-3">{attention.map((item) => <article id={item.reference} key={item.reference} className="scroll-mt-6 rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: ask for technical help and quote reference {item.reference}.</p></article>)}</div>}
+        {attention.length === 0 ? <><p className="mt-2 text-slate-700">Everything currently monitored is operating normally. You do not need to do anything.</p>{activeSourceRefreshes.length > 0 && <p className="mt-3 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm font-semibold text-sky-950">{activeSourceRefreshes.map((item) => label(item.integration_name)).join(", ")} refresh {activeSourceRefreshes.length === 1 ? "is" : "are"} in progress. It does not need an operator decision.</p>}</> : <div className="mt-4 space-y-3">{attention.map((item) => <article id={item.reference} key={item.reference} className="scroll-mt-6 rounded-xl border border-amber-200 bg-white p-4"><p className="font-bold">{item.title}</p><p className="mt-1 text-sm text-slate-700">{item.explanation}</p><p className="mt-2 text-sm font-semibold text-slate-800">What to do: {recoveryInstruction(item.reference)}</p><a className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-teal-900 underline decoration-teal-800/40 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800" href="https://github.com/carlsuburbmates/suburbmates/issues/104" target="_blank" rel="noreferrer">Open Operations Health</a></article>)}</div>}
       </section>
+
+      <OperationalWeekSummary health={health} jobs={jobs} events={events} attentionCount={attention.length} />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold">What is deliberately not active</h3>
@@ -78,7 +80,7 @@ export default async function OpsSystemPage() {
       <details className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <summary className="cursor-pointer p-5 text-lg font-bold">Technical details and recent checks</summary>
         <div className="border-t border-slate-200 p-5">
-          <p className="text-sm text-slate-600">Use these details only when investigating an item above with technical help. A warning never publishes a listing or changes ownership by itself.</p>
+          <p className="text-sm text-slate-600">Use these details only when a recovery card above asks you to investigate. A warning never publishes a listing or changes ownership by itself.</p>
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{health.map((item) => <article key={item.integration_name} className="rounded-xl border border-slate-200 p-4"><div className="flex items-center justify-between gap-3"><h4 className="font-bold">{label(item.integration_name)}</h4><Status value={item.status} /></div><p className="mt-2 text-sm text-slate-700">{healthMessage(item)}</p><p className="mt-3 text-xs text-slate-500">Last checked {date(item.updated_at)}</p>{item.last_success_at && <p className="mt-1 text-xs text-slate-500">Last successful check {date(item.last_success_at)}</p>}{item.last_failure_at && <p className="mt-1 text-xs text-slate-500">Last failure {date(item.last_failure_at)}</p>}{item.last_error && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-950">Technical note: {item.last_error}</p>}<HealthDetails item={item} /></article>)}</div>
           <JobDetails jobs={jobs} />
         </div>
@@ -90,6 +92,16 @@ export default async function OpsSystemPage() {
       </details>
     </div>
   );
+}
+
+function OperationalWeekSummary({ health, jobs, events, attentionCount }: { health: Health[]; jobs: Job[]; events: Audit[]; attentionCount: number }) {
+  const readAt = new Date();
+  const start = new Date(readAt.getTime() - 7 * 24 * 60 * 60 * 1_000);
+  const recentDecisions = events.filter((event) => Date.parse(event.created_at) >= start.getTime()).length;
+  const recentFailedJobs = jobs.filter((job) => job.status === "failed" && Date.parse(job.created_at) >= start.getTime()).length;
+  const healthyChecks = health.filter((item) => item.status === "healthy").length;
+  const runningChecks = health.filter((item) => item.status === "running").length;
+  return <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-wrap items-baseline justify-between gap-3"><div><h3 className="text-xl font-bold">This week at a glance</h3><p className="mt-1 text-sm text-slate-600">The short solo-operator review. Routine evidence remains below.</p></div><p className="text-xs text-slate-500">{date(start.toISOString())} to {date(readAt.toISOString())}</p></div><div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Action needed now" value={String(attentionCount)} /><Metric label="Healthy monitored checks" value={String(healthyChecks)} /><Metric label="Refreshes in progress" value={String(runningChecks)} /><Metric label="Decisions recorded" value={String(recentDecisions)} /></div><p className="mt-5 text-sm text-slate-700">{attentionCount === 0 && recentFailedJobs === 0 ? "No operational recovery is required. Review genuine decisions in Work, then stop." : `${recentFailedJobs} automated job failure${recentFailedJobs === 1 ? "" : "s"} occurred in this period. Follow only the recovery cards above; do not edit business records to compensate.`}</p></section>;
 }
 
 function LicensedCategoryContextSummary({ activeCount, providerConfigured }: { activeCount: number; providerConfigured: boolean }) {
@@ -153,8 +165,15 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function attentionItems(health: Health[], jobs: Job[]): AttentionItem[] {
   const healthItems = health.filter((item) => ["failed", "degraded", "stale"].includes(item.status)).map((item) => ({ title: `${label(item.integration_name)} needs attention`, explanation: healthMessage(item), reference: `health-${item.integration_name}` }));
-  const jobItems = jobs.filter((job) => job.status === "failed").map((job) => ({ title: `${label(job.job_type)} did not complete`, explanation: "No listing, claim, or request was changed automatically. Technical help is needed before relying on this run.", reference: `job-${job.job_id.slice(0, 8)}` }));
+  const jobItems = jobs.filter((job) => job.status === "failed").map((job) => ({ title: `${label(job.job_type)} did not complete`, explanation: "No listing, claim, or request was changed automatically. Follow the bounded recovery step before relying on this run.", reference: `job-${job.job_id.slice(0, 8)}` }));
   return [...healthItems, ...jobItems];
+}
+function recoveryInstruction(reference: string) {
+  if (/tax_practitioners_board|victorian_liquor_licences|openstreetmap_source|asic_credit_licensees_source/.test(reference)) return "open Operations Health, open the linked workflow run, and select Re-run failed jobs once. If it fails again, leave the source paused; existing listings remain unchanged.";
+  if (/official_website_enrichment|category_context/.test(reference)) return "leave existing profile content unchanged and allow the next scheduled run. If the same warning remains after 48 hours, open Operations Health and re-run the failed workflow once.";
+  if (/hubspot/.test(reference)) return "use Work in /ops as the authoritative inbox. HubSpot is only an optional mirror; allow its next hourly run before retrying it once from Operations Health.";
+  if (/production_smoke|website_safety/.test(reference)) return "avoid publishing or changing listings, open Operations Health, and re-run the failed safety check once. If it fails again, leave the warning open.";
+  return "leave business records unchanged, open Operations Health, and use the linked run's Re-run failed jobs action once. If it fails again, leave the warning open.";
 }
 function Status({ value }: { value: string }) { const colour = value === "healthy" || value === "succeeded" ? "bg-green-100 text-green-800" : value === "running" ? "bg-sky-100 text-sky-900" : value === "failed" ? "bg-red-100 text-red-800" : value === "degraded" || value === "stale" ? "bg-amber-100 text-amber-900" : "bg-slate-100 text-slate-700"; return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${colour}`}>{label(value)}</span>; }
 function healthMessage(item: Health) { if (item.status === "healthy") return "This check is working normally."; if (item.status === "running") return "An approved source refresh is in progress. It does not need an operator decision."; if (item.status === "disabled") return dormantMessage(item); if (item.status === "degraded" || item.status === "stale") return "This information may be out of date. Nothing has changed automatically."; if (item.status === "failed" && item.metadata?.action === "source_contract_held") return `The approved ${catalogueSourceName(text(item.metadata?.source))} source contract or registry approval changed. Candidate processing is safely held; no listing changed.`; if (item.status === "failed") return "The latest check did not finish. Nothing has changed automatically."; return "This is not connected to automatic monitoring yet."; }
