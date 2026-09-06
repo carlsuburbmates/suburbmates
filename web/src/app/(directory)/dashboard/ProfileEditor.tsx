@@ -138,6 +138,12 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
           {latestChange.operator_note && <p className="mt-2">Operator note: {latestChange.operator_note}</p>}
         </div>
       )}
+      <WebsiteProfilePreview
+        vendorId={vendor.id}
+        website={vendor.website}
+        currentValues={{ phone, email: contactEmail, tradingHours, facebookUrl, instagramUrl, summary: description, services: listFromText(services), bookingUrl, menuUrl, areaServed: listFromText(areaServed), accessibilityFeatures: listFromText(accessibilityFeatures) }}
+        onApply={applyWebsitePreview}
+      />
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-slate-700 mb-1">Business Name</label>
@@ -240,13 +246,6 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
           <p className="mt-1 text-xs leading-5 text-slate-500">A direct https menu or price-list page, if relevant.</p>
         </div>
       </div>
-      <WebsiteProfilePreview
-        vendorId={vendor.id}
-        website={vendor.website}
-        currentValues={{ phone, email: contactEmail, tradingHours, facebookUrl, instagramUrl, summary: description, services: listFromText(services), bookingUrl, menuUrl, areaServed: listFromText(areaServed), accessibilityFeatures: listFromText(accessibilityFeatures) }}
-        onApply={applyWebsitePreview}
-      />
-      
       {error && (
         <div className="bg-red-50 text-red-800 p-4 rounded-lg flex items-start gap-3 text-sm">
           <AlertCircle size={20} className="shrink-0 mt-0.5" />
