@@ -12,7 +12,7 @@ The product status screen is the source of a person's request outcome. A message
 
 | Capability | Status |
 | --- | --- |
-| Email-and-password sign-in | Active for existing authorised accounts; no public account-registration screen is provided. |
+| Email-and-password sign-in | Active for existing authorised accounts. D-021 additionally permits a new business owner to create authentication-only access through a hostname-restricted, Turnstile-verified one-time email code; claims and ownership remain reviewed. |
 | Password reset from `auth@suburbmates.com.au` | Active. It returns only to the real SuburbMates callback, where the person sets a new password. |
 | Email-code sign-in | Available as a fallback through an eight-digit code entered in the browser being used. |
 | Public contact/help/privacy form | Publicly reachable; it creates a private, moderated request and does not promise an email. |

@@ -150,7 +150,7 @@ This is a first-class service journey, not a background detail of claims or form
 
 ### Current release posture
 
-Password sign-in is the normal path for existing authorised accounts. A person can set or reset a 12+ character password through their email. An eight-digit email code from `auth@suburbmates.com.au` remains an accessible fallback and may be entered in the browser being used. Approved status messages are limited to the defined claim, profile-change, submission and request-outcome paths; their success and failure branches require controlled non-production acceptance under D-017. There is no public support inbox, marketing mail, bulk notification system or automatic retry loop.
+Password sign-in is the normal path for existing authorised accounts. A person can set or reset a 12+ character password through their email. An eight-digit email code from `auth@suburbmates.com.au` remains an accessible fallback and may be entered in the browser being used. Under D-021, a new owner or authorised representative may use the separate Turnstile-protected owner-access page to create an authentication-only account before submitting a reviewed claim; this never grants ownership or changes a listing. Approved status messages are limited to the defined claim, profile-change, submission and request-outcome paths; their success and failure branches require controlled non-production acceptance under D-017. There is no public support inbox, marketing mail, bulk notification system or automatic retry loop.
 
 ### Communications controls after release
 
