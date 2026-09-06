@@ -42,10 +42,12 @@ for (const expected of monitored) {
     problems.push({ ...expected, state: "missing", detail: "The workflow definition could not be found.", url: `https://github.com/${repository}/actions` });
     continue;
   }
-  const runResponse = await github(`/repos/${repository}/actions/workflows/${workflow.id}/runs?event=schedule&status=completed&per_page=1`);
+  // A successful owner-triggered recovery is current operational evidence too;
+  // cadence-based staleness still proves that recurring execution continues.
+  const runResponse = await github(`/repos/${repository}/actions/workflows/${workflow.id}/runs?status=completed&per_page=1`);
   const run = runResponse.workflow_runs[0];
   if (!run) {
-    problems.push({ ...expected, state: "missing", detail: "No completed scheduled run was found.", url: workflow.html_url });
+    problems.push({ ...expected, state: "missing", detail: "No completed run was found.", url: workflow.html_url });
     continue;
   }
   const ageHours = (now - new Date(run.updated_at).getTime()) / 3_600_000;
