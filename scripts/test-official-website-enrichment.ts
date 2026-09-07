@@ -24,6 +24,22 @@ const unsafeHours = extractOfficialWebsiteFacts(`<script type="application/ld+js
 assert.ok(!unsafeHours.some((fact) => fact.fieldName === "trading_hours"), "Blank or ambiguous overnight hours must not publish.");
 const missingDayHours = extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","openingHours":"Mo 11:00-18:00, , We 11:00-18:00"}</script>`);
 assert.ok(!missingDayHours.some((fact) => fact.fieldName === "trading_hours"), "An empty weekday segment inside an otherwise valid schedule must not publish.");
+const explicitHtmlFacts = extractOfficialWebsiteFacts(`
+  <a href="tel:03%209000%201234">Call</a>
+  <a href="mailto:hello@example.test?subject=Booking">Email</a>
+  <a href="/book">Book now</a>
+  <a href="/menu">View our menu</a>
+  <span itemprop="serviceType">Wedding cakes</span>
+  <meta itemprop="areaServed" content="Darebin">
+`, "https://example.test/services");
+assert.ok(explicitHtmlFacts.some((fact) => fact.fieldName === "phone" && fact.value === "03 9000 1234"));
+assert.ok(explicitHtmlFacts.some((fact) => fact.fieldName === "email" && fact.value === "hello@example.test"));
+assert.ok(explicitHtmlFacts.some((fact) => fact.fieldName === "booking_url" && fact.value === "https://example.test/book"));
+assert.ok(explicitHtmlFacts.some((fact) => fact.fieldName === "menu_url" && fact.value === "https://example.test/menu"));
+assert.ok(explicitHtmlFacts.some((fact) => fact.fieldName === "service" && fact.value === "Wedding cakes" && !fact.evidenceOnly));
+assert.ok(explicitHtmlFacts.some((fact) => fact.fieldName === "area_served" && fact.value === "Darebin"));
+const serviceHeadingFacts = extractOfficialWebsiteFacts(`<h2>Emergency plumbing</h2><h2>Why choose us</h2>`, "https://example.test/services");
+assert.deepEqual(serviceHeadingFacts, [{ fieldName: "service", value: "Emergency plumbing", evidenceOnly: true, sourceUrl: "https://example.test/services" }]);
 
 assert.equal(isRobotsPathAllowed("User-agent: *\nDisallow: /private\nAllow: /private/about", "SuburbMates-official-website-enrichment/1.0", "/"), true);
 assert.equal(isRobotsPathAllowed("User-agent: *\nDisallow: /private\nAllow: /private/about", "SuburbMates-official-website-enrichment/1.0", "/private"), false);

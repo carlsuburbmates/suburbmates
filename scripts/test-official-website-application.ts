@@ -33,6 +33,22 @@ const ambiguousContactPlan = planOfficialWebsiteApplication({ ...vendor, phone: 
 assert.equal(ambiguousContactPlan.updates.phone, undefined, "Several structured phones must remain private ambiguity evidence.");
 assert.equal(ambiguousContactPlan.updates.contact_email, undefined, "Several structured emails must remain private ambiguity evidence.");
 assert.ok(ambiguousContactPlan.facts.every((fact) => fact.conflict), "Each ambiguous scalar value must be marked for private conflict review.");
+const evidenceOnlyPlan = planOfficialWebsiteApplication(vendor, [
+  { fieldName: "service", value: "Unreviewed heading", sourceUrl: "https://example.test/services", evidenceOnly: true },
+]);
+assert.deepEqual(evidenceOnlyPlan.updates, {}, "Low-confidence page headings must remain evidence-only during rollout.");
+assert.equal(evidenceOnlyPlan.facts[0]?.evidenceOnly, true);
+assert.equal(evidenceOnlyPlan.facts[0]?.applied, false);
+const formattedDuplicatePlan = planOfficialWebsiteApplication({ ...vendor, phone: null }, [
+  { fieldName: "phone", value: "03 9794 8688", sourceUrl: "https://example.test/" },
+  { fieldName: "phone", value: "+61 3 9794 8688", sourceUrl: "https://example.test/contact" },
+]);
+assert.equal(formattedDuplicatePlan.updates.phone, "03 9794 8688", "Equivalent Australian phone formatting must not create false ambiguity.");
+assert.equal(formattedDuplicatePlan.facts.filter((fact) => fact.fieldName === "phone").length, 1);
+const equivalentExistingPlan = planOfficialWebsiteApplication(vendor, [
+  { fieldName: "phone", value: "+61 3 9000 0000" },
+]);
+assert.ok(!equivalentExistingPlan.conflictFields.includes("phone"), "Equivalent Australian phone formatting must not create a private conflict.");
 const runner = fs.readFileSync("web/src/lib/official-website-application.ts", "utf8");
 const route = fs.readFileSync("web/src/app/api/automation/official-website-enrichment/route.ts", "utf8");
 const workflow = fs.readFileSync(".github/workflows/official-website-enrichment.yml", "utf8");

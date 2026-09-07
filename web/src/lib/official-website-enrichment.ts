@@ -19,6 +19,7 @@ export type WebsiteFact = {
   fieldName: WebsiteFactName;
   value: string;
   sourceUrl?: string;
+  evidenceOnly?: boolean;
 };
 
 export type OfficialWebsiteInspection = {
@@ -73,6 +74,70 @@ function cleanHttpsUrl(value: unknown) {
   } catch {
     return null;
   }
+}
+
+function decodeHtmlText(value: string) {
+  const entities: Record<string, string> = { amp: "&", quot: '"', apos: "'", lt: "<", gt: ">", nbsp: " " };
+  return value
+    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style\s*>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (_match, entity: string) => {
+      if (entity.startsWith("#x")) return String.fromCodePoint(Number.parseInt(entity.slice(2), 16));
+      if (entity.startsWith("#")) return String.fromCodePoint(Number.parseInt(entity.slice(1), 10));
+      return entities[entity.toLowerCase()] ?? " ";
+    })
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function attributeValue(attributes: string, name: string) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return attributes.match(new RegExp(`\\b${escaped}\\s*=\\s*(["'])(.*?)\\1`, "i"))?.[2] ?? null;
+}
+
+function itemProps(attributes: string) {
+  return (attributeValue(attributes, "itemprop") ?? "").toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+function factsFromExplicitHtml(html: string, sourceUrl?: string): WebsiteFact[] {
+  const facts: WebsiteFact[] = [];
+  const add = (fact: WebsiteFact | null) => { if (fact) facts.push(sourceUrl ? { ...fact, sourceUrl } : fact); };
+  const decoded = (value: string) => { try { return decodeURIComponent(value); } catch { return value; } };
+  const httpsLink = (value: string) => { try { return cleanHttpsUrl(sourceUrl ? new URL(value, sourceUrl).toString() : value); } catch { return null; } };
+
+  for (const match of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi)) {
+    const href = attributeValue(match[1], "href");
+    if (!href) continue;
+    const label = decodeHtmlText(match[2]);
+    if (/^tel:/i.test(href)) add(cleanPhone(decoded(href.slice(4))) ? { fieldName: "phone", value: cleanPhone(decoded(href.slice(4)))! } : null);
+    if (/^mailto:/i.test(href)) add(cleanEmail(decoded(href.slice(7)).split("?")[0]) ? { fieldName: "email", value: cleanEmail(decoded(href.slice(7)).split("?")[0])! } : null);
+    if (/^(?:book(?:ing| now)?|make (?:a )?booking|appointments?|reserve|order online)$/i.test(label)) add(httpsLink(href) ? { fieldName: "booking_url", value: httpsLink(href)! } : null);
+    if (/^(?:menu|view (?:our )?menu)$/i.test(label)) add(httpsLink(href) ? { fieldName: "menu_url", value: httpsLink(href)! } : null);
+  }
+
+  const readItem = (attributes: string, body: string) => {
+    const props = itemProps(attributes);
+    if (!props.length) return;
+    const raw = attributeValue(attributes, "content") ?? attributeValue(attributes, "href") ?? decodeHtmlText(body);
+    if (props.includes("telephone")) add(cleanPhone(raw) ? { fieldName: "phone", value: cleanPhone(raw)! } : null);
+    if (props.includes("email")) add(cleanEmail(raw.replace(/^mailto:/i, "")) ? { fieldName: "email", value: cleanEmail(raw.replace(/^mailto:/i, ""))! } : null);
+    if (props.includes("openinghours")) add(cleanOpeningHours(raw) ? { fieldName: "trading_hours", value: cleanOpeningHours(raw)! } : null);
+    if (props.includes("servicetype")) add(cleanText(raw, 140) ? { fieldName: "service", value: cleanText(raw, 140)! } : null);
+    if (props.includes("areaserved")) add(cleanText(raw, 140) ? { fieldName: "area_served", value: cleanText(raw, 140)! } : null);
+    if (props.includes("accessibilityfeature")) add(cleanText(raw, 180) ? { fieldName: "accessibility", value: cleanText(raw, 180)! } : null);
+  };
+  for (const match of html.matchAll(/<(meta|link|img|input)\b([^>]*)>/gi)) readItem(match[2], "");
+  for (const match of html.matchAll(/<([a-z][\w:-]*)\b([^>]*)>([\s\S]*?)<\/\1\s*>/gi)) readItem(match[2], match[3]);
+
+  if (sourceUrl && /\/(?:services?|what-we-do)(?:\/|$)/i.test(new URL(sourceUrl).pathname)) {
+    for (const match of html.matchAll(/<h[23]\b[^>]*>([\s\S]*?)<\/h[23]\s*>/gi)) {
+      const value = cleanText(decodeHtmlText(match[1]), 100);
+      if (!value || value.split(/\s+/).length > 8 || /^(?:services?|what we do|our services|how it works|why choose us|contact|book|about|faq|testimonials?|reviews?|welcome|learn more)$/i.test(value)) continue;
+      add({ fieldName: "service", value, evidenceOnly: true });
+    }
+  }
+  return facts;
 }
 
 function flattenJsonLd(value: unknown): JsonObject[] {
@@ -236,7 +301,8 @@ export function extractOfficialWebsiteFacts(html: string, sourceUrl?: string): W
       ...actionUrls(record.potentialAction),
     ].filter((fact): fact is WebsiteFact => Boolean(fact));
   });
-  return uniqueFacts(facts).slice(0, 40).map((fact) => sourceUrl ? { ...fact, sourceUrl } : fact);
+  const sourcedStructured = facts.map((fact) => sourceUrl ? { ...fact, sourceUrl } : fact);
+  return uniqueFacts([...sourcedStructured, ...factsFromExplicitHtml(html, sourceUrl)]).slice(0, 40);
 }
 
 function parseAllowedWebsite(value: string) {
