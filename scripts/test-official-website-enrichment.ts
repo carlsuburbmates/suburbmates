@@ -18,6 +18,7 @@ assert.deepEqual(facts, [
   { fieldName: "accessibility", value: "WheelchairAccessible" },
   { fieldName: "booking_url", value: "https://example.test/book" },
 ]);
+assert.equal(extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","telephone":"123-456-7890"}</script>`).length, 0, "Obvious placeholder phones must never become evidence or public data.");
 assert.doesNotMatch(JSON.stringify(facts), /promotional copy|image\.jpg/i, "Copy and images must not leave the extractor.");
 const unsafeHours = extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","openingHours":["", "", "Mo 11:30-10:00"]}</script>`);
 assert.ok(!unsafeHours.some((fact) => fact.fieldName === "trading_hours"), "Blank or ambiguous overnight hours must not publish.");

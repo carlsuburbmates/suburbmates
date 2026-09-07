@@ -54,7 +54,12 @@ function cleanEmail(value: unknown) {
 
 function cleanPhone(value: unknown) {
   const phone = cleanText(value, 80);
-  return phone && /[0-9]/.test(phone) ? phone : null;
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 8 || digits.length > 15) return null;
+  if (/^(\d)\1+$/.test(digits)) return null;
+  if (["0123456789", "1234567890", "9876543210"].includes(digits)) return null;
+  return phone;
 }
 
 function cleanHttpsUrl(value: unknown) {

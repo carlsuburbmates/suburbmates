@@ -13,6 +13,7 @@ assert.ok(plan.facts.some((fact) => fact.fieldName === "contact_email"));
 assert.ok(!plan.facts.some((fact) => fact.fieldName === "email"));
 assert.ok(plan.conflictFields.includes("phone"));
 assert.match(factualSummary(facts) ?? "", /Services include Sourdough baking, Wedding cakes\. Serves Darebin\./);
+assert.equal(factualSummary([{ fieldName: "trading_hours", value: "Mo-Su 09:00-21:00" }]), null, "Hours alone must not create a low-value public description.");
 assert.doesNotMatch(JSON.stringify(plan), /image|marketing|testimonial/i);
 const addressPlan = planOfficialWebsiteApplication(vendor, [{ fieldName: "street_address", value: "100 William Street, Sydney, NSW, 2000" }]);
 assert.equal(addressPlan.updates.street_address, undefined, "A head-office address outside the listing locality must not publish.");
@@ -23,11 +24,21 @@ const linkedPagePlan = planOfficialWebsiteApplication(vendor, [
 assert.deepEqual(linkedPagePlan.updates.services, ["Emergency plumbing"], "A structured service from an eligible linked factual page may fill an empty service list.");
 assert.equal(linkedPagePlan.updates.booking_url, "https://example.test/book", "A structured booking destination from an eligible linked factual page may fill an empty booking field.");
 assert.ok(linkedPagePlan.facts.every((fact) => fact.sourceUrl?.startsWith("https://example.test/")), "Each linked-page fact must retain exact page provenance.");
+const ambiguousContactPlan = planOfficialWebsiteApplication({ ...vendor, phone: null }, [
+  { fieldName: "phone", value: "03 9000 1111" },
+  { fieldName: "phone", value: "03 9000 2222" },
+  { fieldName: "email", value: "north@example.test" },
+  { fieldName: "email", value: "south@example.test" },
+]);
+assert.equal(ambiguousContactPlan.updates.phone, undefined, "Several structured phones must remain private ambiguity evidence.");
+assert.equal(ambiguousContactPlan.updates.contact_email, undefined, "Several structured emails must remain private ambiguity evidence.");
+assert.ok(ambiguousContactPlan.facts.every((fact) => fact.conflict), "Each ambiguous scalar value must be marked for private conflict review.");
 const runner = fs.readFileSync("web/src/lib/official-website-application.ts", "utf8");
 const route = fs.readFileSync("web/src/app/api/automation/official-website-enrichment/route.ts", "utf8");
 const workflow = fs.readFileSync(".github/workflows/official-website-enrichment.yml", "utf8");
 const atomicMigration = fs.readFileSync("supabase/migrations/20260906200333_atomic_official_website_enrichment.sql", "utf8");
 const rollbackMigration = fs.readFileSync("supabase/migrations/20260906200544_guarded_official_website_enrichment_rollback.sql", "utf8");
+const acceptanceCorrection = fs.readFileSync("supabase/migrations/20260907104845_reject_low_quality_website_enrichment_acceptance.sql", "utf8");
 const pilotPage = fs.readFileSync("web/src/app/ops/system/website-pilot/page.tsx", "utf8");
 const pilotActions = fs.readFileSync("web/src/app/ops/system/website-pilot/actions.ts", "utf8");
 assert.match(runner, /official-business-site-application-v3/);
@@ -60,6 +71,9 @@ assert.match(rollbackMigration, /vendor\.is_claimed IS FALSE/);
 assert.match(rollbackMigration, /evidence_state = 'superseded', application_state = 'superseded'/);
 assert.match(rollbackMigration, /official_website_factual_enrichment_rolled_back/);
 assert.match(rollbackMigration, /GRANT EXECUTE ON FUNCTION public\.ops_rollback_official_website_enrichment[\s\S]*TO authenticated/);
+assert.match(acceptanceCorrection, /ambiguous multi-location phone and email values/);
+assert.match(acceptanceCorrection, /valid_hours_retained/);
+assert.match(acceptanceCorrection, /evidence_retained_as_superseded/);
 assert.match(pilotPage, /Safe enrichment rollback/);
 assert.match(pilotPage, /Protected from rollback/);
 assert.match(pilotActions, /ops_rollback_official_website_enrichment/);

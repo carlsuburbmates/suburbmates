@@ -13,6 +13,7 @@ function addressMatchesListingLocality(suburbSlug: string, address: string) { co
 /** A new sentence assembled only from retained structured facts, never website prose. */
 export function factualSummary(facts: WebsiteFact[]) {
   const services = values(facts, "service"); const areas = values(facts, "area_served"); const hours = values(facts, "trading_hours")[0];
+  if (!services.length && !areas.length) return null;
   const summary = [services.length ? `Services include ${services.slice(0, 3).join(", ")}.` : null, areas.length ? `Serves ${areas.slice(0, 3).join(", ")}.` : null, hours ? `Source-reported hours: ${hours}.` : null].filter((value): value is string => Boolean(value)).join(" ");
   return summary.length > 0 && summary.length <= 500 ? summary : null;
 }
@@ -21,7 +22,26 @@ export function factualSummary(facts: WebsiteFact[]) {
 export function planOfficialWebsiteApplication(vendor: OfficialWebsiteApplicationVendor, facts: WebsiteFact[]): OfficialWebsiteApplicationPlan {
   const updates: Record<string, string | string[]> = {}; const evidence: OfficialWebsiteApplicationPlan["facts"] = []; const appliedFields: string[] = []; const conflictFields: string[] = [];
   const scalar: Array<[WebsiteFact["fieldName"], keyof OfficialWebsiteApplicationVendor]> = [["phone", "phone"], ["email", "contact_email"], ["trading_hours", "trading_hours"], ["street_address", "street_address"], ["booking_url", "booking_url"], ["menu_url", "menu_url"]];
-  for (const [factName, column] of scalar) for (const value of values(facts, factName)) { const current = vendor[column] as string | null; const equal = same(current, value); const localitySafe = column !== "street_address" || addressMatchesListingLocality(vendor.suburb_slug, value); const apply = !current && localitySafe; const conflict = Boolean(current) && !equal; const storageField = String(column); evidence.push({ fieldName: storageField, value, sourceUrl: sourceFor(facts, factName, value), applied: apply, conflict }); if (apply) { updates[column] = value; if (!appliedFields.includes(storageField)) appliedFields.push(storageField); } else if (conflict && !conflictFields.includes(storageField)) conflictFields.push(storageField); }
+  for (const [factName, column] of scalar) {
+    const current = vendor[column] as string | null;
+    const candidates = values(facts, factName);
+    const eligible = candidates.filter((value) => column !== "street_address" || addressMatchesListingLocality(vendor.suburb_slug, value));
+    const ambiguous = !current && eligible.length > 1;
+    const storageField = String(column);
+    for (const value of candidates) {
+      const equal = same(current, value);
+      const localitySafe = eligible.includes(value);
+      const apply = !current && localitySafe && eligible.length === 1;
+      const conflict = (Boolean(current) && !equal) || (ambiguous && localitySafe);
+      evidence.push({ fieldName: storageField, value, sourceUrl: sourceFor(facts, factName, value), applied: apply, conflict });
+      if (apply) {
+        updates[column] = value;
+        if (!appliedFields.includes(storageField)) appliedFields.push(storageField);
+      } else if (conflict && !conflictFields.includes(storageField)) {
+        conflictFields.push(storageField);
+      }
+    }
+  }
   const arrays: Array<[WebsiteFact["fieldName"], "services" | "area_served" | "accessibility_features"]> = [["service", "services"], ["area_served", "area_served"], ["accessibility", "accessibility_features"]];
   for (const [factName, column] of arrays) { const incoming = values(facts, factName); if (!incoming.length) continue; const current = vendor[column] as string[] | null; const equal = sameList(current, incoming); const apply = (current?.length ?? 0) === 0; for (const value of incoming) evidence.push({ fieldName: factName, value, sourceUrl: sourceFor(facts, factName, value), applied: apply, conflict: !apply && !equal }); if (apply) { updates[column] = incoming; appliedFields.push(factName); } else if (!equal) conflictFields.push(factName); }
   const summary = factualSummary(facts);
