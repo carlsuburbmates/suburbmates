@@ -9,10 +9,6 @@ const REFRESH_DAYS = 31;
 type Vendor = OfficialWebsiteApplicationVendor;
 
 function hostname(value: string) { try { return new URL(value).hostname.toLowerCase().replace(/^www\./, ""); } catch { return null; } }
-function evidenceFieldName(fieldName: OfficialWebsiteInspection["facts"][number]["fieldName"]) {
-  if (fieldName === "email") return "contact_email";
-  return fieldName;
-}
 function reasonCode(inspection: OfficialWebsiteInspection) {
   const reason = inspection.reason ?? ""; if (inspection.outcome === "eligible") return "eligible";
   if (/robots.*disallow/i.test(reason)) return "robots_disallowed"; if (/robots/i.test(reason)) return "robots_unavailable";
@@ -55,16 +51,9 @@ export async function runOfficialWebsiteEnrichment(runKey: string, requestedLimi
       const inspection = await inspectOfficialWebsite(vendor.website, { termsOverride: decision === "approved" ? "approved" : undefined, expectedBusinessName: vendor.business_name });
       const { error: inspectionError } = await admin.from("official_website_inspections").insert({ vendor_id: vendor.id, source_key: SOURCE_KEY, source_contract_version: SOURCE_CONTRACT_VERSION, requested_url: vendor.website, resolved_url: inspection.sourceUrl, host_name: host, outcome: inspection.outcome, reason_code: reasonCode(inspection), robots_status: robotsStatus(inspection), terms_review_status: inspection.termsStatus, terms_url: inspection.termsUrl, terms_fingerprint: inspection.termsFingerprint, terms_assessment_basis: inspection.termsBasis, content_fingerprint: inspection.contentFingerprint, extracted_fact_count: inspection.facts.length, checked_at: inspection.checkedAt, freshness_due_at: freshnessDueAt(inspection.checkedAt), enrichment_run_id: created.id });
       if (inspectionError) throw new Error("Could not retain official-website inspection evidence."); if (inspection.outcome !== "eligible") continue;
-      // Linked factual pages expand evidence coverage first. They are retained
-      // with their exact page provenance but cannot change a public field until
-      // their production quality has been measured and explicitly promoted.
-      const homepageFacts = inspection.facts.filter((fact) => !fact.sourceUrl || fact.sourceUrl === inspection.sourceUrl);
       const linkedFacts = inspection.facts.filter((fact) => fact.sourceUrl && fact.sourceUrl !== inspection.sourceUrl);
-      const plan = planOfficialWebsiteApplication(vendor, homepageFacts); const sourceRecordKey = `website:${host}:${inspection.contentFingerprint ?? inspection.checkedAt}`;
-      const rows = [
-        ...plan.facts.map((fact) => ({ vendor_id: vendor.id, field_name: fact.fieldName, value_text: fact.value, source_key: SOURCE_KEY, source_record_key: sourceRecordKey, source_url: fact.sourceUrl ?? inspection.sourceUrl, observed_at: inspection.checkedAt, freshness_due_at: freshnessDueAt(inspection.checkedAt), confidence: fact.fieldName === "description" ? 70 : 85, evidence_state: fact.conflict ? "conflict" : "active", application_state: fact.applied ? "applied" : fact.conflict ? "conflict" : "observed", applied_at: fact.applied ? inspection.checkedAt : null, enrichment_run_id: created.id })),
-        ...linkedFacts.map((fact) => ({ vendor_id: vendor.id, field_name: evidenceFieldName(fact.fieldName), value_text: fact.value, source_key: SOURCE_KEY, source_record_key: sourceRecordKey, source_url: fact.sourceUrl!, observed_at: inspection.checkedAt, freshness_due_at: freshnessDueAt(inspection.checkedAt), confidence: 70, evidence_state: "active", application_state: "observed", applied_at: null, enrichment_run_id: created.id })),
-      ];
+      const plan = planOfficialWebsiteApplication(vendor, inspection.facts); const sourceRecordKey = `website:${host}:${inspection.contentFingerprint ?? inspection.checkedAt}`;
+      const rows = plan.facts.map((fact) => ({ vendor_id: vendor.id, field_name: fact.fieldName, value_text: fact.value, source_key: SOURCE_KEY, source_record_key: sourceRecordKey, source_url: fact.sourceUrl ?? inspection.sourceUrl, observed_at: inspection.checkedAt, freshness_due_at: freshnessDueAt(inspection.checkedAt), confidence: fact.fieldName === "description" || linkedFacts.some((linked) => linked.sourceUrl === fact.sourceUrl) ? 70 : 85, evidence_state: fact.conflict ? "conflict" : "active", application_state: fact.applied ? "applied" : fact.conflict ? "conflict" : "observed", applied_at: fact.applied ? inspection.checkedAt : null, enrichment_run_id: created.id }));
       const { data: committed, error: commitError } = await admin.rpc("apply_official_website_enrichment_atomic", {
         p_vendor_id: vendor.id,
         p_enrichment_run_id: created.id,
@@ -76,7 +65,8 @@ export async function runOfficialWebsiteEnrichment(runKey: string, requestedLimi
           applied_fields: plan.appliedFields,
           conflict_fields: plan.conflictFields,
           linked_page_fact_count: linkedFacts.length,
-          linked_page_application: "evidence_only",
+          linked_page_application: "qualified_empty_fields",
+          linked_page_applied_fact_count: plan.facts.filter((fact) => fact.applied && fact.sourceUrl && fact.sourceUrl !== inspection.sourceUrl).length,
           terms_basis: inspection.termsBasis,
           media_or_page_copy_retained: false,
         },

@@ -16,6 +16,13 @@ assert.match(factualSummary(facts) ?? "", /Services include Sourdough baking, We
 assert.doesNotMatch(JSON.stringify(plan), /image|marketing|testimonial/i);
 const addressPlan = planOfficialWebsiteApplication(vendor, [{ fieldName: "street_address", value: "100 William Street, Sydney, NSW, 2000" }]);
 assert.equal(addressPlan.updates.street_address, undefined, "A head-office address outside the listing locality must not publish.");
+const linkedPagePlan = planOfficialWebsiteApplication(vendor, [
+  { fieldName: "service", value: "Emergency plumbing", sourceUrl: "https://example.test/services" },
+  { fieldName: "booking_url", value: "https://example.test/book", sourceUrl: "https://example.test/booking" },
+]);
+assert.deepEqual(linkedPagePlan.updates.services, ["Emergency plumbing"], "A structured service from an eligible linked factual page may fill an empty service list.");
+assert.equal(linkedPagePlan.updates.booking_url, "https://example.test/book", "A structured booking destination from an eligible linked factual page may fill an empty booking field.");
+assert.ok(linkedPagePlan.facts.every((fact) => fact.sourceUrl?.startsWith("https://example.test/")), "Each linked-page fact must retain exact page provenance.");
 const runner = fs.readFileSync("web/src/lib/official-website-application.ts", "utf8");
 const route = fs.readFileSync("web/src/app/api/automation/official-website-enrichment/route.ts", "utf8");
 const workflow = fs.readFileSync(".github/workflows/official-website-enrichment.yml", "utf8");
@@ -32,10 +39,10 @@ assert.match(runner, /catalogue_enrichment_runs\.status.*completed/);
 assert.match(runner, /termsOverride/);
 assert.match(runner, /staleBefore/);
 assert.match(runner, /Execution ended before the bounded batch completed/);
-assert.match(runner, /linked_page_application: "evidence_only"/);
-assert.match(runner, /application_state: "observed"/);
-assert.match(runner, /const homepageFacts = inspection\.facts\.filter/);
-assert.match(runner, /planOfficialWebsiteApplication\(vendor, homepageFacts\)/);
+assert.match(runner, /linked_page_application: "qualified_empty_fields"/);
+assert.match(runner, /linked_page_applied_fact_count/);
+assert.match(runner, /planOfficialWebsiteApplication\(vendor, inspection\.facts\)/);
+assert.doesNotMatch(runner, /const homepageFacts = inspection\.facts\.filter/);
 assert.match(runner, /apply_official_website_enrichment_atomic/);
 assert.doesNotMatch(runner, /from\("listing_field_evidence"\)\.upsert/);
 assert.doesNotMatch(runner, /from\("vendors"\)\.update/);
@@ -63,4 +70,4 @@ assert.match(workflow, /seq 1 25/);
 assert.match(workflow, /"\$batch"/);
 assert.ok(workflow.includes('\\"limit\\":1'));
 assert.doesNotMatch(workflow, /--retry/);
-console.log("Official website application plans only factual empty-field enrichment and conflicts.");
+console.log("Official website application plans factual homepage and linked-page empty-field enrichment and conflicts.");
