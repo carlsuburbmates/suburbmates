@@ -7,7 +7,7 @@ const pageSize = 200;
 
 export default async function OpsWorkPage() {
   const supabase = await createOpsDataClient();
-  const [listings, pendingClaims, waitingClaims, profiles, newContacts, activeContacts, candidates, catalogue, health, jobs] = await Promise.all([
+  const [listings, pendingClaims, waitingClaims, profiles, newContacts, activeContacts, candidates, catalogue] = await Promise.all([
     loadAll((offset) => supabase.rpc("ops_list_listings", { p_status: "review", p_query: null, p_vendor_id: null, p_ownership_status: null, p_listing_source: null, p_limit: pageSize, p_offset: offset })),
     loadAll((offset) => supabase.rpc("ops_list_claim_requests", { p_status: "pending", p_claim_request_id: null, p_limit: pageSize, p_offset: offset })),
     loadAll((offset) => supabase.rpc("ops_list_claim_requests", { p_status: "needs_information", p_claim_request_id: null, p_limit: pageSize, p_offset: offset })),
@@ -16,8 +16,6 @@ export default async function OpsWorkPage() {
     loadAll((offset) => supabase.rpc("ops_list_contact_requests", { p_status: "in_progress", p_contact_request_id: null, p_limit: pageSize, p_offset: offset })),
     loadAll((offset) => supabase.rpc("ops_list_candidate_handoff_records", { p_status: "open", p_limit: pageSize, p_offset: offset, p_record_id: null })),
     loadAll((offset) => supabase.rpc("ops_list_existing_catalogue_requalification_exceptions", { p_status: "open", p_limit: pageSize, p_offset: offset })),
-    onePage(() => supabase.rpc("ops_list_integration_health")),
-    onePage(() => supabase.rpc("ops_list_automation_jobs", { p_limit: pageSize })),
   ]);
 
   const items = composeWorkItems({
@@ -27,8 +25,6 @@ export default async function OpsWorkPage() {
     contacts: [...newContacts, ...activeContacts] as WorkSource["contacts"],
     candidates: candidates as WorkSource["candidates"],
     catalogue: catalogue as WorkSource["catalogue"],
-    health: health as WorkSource["health"],
-    jobs: jobs as WorkSource["jobs"],
   });
   const grouped = new Map(workPriorityOrder.map((priority) => [priority, items.filter((item) => item.priority === priority)]));
 
@@ -41,7 +37,7 @@ export default async function OpsWorkPage() {
 }
 
 function WorkGroup({ priority, items }: { priority: WorkPriority; items: WorkItem[] }) {
-  const copy: Record<WorkPriority, [string, string]> = { act_now: ["Act now", "A real technical, safety, privacy or security issue needs attention."], needs_decision: ["Needs a decision", "Open an item to see its evidence and the safe choices already available."], later_review: ["Later review", "Older possible duplicates are worth reviewing, but they are not urgent."] };
+  const copy: Record<WorkPriority, [string, string]> = { act_now: ["Act now", "A time-sensitive business decision needs your judgment."], needs_decision: ["Needs a decision", "Open an item to see its evidence and the safe choices already available."], later_review: ["Later review", "Older possible duplicates are worth reviewing, but they are not urgent."] };
   const [title, detail] = copy[priority];
   if (!items.length) return null;
   return <section><div className="mb-3 flex items-baseline justify-between gap-4"><div><h3 className="text-2xl font-black tracking-tight">{title}</h3><p className="mt-1 text-sm text-slate-600">{detail}</p></div><span className="rounded-full bg-slate-200 px-3 py-1 text-sm font-bold tabular-nums">{items.length}</span></div><div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">{items.map((item) => <WorkRow key={item.id} item={item} />)}</div></section>;

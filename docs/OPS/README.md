@@ -49,7 +49,7 @@ System warnings are supporting information, not permission to change a listing. 
 
 1. Open **System** and read **This week at a glance**.
 2. If **Action needed now** is zero, review the directory-activity and profile-coverage summaries, then stop.
-3. If a recovery card appears, follow its exact safe step and use **Open Operations Health**. Retry only once.
+3. If a recovery card appears in **System**, follow its exact safe step and use **Open Operations Health**. Retry only once. Technical recovery never appears as a Work decision.
 4. Check whether visitors are progressing from search to profiles and direct contact, and whether the claimed-profile pilot is gaining complete profiles.
 5. Leave routine inspections, blocked website domains, repeat discoveries and historic evidence alone unless System explicitly surfaces a threshold or owner-impact warning.
 

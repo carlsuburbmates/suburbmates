@@ -9,6 +9,7 @@
 - The owner-status feed is read-only and returns only request type, status, controlled explanation, next step, and dates for the signed-in owner’s own claim and profile-change requests.
 - The one-way HubSpot Decision Inbox may mirror a genuine decision as a low-detail task, but the protected Ops action remains the only place that changes SuburbMates data.
 - System provides one seven-day operator summary and source-specific recovery cards. The stable Operations Health record consolidates scheduled failure, cancellation and staleness evidence and closes after recovery.
+- Work contains business decisions only. Integration warnings and failed jobs stay in System so technical recovery cannot be mistaken for a listing, ownership, profile, contact or candidate decision.
 
 ## What remains for acceptance
 

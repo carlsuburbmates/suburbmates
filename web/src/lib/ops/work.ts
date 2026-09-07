@@ -3,7 +3,7 @@ export type WorkPriority = "act_now" | "needs_decision" | "later_review";
 export type WorkItem = {
   id: string;
   priority: WorkPriority;
-  kind: "listing" | "claim" | "profile" | "contact" | "candidate" | "catalogue" | "system";
+  kind: "listing" | "claim" | "profile" | "contact" | "candidate" | "catalogue";
   title: string;
   decision: string;
   evidence: string;
@@ -17,9 +17,6 @@ type Profile = { change_request_id: string; business_name: string; proposed_chan
 type Contact = { contact_request_id: string; topic: string; business_name: string | null; requester_name: string; created_at: string };
 type Candidate = { record_id: string; candidate_data: Record<string, unknown>; qualification_reasons: string[]; created_at: string };
 type Catalogue = { record_id: string; vendor_id: string; business_name: string; qualification_reasons: string[]; created_at: string };
-type Health = { integration_name: string; status: string; updated_at: string };
-type Job = { job_id: string; job_type: string; status: string; created_at: string };
-
 export type WorkSource = {
   listings: Listing[];
   claims: Claim[];
@@ -27,20 +24,12 @@ export type WorkSource = {
   contacts: Contact[];
   candidates: Candidate[];
   catalogue: Catalogue[];
-  health: Health[];
-  jobs: Job[];
 };
 
 export const workPriorityOrder: WorkPriority[] = ["act_now", "needs_decision", "later_review"];
 
 export function composeWorkItems(source: WorkSource): WorkItem[] {
   const items: WorkItem[] = [
-    ...source.health
-      .filter((item) => ["failed", "degraded", "stale"].includes(item.status))
-      .map((item) => ({ id: `health:${item.integration_name}`, priority: "act_now" as const, kind: "system" as const, title: `${label(item.integration_name)} needs attention`, decision: "Follow the safe recovery step", evidence: "The latest monitored check needs attention. Your business records were left unchanged.", href: `/ops/system#health-${item.integration_name}`, createdAt: item.updated_at })),
-    ...source.jobs
-      .filter((item) => item.status === "failed")
-      .map((item) => ({ id: `job:${item.job_id}`, priority: "act_now" as const, kind: "system" as const, title: `${label(item.job_type)} did not complete`, decision: "Follow the safe recovery step", evidence: "This bounded automated job stopped. Your business records were left unchanged.", href: `/ops/system#job-${item.job_id}`, createdAt: item.created_at })),
     ...source.listings.map((item) => ({ id: `listing:${item.vendor_id}`, priority: "needs_decision" as const, kind: "listing" as const, title: item.business_name, decision: "Make a listing decision", evidence: "Review the public facts and choose the permitted listing outcome.", href: `/ops/listings/${item.vendor_id}`, createdAt: item.updated_at })),
     ...source.claims.map((item) => ({ id: `claim:${item.claim_request_id}`, priority: "needs_decision" as const, kind: "claim" as const, title: item.business_name, decision: item.claim_status === "needs_information" ? "Review ownership evidence" : "Review an ownership claim", evidence: "A claim changes ownership only; it never publishes or edits the listing.", href: `/ops/claims/${item.claim_request_id}`, createdAt: item.created_at })),
     ...source.profiles.map((item) => ({ id: `profile:${item.change_request_id}`, priority: "needs_decision" as const, kind: "profile" as const, title: item.business_name, decision: "Review a proposed profile update", evidence: changedFields(item.proposed_changes), href: `/ops/profile-edits/${item.change_request_id}`, createdAt: item.created_at })),
