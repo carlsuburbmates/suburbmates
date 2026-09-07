@@ -64,7 +64,7 @@ const search = await github(`/repos/${repository}/issues?state=all&per_page=100`
 const existing = search.find((issue) => issue.title === issueTitle && !issue.pull_request);
 
 if (problems.length === 0) {
-  if (existing) {
+  if (existing?.state === "open") {
     await github(`/repos/${repository}/issues/${existing.number}/comments`, { method: "POST", body: JSON.stringify({ body: "All monitored scheduled workflows have recovered. This issue is closing automatically." }) });
     await github(`/repos/${repository}/issues/${existing.number}`, { method: "PATCH", body: JSON.stringify({ state: "closed", state_reason: "completed" }) });
   }

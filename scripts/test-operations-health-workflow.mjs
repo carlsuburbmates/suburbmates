@@ -15,6 +15,7 @@ assert.doesNotMatch(reconciler, /event=schedule/);
 assert.match(reconciler, /run\.conclusion !== "success"/);
 assert.match(reconciler, /ageHours > expected\.maximumAgeHours/);
 assert.match(reconciler, /state: "closed"/);
+assert.match(reconciler, /existing\?\.state === "open"/, "Healthy reconciliation must stay silent when the durable issue is already closed.");
 assert.match(reconciler, /issues\?state=all/);
 assert.match(reconciler, /body, state: "open"/);
 assert.match(reconciler, /Public and owner data were not changed/);
