@@ -50,7 +50,10 @@ function cleanText(value: unknown, maxLength: number) {
 
 function cleanEmail(value: unknown) {
   const email = cleanText(value, 254);
-  return email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email.toLowerCase() : null;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  const normalized = email.toLowerCase();
+  if (/^(?:info|email|name|yourname|test)@(?:example|company|domain)\./.test(normalized)) return null;
+  return normalized;
 }
 
 function cleanPhone(value: unknown) {
@@ -59,7 +62,7 @@ function cleanPhone(value: unknown) {
   const digits = phone.replace(/\D/g, "");
   if (digits.length < 8 || digits.length > 15) return null;
   if (/^(\d)\1+$/.test(digits)) return null;
-  if (["0123456789", "1234567890", "9876543210"].includes(digits)) return null;
+  if (["0123456789", "1234567890", "9876543210", "1102209800"].includes(digits)) return null;
   return phone;
 }
 
@@ -133,7 +136,11 @@ function factsFromExplicitHtml(html: string, sourceUrl?: string): WebsiteFact[] 
   if (sourceUrl && /\/(?:services?|what-we-do)(?:\/|$)/i.test(new URL(sourceUrl).pathname)) {
     for (const match of html.matchAll(/<h[23]\b[^>]*>([\s\S]*?)<\/h[23]\s*>/gi)) {
       const value = cleanText(decodeHtmlText(match[1]), 100);
-      if (!value || value.split(/\s+/).length > 8 || /^(?:services?|what we do|our services|how it works|why choose us|contact|book|about|faq|testimonials?|reviews?|welcome|learn more)$/i.test(value)) continue;
+      if (
+        !value || value.split(/\s+/).length > 8 || /[?!]/.test(value)
+        || /\b(?:faqs?|feedback|testimonial|review|why|what|how|choose|top-rated|free quote|rely on|different from|regions? we serve|areas? we service|our service areas|available every|hidden cost|belongings|listing below|priority|transparency|flexibility|types of|positive moving|solution)\b/i.test(value)
+        || /^(?:services?|what we do|our services|contact|book|about|welcome|learn more|products and consumables)$/i.test(value)
+      ) continue;
       add({ fieldName: "service", value, evidenceOnly: true });
     }
   }

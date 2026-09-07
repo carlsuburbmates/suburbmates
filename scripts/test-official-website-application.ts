@@ -55,6 +55,7 @@ const workflow = fs.readFileSync(".github/workflows/official-website-enrichment.
 const atomicMigration = fs.readFileSync("supabase/migrations/20260906200333_atomic_official_website_enrichment.sql", "utf8");
 const rollbackMigration = fs.readFileSync("supabase/migrations/20260906200544_guarded_official_website_enrichment_rollback.sql", "utf8");
 const acceptanceCorrection = fs.readFileSync("supabase/migrations/20260907105902_reject_low_quality_website_enrichment_acceptance.sql", "utf8");
+const explicitEvidenceCorrection = fs.readFileSync("supabase/migrations/20260907165753_reject_noisy_explicit_website_evidence.sql", "utf8");
 const pilotPage = fs.readFileSync("web/src/app/ops/system/website-pilot/page.tsx", "utf8");
 const pilotActions = fs.readFileSync("web/src/app/ops/system/website-pilot/actions.ts", "utf8");
 assert.match(runner, /official-business-site-application-v3/);
@@ -90,6 +91,9 @@ assert.match(rollbackMigration, /GRANT EXECUTE ON FUNCTION public\.ops_rollback_
 assert.match(acceptanceCorrection, /ambiguous multi-location phone and email values/);
 assert.match(acceptanceCorrection, /valid_hours_retained/);
 assert.match(acceptanceCorrection, /evidence_retained_as_superseded/);
+assert.match(explicitEvidenceCorrection, /official_website_evidence_quality_rejected/);
+assert.match(explicitEvidenceCorrection, /public_values_unchanged/);
+assert.match(explicitEvidenceCorrection, /evidence_state = 'rejected'/);
 assert.match(pilotPage, /Safe enrichment rollback/);
 assert.match(pilotPage, /Protected from rollback/);
 assert.match(pilotActions, /ops_rollback_official_website_enrichment/);
