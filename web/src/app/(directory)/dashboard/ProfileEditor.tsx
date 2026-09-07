@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { WebsiteProfilePreview, type WebsiteProfilePreviewValues } from "./WebsiteProfilePreview";
+import { recordDirectoryObservabilityEvent } from "@/components/observability/DirectoryObservabilityObserver";
 
 type Vendor = {
   id: string;
@@ -85,6 +86,7 @@ export default function ProfileEditor({ vendor, latestChange }: { vendor: Vendor
     } else {
       setSubmitted(true);
       setSuccess("Changes submitted for review. Your current public profile remains unchanged until approval.");
+      recordDirectoryObservabilityEvent("owner_profile_change_submitted");
     }
     
     setLoading(false);

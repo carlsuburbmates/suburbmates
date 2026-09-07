@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { BadgeCheck, Camera, ImagePlus, ShieldCheck } from "lucide-react";
+import { recordDirectoryObservabilityEvent } from "@/components/observability/DirectoryObservabilityObserver";
 
 export default function MediaProposalForm({ vendorId }: { vendorId: string }) {
   const [pending, setPending] = useState(false);
@@ -25,6 +26,7 @@ export default function MediaProposalForm({ vendorId }: { vendorId: string }) {
     setPending(false);
     setMessage(response.ok ? "Your image is private and awaiting operator review. Its review status is now shown below." : body.error || "We could not submit this image.");
     if (response.ok) {
+      recordDirectoryObservabilityEvent("owner_media_submitted");
       form.reset();
       setSourceBasis("");
       preview(null);

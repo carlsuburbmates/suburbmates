@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { TurnstileVerificationError, verifyTurnstileToken } from "@/lib/turnstile";
+import { recordDirectoryObservabilityEvent } from "@/lib/directory-observability";
 
 export type OwnerAccessState = { status: "idle" | "sent" | "error"; email: string; message: string };
 
@@ -21,5 +22,6 @@ export async function requestOwnerAccessAction(_: OwnerAccessState, formData: Fo
   if (error) {
     return { status: "error", email, message: error.message.toLowerCase().includes("rate") ? "Too many email codes were requested. Wait a little while and try again." : "We could not send the access code. Check the email and try again." };
   }
+  await recordDirectoryObservabilityEvent("owner_access_code_sent");
   return { status: "sent", email, message: "Check your email for the eight-digit access code." };
 }

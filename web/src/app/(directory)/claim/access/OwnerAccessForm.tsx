@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { SubmitButton, TurnstileField } from "../../join/JoinFormControls";
 import { requestOwnerAccessAction, type OwnerAccessState } from "./actions";
+import { recordDirectoryObservabilityEvent } from "@/components/observability/DirectoryObservabilityObserver";
 
 const initialState: OwnerAccessState = { status: "idle", email: "", message: "" };
 
@@ -20,6 +21,7 @@ export function OwnerAccessForm({ siteKey, claimPath }: { siteKey: string; claim
     setVerifying(true); setVerificationError(null);
     const { data, error } = await createClient().auth.verifyOtp({ email: state.email, token, type: "email" });
     if (error || !data.session) { setVerificationError("That code could not be used. Check the newest email or request another code after the rate limit clears."); setVerifying(false); return; }
+    recordDirectoryObservabilityEvent("owner_access_verified");
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     window.location.assign(claimPath);
   }

@@ -7,6 +7,7 @@ import ProfileEditor from './ProfileEditor'
 import ClaimRequests from './ClaimRequests'
 import MediaProposalForm from './MediaProposalForm'
 import WebsiteMediaProposalForm from './WebsiteMediaProposalForm'
+import OwnerJourneyObserver from './OwnerJourneyObserver'
 
 type OwnerVendor = {
   id: string
@@ -97,6 +98,7 @@ export default async function DashboardPage({
 
   return (
     <div className="min-h-screen bg-[#f5f7f3] text-slate-900 p-5 sm:p-8">
+      <OwnerJourneyObserver />
       <div className="max-w-4xl mx-auto space-y-12">
         
         <header className="overflow-hidden rounded-3xl bg-[#073b3a] px-6 py-8 text-white shadow-sm sm:px-9 sm:py-10">

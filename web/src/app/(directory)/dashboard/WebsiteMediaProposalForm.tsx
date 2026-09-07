@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { recordDirectoryObservabilityEvent } from "@/components/observability/DirectoryObservabilityObserver";
 
 type ImageCandidate = {
   url: string;
@@ -43,7 +44,10 @@ export default function WebsiteMediaProposalForm({ vendorId, website }: { vendor
     const body = await response.json().catch(() => ({}));
     setPending(false);
     setMessage(response.ok ? "Your website image is private and awaiting operator review." : body.error || "We could not retrieve that image.");
-    if (response.ok) window.location.assign(`/dashboard?media=submitted#media-${vendorId}`);
+    if (response.ok) {
+      recordDirectoryObservabilityEvent("owner_media_submitted");
+      window.location.assign(`/dashboard?media=submitted#media-${vendorId}`);
+    }
   }
 
   const chooseCandidate = (candidate: ImageCandidate) => {

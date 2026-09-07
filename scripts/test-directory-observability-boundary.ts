@@ -39,6 +39,11 @@ assert.match(system, /Official-website enrichment comparison/);
 assert.match(system, /profile_cohort_website_enriched_view/);
 assert.match(observer, /websiteEnriched/);
 assert.match(observer, /profile_cohort_website_unchanged_contact/);
+assert.match(system, /Owner pilot progression/);
+for (const event of ["owner_access_code_sent", "owner_access_verified", "owner_dashboard_reached", "owner_website_preview_loaded", "owner_website_details_applied", "owner_profile_change_submitted", "owner_media_submitted"]) {
+  assert.match(events, new RegExp(event));
+  assert.match(system, new RegExp(event));
+}
 
 for (const source of [events, observer, route, summary]) {
   assert.doesNotMatch(source, /document\.cookie|localStorage|sessionStorage|clientIP|searchParams/);

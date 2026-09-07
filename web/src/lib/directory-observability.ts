@@ -25,6 +25,13 @@ export const directoryObservabilityEvents = [
   "claim_completed",
   "missing_business_submission_completed",
   "contact_request_completed",
+  "owner_access_code_sent",
+  "owner_access_verified",
+  "owner_dashboard_reached",
+  "owner_website_preview_loaded",
+  "owner_website_details_applied",
+  "owner_profile_change_submitted",
+  "owner_media_submitted",
 ] as const;
 
 export type DirectoryObservabilityEvent = (typeof directoryObservabilityEvents)[number];
