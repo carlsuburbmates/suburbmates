@@ -226,7 +226,7 @@ Current allowed sources and rules are documented in `docs/vendor-acquisition-str
 | Supabase | PostgreSQL, Auth, RLS, RPC workflows | Connected; D-018 source-evidence and intent-search migrations applied 28 August 2026 |
 | Cloudflare | DNS, Worker delivery, Turnstile | Live; contact widget restricted to `suburbmates.com.au`; runtime secrets are managed bindings |
 | Resend | Supabase Auth delivery only | Domain verified; password reset and the eight-digit email-code fallback are delivered from `auth@suburbmates.com.au`. No general sender, marketing mail or public inbox is enabled. |
-| HubSpot | Optional daily decision inbox | Connected through a 15-minute GitHub reconciliation. It creates or closes low-detail Tasks for genuine protected Ops decisions only; it cannot change SuburbMates data or read/write HubSpot contacts, companies, deals, marketing or billing. |
+| HubSpot | Optional daily decision inbox | Connected through an hourly GitHub reconciliation. It creates or closes low-detail Tasks for genuine protected Ops decisions only; it cannot change SuburbMates data or read/write HubSpot contacts, companies, deals, marketing or billing. |
 | Stripe | Future optional paid upgrades | Test account only; webhook returns 501; keep disabled until benefits and pricing are approved |
 | ABN Lookup | Optional operator-run supporting evidence | One-listing-at-a-time evidence path is implemented; never gate listing, claim, or publication on ABN alone |
 
