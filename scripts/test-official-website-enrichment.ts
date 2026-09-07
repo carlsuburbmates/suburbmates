@@ -20,6 +20,8 @@ assert.deepEqual(facts, [
 ]);
 assert.equal(extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","telephone":"123-456-7890"}</script>`).length, 0, "Obvious placeholder phones must never become evidence or public data.");
 assert.equal(extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","telephone":"110-220-9800","email":"info@company.com"}</script>`).length, 0, "Template contact placeholders must never become evidence or public data.");
+assert.equal(extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","email":"porto@portotheme.com"}</script>`).length, 0, "Theme-vendor placeholder emails must never become evidence or public data.");
+assert.equal(extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","potentialAction":{"@type":"OrderAction","target":"https://example.test/my-account/orders/"}}</script>`).length, 0, "Customer account/order-history routes must never be classified as booking destinations.");
 assert.doesNotMatch(JSON.stringify(facts), /promotional copy|image\.jpg/i, "Copy and images must not leave the extractor.");
 const unsafeHours = extractOfficialWebsiteFacts(`<script type="application/ld+json">{"name":"Example Bakery","openingHours":["", "", "Mo 11:30-10:00"]}</script>`);
 assert.ok(!unsafeHours.some((fact) => fact.fieldName === "trading_hours"), "Blank or ambiguous overnight hours must not publish.");
@@ -43,6 +45,11 @@ const serviceHeadingFacts = extractOfficialWebsiteFacts(`<h2>Emergency plumbing<
 assert.deepEqual(serviceHeadingFacts, [{ fieldName: "service", value: "Emergency plumbing", evidenceOnly: true, sourceUrl: "https://example.test/services" }]);
 const noisyServiceHeadings = extractOfficialWebsiteFacts(`<h2>What is neuropsychology?</h2><h2>FAQs ON SERVICES</h2><h2>Get A Free Quote!</h2><h2>Schema Therapy</h2>`, "https://example.test/services");
 assert.deepEqual(noisyServiceHeadings, [{ fieldName: "service", value: "Schema Therapy", evidenceOnly: true, sourceUrl: "https://example.test/services" }]);
+const numberedServiceHeadings = extractOfficialWebsiteFacts(`<h2>1. Interior House Painting</h2><h2>III. Our Painting Process</h2><h2>Contact Us</h2><h2>Your Account</h2>`, "https://example.test/services");
+assert.deepEqual(numberedServiceHeadings, [{ fieldName: "service", value: "Interior House Painting", evidenceOnly: true, sourceUrl: "https://example.test/services" }]);
+const encodedAction = extractOfficialWebsiteFacts(`<a href="https://booking.test/widget?aid=146&amp;utm_source=partner">Book now</a>`, "https://example.test/");
+assert.equal(encodedAction.find((fact) => fact.fieldName === "booking_url")?.value, "https://booking.test/widget?aid=146&utm_source=partner");
+assert.equal(extractOfficialWebsiteFacts(`<a href="/">Book now</a>`, "https://example.test/").length, 0, "A homepage self-link is not a booking destination.");
 
 assert.equal(isRobotsPathAllowed("User-agent: *\nDisallow: /private\nAllow: /private/about", "SuburbMates-official-website-enrichment/1.0", "/"), true);
 assert.equal(isRobotsPathAllowed("User-agent: *\nDisallow: /private\nAllow: /private/about", "SuburbMates-official-website-enrichment/1.0", "/private"), false);

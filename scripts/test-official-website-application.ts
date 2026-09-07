@@ -56,6 +56,7 @@ const atomicMigration = fs.readFileSync("supabase/migrations/20260906200333_atom
 const rollbackMigration = fs.readFileSync("supabase/migrations/20260906200544_guarded_official_website_enrichment_rollback.sql", "utf8");
 const acceptanceCorrection = fs.readFileSync("supabase/migrations/20260907105902_reject_low_quality_website_enrichment_acceptance.sql", "utf8");
 const explicitEvidenceCorrection = fs.readFileSync("supabase/migrations/20260907170149_reject_noisy_explicit_website_evidence.sql", "utf8");
+const actionAcceptanceCorrection = fs.readFileSync("supabase/migrations/20260907173500_reject_invalid_explicit_website_actions.sql", "utf8");
 const pilotPage = fs.readFileSync("web/src/app/ops/system/website-pilot/page.tsx", "utf8");
 const pilotActions = fs.readFileSync("web/src/app/ops/system/website-pilot/actions.ts", "utf8");
 assert.match(runner, /official-business-site-application-v3/);
@@ -94,6 +95,10 @@ assert.match(acceptanceCorrection, /evidence_retained_as_superseded/);
 assert.match(explicitEvidenceCorrection, /official_website_evidence_quality_rejected/);
 assert.match(explicitEvidenceCorrection, /public_values_unchanged/);
 assert.match(explicitEvidenceCorrection, /evidence_state = 'rejected'/);
+assert.match(actionAcceptanceCorrection, /official_website_enrichment_acceptance_rejected/);
+assert.match(actionAcceptanceCorrection, /porto@portotheme\.com/);
+assert.match(actionAcceptanceCorrection, /evidence_retained_as_rejected/);
+assert.match(actionAcceptanceCorrection, /publication_unchanged/);
 assert.match(pilotPage, /Safe enrichment rollback/);
 assert.match(pilotPage, /Protected from rollback/);
 assert.match(pilotActions, /ops_rollback_official_website_enrichment/);

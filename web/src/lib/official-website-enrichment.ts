@@ -53,6 +53,7 @@ function cleanEmail(value: unknown) {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
   const normalized = email.toLowerCase();
   if (/^(?:info|email|name|yourname|test)@(?:example|company|domain)\./.test(normalized)) return null;
+  if (/@(?:portotheme\.com|example\.(?:com|org|net))$/.test(normalized)) return null;
   return normalized;
 }
 
@@ -67,7 +68,8 @@ function cleanPhone(value: unknown) {
 }
 
 function cleanHttpsUrl(value: unknown) {
-  const raw = cleanText(value, 2_000);
+  const rawValue = cleanText(value, 2_000);
+  const raw = rawValue ? decodeHtmlText(rawValue) : null;
   if (!raw) return null;
   try {
     const url = new URL(raw);
@@ -77,6 +79,18 @@ function cleanHttpsUrl(value: unknown) {
   } catch {
     return null;
   }
+}
+
+function cleanActionUrl(value: unknown, sourceUrl?: string) {
+  const url = cleanHttpsUrl(value);
+  if (!url) return null;
+  const parsed = new URL(url);
+  if (/\/(?:my-?account|account)(?:\/|$)|\/orders?(?:\/|$)/i.test(parsed.pathname)) return null;
+  if (sourceUrl) {
+    const source = new URL(sourceUrl);
+    if (parsed.origin === source.origin && parsed.pathname === source.pathname && !parsed.search) return null;
+  }
+  return url;
 }
 
 function decodeHtmlText(value: string) {
@@ -107,7 +121,12 @@ function factsFromExplicitHtml(html: string, sourceUrl?: string): WebsiteFact[] 
   const facts: WebsiteFact[] = [];
   const add = (fact: WebsiteFact | null) => { if (fact) facts.push(sourceUrl ? { ...fact, sourceUrl } : fact); };
   const decoded = (value: string) => { try { return decodeURIComponent(value); } catch { return value; } };
-  const httpsLink = (value: string) => { try { return cleanHttpsUrl(sourceUrl ? new URL(value, sourceUrl).toString() : value); } catch { return null; } };
+  const actionLink = (value: string) => {
+    try {
+      const decodedValue = decodeHtmlText(value);
+      return cleanActionUrl(sourceUrl ? new URL(decodedValue, sourceUrl).toString() : decodedValue, sourceUrl);
+    } catch { return null; }
+  };
 
   for (const match of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi)) {
     const href = attributeValue(match[1], "href");
@@ -115,8 +134,8 @@ function factsFromExplicitHtml(html: string, sourceUrl?: string): WebsiteFact[] 
     const label = decodeHtmlText(match[2]);
     if (/^tel:/i.test(href)) add(cleanPhone(decoded(href.slice(4))) ? { fieldName: "phone", value: cleanPhone(decoded(href.slice(4)))! } : null);
     if (/^mailto:/i.test(href)) add(cleanEmail(decoded(href.slice(7)).split("?")[0]) ? { fieldName: "email", value: cleanEmail(decoded(href.slice(7)).split("?")[0])! } : null);
-    if (/^(?:book(?:ing| now)?|make (?:a )?booking|appointments?|reserve|order online)$/i.test(label)) add(httpsLink(href) ? { fieldName: "booking_url", value: httpsLink(href)! } : null);
-    if (/^(?:menu|view (?:our )?menu)$/i.test(label)) add(httpsLink(href) ? { fieldName: "menu_url", value: httpsLink(href)! } : null);
+    if (/^(?:book(?:ing| now)?|make (?:a )?booking|appointments?|reserve|order online)$/i.test(label)) add(actionLink(href) ? { fieldName: "booking_url", value: actionLink(href)! } : null);
+    if (/^(?:menu|view (?:our )?menu)$/i.test(label)) add(actionLink(href) ? { fieldName: "menu_url", value: actionLink(href)! } : null);
   }
 
   const readItem = (attributes: string, body: string) => {
@@ -135,11 +154,12 @@ function factsFromExplicitHtml(html: string, sourceUrl?: string): WebsiteFact[] 
 
   if (sourceUrl && /\/(?:services?|what-we-do)(?:\/|$)/i.test(new URL(sourceUrl).pathname)) {
     for (const match of html.matchAll(/<h[23]\b[^>]*>([\s\S]*?)<\/h[23]\s*>/gi)) {
-      const value = cleanText(decodeHtmlText(match[1]), 100);
+      const rawValue = cleanText(decodeHtmlText(match[1]), 100);
+      const value = rawValue?.replace(/^(?:\d+|[ivx]+)[.)]?\s+/i, "").trim() ?? null;
       if (
         !value || value.split(/\s+/).length > 8 || /[?!]/.test(value)
-        || /\b(?:faqs?|feedback|testimonial|review|why|what|how|choose|top-rated|free quote|rely on|different from|regions? we serve|areas? we service|our service areas|available every|hidden cost|belongings|listing below|priority|transparency|flexibility|types of|positive moving|solution)\b/i.test(value)
-        || /^(?:services?|what we do|our services|contact|book|about|welcome|learn more|products and consumables)$/i.test(value)
+        || /\b(?:faqs?|feedback|testimonial|review|why|what|how|choose|top-rated|free quote|rely on|different from|regions? we serve|areas? we service|our service areas|available every|hidden cost|belongings|listing below|priority|transparency|flexibility|types of|positive moving|solution|process|serving .+ homes|quick information|get a .+ quote|your account)\b/i.test(value)
+        || /^(?:services?|what we do|our services|our complete .+ services|contact(?: us)?|book|about|welcome|learn more|products and consumables)$/i.test(value)
       ) continue;
       add({ fieldName: "service", value, evidenceOnly: true });
     }
@@ -268,7 +288,7 @@ function actionUrls(value: unknown): WebsiteFact[] {
     if (!isJsonObject(entry)) continue;
     const type = stringValues(entry["@type"], 80).join(" ").toLowerCase();
     const target = isJsonObject(entry.target) ? entry.target.url : entry.target;
-    const url = cleanHttpsUrl(target);
+    const url = cleanActionUrl(target);
     if (!url) continue;
     if (/(reserve|book|order)/.test(type)) facts.push({ fieldName: "booking_url", value: url });
     if (/menu/.test(type)) facts.push({ fieldName: "menu_url", value: url });
