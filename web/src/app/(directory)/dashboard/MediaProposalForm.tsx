@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { BadgeCheck, Camera, ImagePlus, ShieldCheck } from "lucide-react";
 import { recordDirectoryObservabilityEvent } from "@/components/observability/DirectoryObservabilityObserver";
 
 export default function MediaProposalForm({ vendorId }: { vendorId: string }) {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [sourceBasis, setSourceBasis] = useState("");
@@ -30,7 +32,8 @@ export default function MediaProposalForm({ vendorId }: { vendorId: string }) {
       form.reset();
       setSourceBasis("");
       preview(null);
-      window.location.assign(`/dashboard?media=submitted#media-${vendorId}`);
+      router.replace(`/dashboard?media=submitted#media-${vendorId}`);
+      router.refresh();
     }
   }
   return <form onSubmit={submit} className="mt-6 space-y-5 border-t border-slate-100 pt-6">
