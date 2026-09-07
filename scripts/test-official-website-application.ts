@@ -38,7 +38,7 @@ const route = fs.readFileSync("web/src/app/api/automation/official-website-enric
 const workflow = fs.readFileSync(".github/workflows/official-website-enrichment.yml", "utf8");
 const atomicMigration = fs.readFileSync("supabase/migrations/20260906200333_atomic_official_website_enrichment.sql", "utf8");
 const rollbackMigration = fs.readFileSync("supabase/migrations/20260906200544_guarded_official_website_enrichment_rollback.sql", "utf8");
-const acceptanceCorrection = fs.readFileSync("supabase/migrations/20260907104845_reject_low_quality_website_enrichment_acceptance.sql", "utf8");
+const acceptanceCorrection = fs.readFileSync("supabase/migrations/20260907105902_reject_low_quality_website_enrichment_acceptance.sql", "utf8");
 const pilotPage = fs.readFileSync("web/src/app/ops/system/website-pilot/page.tsx", "utf8");
 const pilotActions = fs.readFileSync("web/src/app/ops/system/website-pilot/actions.ts", "utf8");
 assert.match(runner, /official-business-site-application-v3/);

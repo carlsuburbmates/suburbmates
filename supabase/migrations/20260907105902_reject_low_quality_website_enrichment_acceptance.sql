@@ -1,4 +1,4 @@
--- Production row-level acceptance of the first linked-fact promotion cohort
+-- Production row-level acceptance of the first linked-fact promotion cohort.
 -- found two pre-existing parser/planner quality failures: a multi-location
 -- page supplied several branch contacts to one Preston listing, and an
 -- hours-only summary added no useful profile meaning. Reverse only the exact
