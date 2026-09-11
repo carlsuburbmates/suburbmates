@@ -93,7 +93,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
-    "csv-parse": "^7.0.1",
+    "csv-parse": "^7.0.2",
     "csv-stringify": "^6.8.1",
     "fflate": "0.8.3",
     "tldts": "^7.4.8"
